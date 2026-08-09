@@ -6,9 +6,9 @@ test-results/
 package-lock.json
 
 # Operating contract — owned by the human, not by our formatter.
-# GOAL.md must be preserved exactly as provided; bootstrap/, AGENTS.md and
+# GOAL.md must be preserved exactly as provided; .bootstrap/, AGENTS.md and
 # CLAUDE.md may only change when an operating-rule change is explicitly requested.
 GOAL.md
 AGENTS.md
 CLAUDE.md
-bootstrap/
+.bootstrap/
