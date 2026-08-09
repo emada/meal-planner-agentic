@@ -6,7 +6,7 @@
 
 ## Context
 
-`SPEC.md` targets real users, and `bootstrap/05-delivery-architecture/03-observability-flow.md` asks for error, latency, and availability signals. The usual answer is a client-side error reporter such as Sentry.
+`SPEC.md` targets real users, and `.bootstrap/05-delivery-architecture/03-observability-flow.md` asks for error, latency, and availability signals. The usual answer is a client-side error reporter such as Sentry.
 
 That answer conflicts with two constraints already approved. The spec's privacy position is that no third party beyond TheMealDB receives anything, and no analytics or tracker is used. The operating contract also forbids adding an external service or a data processor without explicit approval and a stated trade-off.
 
