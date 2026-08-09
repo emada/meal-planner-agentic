@@ -43,7 +43,7 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 ## Deferred gates
 
-Deliberately not yet in force. Each has a named landing slice, per the adoption order in `bootstrap/06-tools`.
+Deliberately not yet in force. Each has a named landing slice, per the adoption order in `.bootstrap/06-tools`.
 
 | Gate                               | Status                           | Lands in | Rationale                                                                                                              |
 | ---------------------------------- | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -82,6 +82,21 @@ A gate is not adopted because it is configured. Each was proven to reject a deli
 | Committing that token for real                        | `husky - pre-commit script failed (code 1)`, no commit created         |
 | Unformatted markdown                                  | `prettier --check` fails the format gate                               |
 | Full suite on the clean tree                          | `npm run verify` passes; 8 Playwright tests pass across both viewports |
+| Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects            |
+
+### Default-branch protection
+
+Desired state is versioned at `.github/rulesets/protect-main.json` and applied through `.bootstrap/06-tools/github/apply-repository-ruleset.sh`. The committed JSON is not evidence; the live state was read back through the API.
+
+- Ruleset `AI Engineering: protect default branch`, id 20604945, enforcement `active`
+- Effective rules on `refs/heads/main`: `deletion`, `non_fast_forward`, `pull_request`
+- Approvals required: 0 — a solo owner must not be locked out of their own repository. Review still happens; GitHub simply does not block on it
+- Negative probe: pushing a commit straight to `main` was rejected with `GH013 ... Changes must be made through a pull request`
+- <https://github.com/emada/meal-planner-agentic/rules/20604945>
+
+**Repository visibility changed to public to obtain this.** GitHub Free returns HTTP 403 for both rulesets and classic branch protection on private repositories. The alternatives were paying for GitHub Pro or leaving `main` unprotected; the human chose public. Verified before publishing: no secrets in the working tree or in the two commits of history. Nothing in this repository is confidential — the TheMealDB key is public by design and deployment credentials live in GitHub secrets, never in the tree.
+
+**Still outstanding:** `required_status_checks` is empty. Check contexts must be observed from a real run rather than guessed, and CI has not run yet — the workflow triggers on pull requests and on pushes to `main`, neither of which has happened. The contexts get added to the versioned JSON and reapplied once the first pull request produces them.
 
 ### Two gates were silently passing and were fixed
 
