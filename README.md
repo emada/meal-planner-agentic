@@ -1,0 +1,70 @@
+# Recipe Search & Meal Planner
+
+Search recipes from [TheMealDB](https://www.themealdb.com) and build a shopping list that lives in your browser. No account, no backend, no tracking.
+
+Status: **S0 — engineering harness complete.** The application shell builds, deploys, and is gated; feature slices S1 onward add search, the recipe modal, and the shopping list.
+
+## Requirements
+
+- Node.js 20 or newer (developed on 24)
+
+## Getting started
+
+```bash
+npm ci        # install exactly what the lockfile specifies
+npm run dev   # http://localhost:5173
+```
+
+## Commands
+
+| Command                 | What it does                                          |
+| ----------------------- | ----------------------------------------------------- |
+| `npm run dev`           | Dev server with hot reload                            |
+| `npm run build`         | Type-check, then produce the static bundle in `dist/` |
+| `npm run preview`       | Serve the built bundle locally                        |
+| `npm run typecheck`     | TypeScript, no emit                                   |
+| `npm run lint`          | ESLint, type-aware                                    |
+| `npm run format`        | Apply Prettier                                        |
+| `npm run test`          | Unit and integration tests                            |
+| `npm run test:coverage` | Tests with a coverage report                          |
+| `npm run test:e2e`      | Playwright journeys at mobile and desktop viewports   |
+| `npm run scan:secrets`  | secretlint over the repository                        |
+| `npm run verify`        | Everything CI runs, in one command                    |
+
+First Playwright run needs browsers: `npx playwright install chromium`.
+
+## How this project is governed
+
+This repository follows a goal-first operating contract. The documents are the contract, in this order:
+
+| Document                   | Role                                            |
+| -------------------------- | ----------------------------------------------- |
+| [`GOAL.md`](GOAL.md)       | The original brief, preserved verbatim          |
+| [`SPEC.md`](SPEC.md)       | The product contract — approved                 |
+| [`PLAN.md`](PLAN.md)       | The execution contract, slices S0–S7 — approved |
+| [`bootstrap/`](bootstrap/) | The operating rules themselves                  |
+
+Supporting records:
+
+- [`docs/quality/gates.md`](docs/quality/gates.md) — what blocks a merge, at which layer, and what is deliberately deferred
+- [`docs/quality/bootstrap-adoption.md`](docs/quality/bootstrap-adoption.md) — every bootstrap rule marked adopted, deferred, or not-applicable
+- [`docs/security/threat-model.md`](docs/security/threat-model.md) — assets, threats, controls, residual risk
+- [`docs/privacy/assessment.md`](docs/privacy/assessment.md) — the data position (short: we collect nothing)
+- [`docs/architecture/`](docs/architecture/) — ADRs for material decisions
+
+## Architecture
+
+Static SPA. Four modules, one permitted direction of dependency, enforced by lint rather than by review:
+
+```text
+domain/   pure logic — no I/O, no React
+api/      TheMealDB client + response schemas
+storage/  localStorage adapter + validation   (may use domain)
+ui/       views and components                (may use api, domain, storage)
+```
+
+Everything crossing a boundary is schema-parsed. See [ADR-0002](docs/architecture/ADR-0002-module-boundaries.md).
+
+## Notes
+
+The app calls TheMealDB with the public developer key `1`, as the brief specifies. That is a test key with no availability guarantee — moving to a supported key is an open decision recorded in `SPEC.md` (O1) and blocks production release.
