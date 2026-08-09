@@ -69,7 +69,9 @@ Recorded retrospectively: this project reached Phase 3 under the previous versio
 - Production release model: Production may occur **only** as an automatic consequence of a pull request that the human approved and merged into `main` after every mandatory gate passed. There is no agent path to production, and spec O1 blocks production release independently
 - Do not create a second Vercel project or a duplicate git integration. Inspect the existing integration first; use `vercel link` only to attach the local directory to the existing project when that is actually required
 
-Known defect to repair during execution: the project's only deployment failed (`● Error`, 2s) and `https://meal-planner-agentic-emada1.vercel.app` returns HTTP 404. Diagnosing and fixing it is in scope; it is a build-configuration failure, not a decision.
+Git integration status: **already connected** by the human before this contract was approved. Verified read-only — Vercel publishes the `Vercel` and `Vercel Preview Comments` contexts on pull requests. No project was created and no integration was duplicated; `vercel link` was not needed.
+
+Resolved: the earlier failed production deployment (`● Error`, 2s, HTTP 404) was not a configuration defect. It built `main` at commit `fcc80b2`, which contained only the operating contract — no `package.json` and no lockfile — so `npm ci` exited with `EUSAGE: can only install with an existing package-lock.json`. The identical configuration built the preview for pull request #1 in 12 s. Production resolves itself when the human merges an application-bearing `main`.
 
 ## External services and credentials
 

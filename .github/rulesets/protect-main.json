@@ -26,6 +26,20 @@
         "required_approving_review_count": 0,
         "required_review_thread_resolution": true
       }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "do_not_enforce_on_create": true,
+        "strict_required_status_checks_policy": true,
+        "required_status_checks": [
+          { "context": "Types, lint, format, unit tests" },
+          { "context": "Secret scan" },
+          { "context": "Reproducible build" },
+          { "context": "Browser journeys (mobile + desktop)" },
+          { "context": "Vercel" }
+        ]
+      }
     }
   ]
 }

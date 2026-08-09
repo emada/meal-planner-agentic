@@ -96,7 +96,30 @@ Desired state is versioned at `.github/rulesets/protect-main.json` and applied t
 
 **Repository visibility changed to public to obtain this.** GitHub Free returns HTTP 403 for both rulesets and classic branch protection on private repositories. The alternatives were paying for GitHub Pro or leaving `main` unprotected; the human chose public. Verified before publishing: no secrets in the working tree or in the two commits of history. Nothing in this repository is confidential — the TheMealDB key is public by design and deployment credentials live in GitHub secrets, never in the tree.
 
-**Still outstanding:** `required_status_checks` is empty. Check contexts must be observed from a real run rather than guessed, and CI has not run yet — the workflow triggers on pull requests and on pushes to `main`, neither of which has happened. The contexts get added to the versioned JSON and reapplied once the first pull request produces them.
+### Required status checks
+
+Contexts were read from the first real run on pull request #1 rather than guessed, then added to the versioned JSON and reapplied to the same named ruleset. Live state confirmed through the API:
+
+```text
+rule_types: deletion, non_fast_forward, pull_request, required_status_checks
+required_status_contexts:
+  Types, lint, format, unit tests
+  Secret scan
+  Reproducible build
+  Browser journeys (mobile + desktop)
+  Vercel
+```
+
+`strict_required_status_checks_policy` is on, so a branch must be up to date with `main` before merging — two pull requests that pass in isolation cannot merge into a broken combination.
+
+`Vercel Preview Comments` is deliberately **not** required. It reports that a bot posted a comment, not that anything built or passed; requiring it would let a cosmetic integration change block merges.
+
+### Vercel deployment
+
+- Git integration was already connected by the human; verified read-only. No project or integration was duplicated.
+- Preview for pull request #1: `● Ready` in 12 s. The preview URL returns HTTP 302 to Vercel SSO because Deployment Protection is enabled on previews — a security default, not a failure.
+- The earlier production deployment failed (`● Error`, 2 s) with `npm error code EUSAGE — can only install with an existing package-lock.json`. Root cause: it built `main` at `fcc80b2`, which held only the operating contract, with no `package.json` and no lockfile. Not a configuration defect; the same configuration builds the preview successfully. It resolves when an application-bearing `main` is merged.
+- Agents have no path to production. `vercel --prod` and deployment promotion are prohibited by `EXECUTION.md`; production may occur only as a consequence of a human-approved merge.
 
 ### Two gates were silently passing and were fixed
 
