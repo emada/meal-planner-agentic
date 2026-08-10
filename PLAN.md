@@ -5,7 +5,7 @@ Status: Approved
 ## Approved specification
 
 - Specification: `SPEC.md`, Status: Approved, approved 2026-08-09 by bmi.machado@gmail.com
-- Version or commit: to be recorded at S0's initial commit
+- Version or commit: `fcc80b2`, the initial commit that recorded the approved `SPEC.md`
 
 ## Architecture and constraints
 
@@ -111,7 +111,7 @@ Constrained by the spec's no-analytics, no-third-party position.
 
 Cross-cutting definition of done for every slice below: acceptance criteria demonstrated with evidence, mandatory gates green, responsive at 375px and desktop, keyboard operable, diff reviewed, docs updated, `main` deployable.
 
-### S0 — Harness SWEAI Builder
+### S0 — Engineering harness
 
 - **Outcome**: repository, toolchain, and gates operational; `main` protected and deployable; control docs exist.
 - **Mapped AC**: none directly; enables AC14.

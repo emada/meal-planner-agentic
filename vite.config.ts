@@ -40,7 +40,10 @@ function contentSecurityPolicy(): Plugin {
               'http-equiv': 'Content-Security-Policy',
               content: CONTENT_SECURITY_POLICY,
             },
-            injectTo: 'head-prepend',
+            // After <meta charset>, not before it. The policy applies wherever
+            // it sits in <head>, but the charset declaration must stay within
+            // the first 1024 bytes or encoding detection falls back to guessing.
+            injectTo: 'head',
           },
         ],
       };
