@@ -14,19 +14,21 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 00 — Orientation
 
-| Rule                   | Status  | Rationale                                                                                             |
-| ---------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| Lifecycle distribution | Adopted | SWEAI Builder is installed as a pinned submodule at `.ai-engineering`; see `EXECUTION.md` for the pin |
+| Rule                    | Status  | Rationale                                                                                             |
+| ----------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| How to use              | Adopted | Goal-first order followed: `GOAL.md` → `SPEC.md` → `PLAN.md` → `EXECUTION.md`, each human-approved    |
+| Bootstrap specification | Adopted | Artifacts created from `.ai-engineering/.bootstrap/templates/`, not hand-invented                     |
+| Lifecycle distribution  | Adopted | SWEAI Builder is installed as a pinned submodule at `.ai-engineering`; see `EXECUTION.md` for the pin |
 
 ## 02 — Quality
 
-| Rule                      | Status  | Rationale                                                                                                                                                                |
-| ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Policy as code            | Adopted | Types, lint, tests, boundaries, and CSP presence are executable checks, not review conventions                                                                           |
-| Layered gates             | Adopted | Development → pre-commit → pre-push → CI, mapped in `docs/quality/gates.md`                                                                                              |
-| Definition of done        | Adopted | Applied per slice; S0's evidence is recorded in this commit's pull request                                                                                               |
-| Control effectiveness     | Partial | Negative probes recorded for 9 gates including CSP; console-error, browser-journey, build, gitleaks, and pre-push probes land in S6 — tracked in `docs/quality/gates.md` |
-| Automated semantic review | Adopted | Mandatory independent reviewer at `.claude/agents/semantic-reviewer.md`; publishing authorized in `EXECUTION.md` on 2026-08-10                                           |
+| Rule                      | Status  | Rationale                                                                                                                                                                                                                |
+| ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Policy as code            | Adopted | Types, lint, tests, boundaries, and CSP presence are executable checks, not review conventions                                                                                                                           |
+| Layered gates             | Adopted | Development → pre-commit → pre-push → CI, mapped in `docs/quality/gates.md`                                                                                                                                              |
+| Definition of done        | Adopted | Applied per slice; S0's evidence is recorded in this commit's pull request                                                                                                                                               |
+| Control effectiveness     | Partial | Negative probes recorded for 9 gates including CSP; probes for unit tests, submodule integrity, console errors, browser journeys, build, gitleaks, and pre-push rejection land in S6 — listed in `docs/quality/gates.md` |
+| Automated semantic review | Adopted | Mandatory independent reviewer at `.claude/agents/semantic-reviewer.md`; publishing authorized in `EXECUTION.md` on 2026-08-10                                                                                           |
 
 ## 03 — Security and privacy
 
@@ -61,6 +63,8 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 | TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; steps 3–5 land in S6. Two substitutions and two version pins recorded in `docs/quality/gates.md` |
 | High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                 |
 | Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                       |
+| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified  |
+| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production reachable only by human merge    |
 
 ## 07 — Project adoption
 

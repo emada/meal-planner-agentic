@@ -16,19 +16,19 @@ Owner: the human accountable for this repository (bmi.machado@gmail.com). Agents
 
 ## Mandatory gates in force (adoption steps 1–2)
 
-| Gate                                | Tool                                                                                                                        | Blocks                                                         | Failure action                                          |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------- |
-| Type safety                         | TypeScript 5 `strict` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals`, `noUnusedParameters` | commit (via type-aware lint), push, CI                         | fix the type; suppressions require a recorded exception |
-| Lint                                | ESLint 9 flat config, type-aware `strictTypeChecked`                                                                        | commit, CI                                                     | fix; no blanket disables                                |
-| Format                              | Prettier                                                                                                                    | commit (auto-fixed and re-staged, not rejected), CI (blocking) | `npm run format`                                        |
-| Unit/integration tests              | Vitest + Testing Library                                                                                                    | push, CI                                                       | fix the code or the test                                |
-| Secret scan, staged files           | secretlint                                                                                                                  | commit                                                         | remove the secret and rotate it                         |
-| Secret scan, full history           | gitleaks (CI)                                                                                                               | CI                                                             | remove and rotate; history rewrite if already pushed    |
-| Reproducible build                  | `tsc --noEmit` + `vite build` at pre-push; additionally `npm ci` from a clean checkout in CI                                | push, CI                                                       | fix                                                     |
-| Browser journeys, mobile + desktop  | Playwright, `desktop-chromium` and `mobile-chromium`                                                                        | CI                                                             | fix                                                     |
-| Content Security Policy exact-match | Playwright asserts the full directive string and the absence of `unsafe-inline`/`unsafe-eval`                               | CI                                                             | fix the policy, never weaken the assertion              |
-| Submodule installation integrity    | Vitest asserts `.ai-engineering` stays Git mode `160000` with no vendored or product-owned contract copy                    | push, CI                                                       | restore the submodule; never re-symlink or vendor       |
-| No console errors on load           | Playwright assertion                                                                                                        | CI                                                             | fix the cause                                           |
+| Gate                                | Tool                                                                                                                        | Blocks                                                                                                                                             | Failure action                                          |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Type safety                         | TypeScript 5 `strict` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals`, `noUnusedParameters` | push, CI. The type-aware lint subset (`no-unsafe-*`, `no-floating-promises`) also blocks at commit, but `tsc` semantic errors surface only at push | fix the type; suppressions require a recorded exception |
+| Lint                                | ESLint 9 flat config, type-aware `strictTypeChecked`                                                                        | commit, CI                                                                                                                                         | fix; no blanket disables                                |
+| Format                              | Prettier                                                                                                                    | commit (auto-fixed and re-staged, not rejected), CI (blocking)                                                                                     | `npm run format`                                        |
+| Unit/integration tests              | Vitest + Testing Library                                                                                                    | push, CI                                                                                                                                           | fix the code or the test                                |
+| Secret scan, staged files           | secretlint                                                                                                                  | commit                                                                                                                                             | remove the secret and rotate it                         |
+| Secret scan, full history           | gitleaks (CI)                                                                                                               | CI                                                                                                                                                 | remove and rotate; history rewrite if already pushed    |
+| Reproducible build                  | `tsc --noEmit` + `vite build` at pre-push; additionally `npm ci` from a clean checkout in CI                                | push, CI                                                                                                                                           | fix                                                     |
+| Browser journeys, mobile + desktop  | Playwright, `desktop-chromium` and `mobile-chromium`                                                                        | CI                                                                                                                                                 | fix                                                     |
+| Content Security Policy exact-match | Playwright asserts the full directive string and the absence of `unsafe-inline`/`unsafe-eval`                               | CI                                                                                                                                                 | fix the policy, never weaken the assertion              |
+| Submodule installation integrity    | Vitest asserts `.ai-engineering` stays Git mode `160000` with no vendored or product-owned contract copy                    | push, CI                                                                                                                                           | restore the submodule; never re-symlink or vendor       |
+| No console errors on load           | Playwright assertion                                                                                                        | CI                                                                                                                                                 | fix the cause                                           |
 
 ## Architectural rules enforced mechanically
 
@@ -86,9 +86,19 @@ A gate is not adopted because it is configured. Each was proven to reject a deli
 | Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects                   |
 | `'unsafe-inline'` added to `script-src`               | CSP assertion fails on the exact-match comparison; passes again once reverted |
 
-Re-verified in full at head `ccd95ea` on 2026-08-10, after the migration to the pinned submodule changed `.prettierignore`, `AGENTS.md`, and every contract path in the documentation. A pass on an obsolete commit is not evidence.
+Re-verified in full at head `3c65abf` on 2026-08-10, after semantic review changed gate-defining code — the CSP assertion, `eslint.config.js`, the build output mode, and the new submodule-integrity test. A pass on an obsolete commit is not evidence, so the head named here moves whenever those files do.
 
-**Probes still outstanding**, tracked against `.ai-engineering/.bootstrap/02-quality/04-control-effectiveness.md`, which requires one per mandatory gate: the no-console-errors assertion, the browser-journey gate, the reproducible-build gate, gitleaks over history, and pre-push rejection. They land in S6 alongside the remaining gate adoption. Until then those gates are configured and green but unproven, which is recorded here rather than presented as verified.
+**Probes still outstanding**, tracked against `.ai-engineering/.bootstrap/02-quality/04-control-effectiveness.md`, which requires one per mandatory gate. Of the twelve mandatory gates above, seven have no recorded negative probe:
+
+- unit and integration tests
+- submodule installation integrity — added in this slice, so it is asserted but not yet disproven
+- no console errors on load
+- browser journeys
+- reproducible build
+- gitleaks over full history
+- pre-push rejection of a failing build or test
+
+They land in S6 alongside the remaining gate adoption. Until then those seven are configured and green but unproven, which is stated here rather than presented as verified.
 
 ### Default-branch protection
 
@@ -119,6 +129,8 @@ required_status_contexts:
 `strict_required_status_checks_policy` is on, so a branch must be up to date with `main` before merging — two pull requests that pass in isolation cannot merge into a broken combination.
 
 `Vercel Preview Comments` is deliberately **not** required. It reports that a bot posted a comment, not that anything built or passed; requiring it would let a cosmetic integration change block merges.
+
+**AC13 is not yet exercised.** The horizontal-overflow assertion in `e2e/smoke.spec.ts` cannot currently fail: the shell renders a heading and an empty `<main>`, so overflow is impossible. It is a valid S0 smoke test and a valid regression guard once there is layout, but AC13 evidence begins at S1, when a real results grid renders. Recorded so the green tick is not mistaken for responsive-layout proof.
 
 `SWEAI Review / Claude` is **not yet** a required context. The semantic review is mandatory by contract and runs on every head, but it is published by the lead agent rather than by an independent workflow, so requiring it would mean the agent under review controls its own merge gate. It becomes a required context when it is emitted by CI rather than by the implementer. Until then the human merge step carries that residual risk, which is recorded here rather than left implicit.
 

@@ -51,10 +51,12 @@ function contentSecurityPolicy(): Plugin {
 export default defineConfig({
   plugins: [react(), contentSecurityPolicy()],
   build: {
-    // Emitted but not referenced from the bundle, so browsers fetch them only
-    // when someone opens devtools deliberately. ADR-0003 declines error
-    // reporting, so no tooling consumes these -- they exist for manual
-    // inspection of a deployed build, nothing else.
+    // 'hidden' emits the map but no sourceMappingURL comment, so nothing
+    // resolves it automatically -- devtools included. ADR-0003 declines error
+    // reporting, so no tooling consumes it either. It exists to be attached by
+    // hand when inspecting a deployed build. The file is still served at the
+    // guessable <bundle>.js.map path; that is acceptable because the client
+    // bundle is public regardless.
     sourcemap: 'hidden',
   },
   test: {
