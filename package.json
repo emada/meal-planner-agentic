@@ -60,6 +60,17 @@
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test:coverage && npm run scan:secrets && npm run build && npm run test:e2e",
     "prepare": "husky"
   },
+  "sweai": {
+    "gates": [
+      "typecheck",
+      "lint",
+      "format:check",
+      "test:coverage",
+      "scan:secrets",
+      "build",
+      "test:e2e"
+    ]
+  },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix",

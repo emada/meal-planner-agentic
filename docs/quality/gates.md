@@ -12,7 +12,7 @@ Owner: the human accountable for this repository (bmi.machado@gmail.com). Agents
 | CI (authoritative) | everything below, from a clean checkout                     | `.github/workflows/ci.yml`                                    |
 | Post-deploy        | availability and error rate from Vercel; manual smoke check | see `docs/architecture/ADR-0003-no-client-error-reporting.md` |
 
-`npm run verify` runs the full local sequence in one command.
+`npm run verify` chains the local sequence for convenience. To produce evidence, use the generator instead — it runs every gate rather than stopping at the first failure. See "Whether the gates passed is derived, not written" below.
 
 ## Mandatory gates in force (adoption steps 1–2)
 
@@ -92,11 +92,42 @@ A gate is not adopted because it is configured. Per-gate probes and their `Last 
 | Correctly formatted fake GitHub token                 | `[GITHUB_TOKEN]`, exit 1 — secret gate rejects                                |
 | Committing that token for real                        | `husky - pre-commit script failed (code 1)`, no commit created                |
 | Unformatted markdown                                  | `prettier --check` fails the format gate                                      |
-| Full suite on the clean tree                          | `npm run verify` passes; 10 Playwright tests pass across both viewports       |
 | Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects                   |
 | `'unsafe-inline'` added to `script-src`               | CSP assertion fails on the exact-match comparison; passes again once reverted |
 
-Full gate sequence re-run on 2026-08-10 at head `b3b4d6d`. The named head advances on any change to gate **behaviour** or to the artifact a gate inspects; the per-gate `Last proven` dates above are the authoritative account.
+### Whether the gates passed is derived, not written
+
+There is no longer a sentence in this document claiming the suite passes at some head. That claim decayed every time the head moved, and it was corrected in four consecutive review rounds — which is the argument against writing it at all.
+
+Gates are declared once, in `package.json` under `sweai.gates`, beside the scripts they name so the two cannot drift:
+
+```json
+"sweai": {
+  "gates": ["typecheck", "lint", "format:check", "test:coverage", "scan:secrets", "build", "test:e2e"]
+}
+```
+
+Evidence is produced by running them:
+
+```bash
+node .ai-engineering/.bootstrap/06-tools/evidence/generate-evidence.mjs run --markdown evidence-report.md
+node .ai-engineering/.bootstrap/06-tools/evidence/generate-evidence.mjs verify
+```
+
+`run` executes every declared gate — it does not stop at the first failure, so one broken gate cannot hide the others. `verify` exits non-zero unless the evidence describes the current head of a clean worktree with every gate passing, which makes a stale claim fail instead of merely reading as true.
+
+`evidence.json` and the rendered report are gitignored. Committing either would dirty the worktree the evidence describes and change the commit it is stamped with.
+
+The rendered report is published on the pull request under the marker `<!-- sweai-builder-evidence -->` and updated in place, separate from the semantic-review record.
+
+**The `verify` script is deliberately not declared as a gate.** It chains with `&&`, so it reports the first failure and hides every one after it — exactly the defect this arrangement removes. It stays as a convenience for local use.
+
+### What this evidence does not establish
+
+Two limits, stated because a green report is easy to over-read:
+
+- **The required `Vercel` context is not covered.** It is a deployment, not a locally runnable gate; the generator can only run declared npm scripts. Of the five contexts the ruleset requires, this evidence covers four. Gate evidence alone therefore never demonstrates merge readiness — the pull request's own checks do that, and they include `Vercel`.
+- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and seven of fifteen gates still have no probe.
 
 ### Default-branch protection
 

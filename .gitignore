@@ -28,3 +28,8 @@ npm-debug.log*
 
 # SWEAI Builder is a submodule at .ai-engineering; a product-owned copy is invalid.
 .bootstrap/
+
+# Gate evidence is a generated artifact, never a tracked file. Committing it
+# would dirty the worktree it describes and change the head it is stamped with.
+evidence.json
+evidence-report.md
