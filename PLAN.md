@@ -115,7 +115,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 - **Outcome**: repository, toolchain, and gates operational; `main` protected and deployable; control docs exist.
 - **Mapped AC**: none directly; enables AC14.
-- **Scope**: `git init` and initial commit; Vite + React + TS strict scaffold; ESLint, Prettier, Vitest, Playwright, Gitleaks; pre-commit and pre-push hooks; GitHub Actions CI covering adoption steps 1–2; Vercel static-build configuration; `docs/quality/gates.md`, `docs/security/threat-model.md`, `docs/privacy/assessment.md`; ADRs for stack and boundaries; .bootstrap rule statuses recorded as adopted / deferred / not-applicable.
+- **Scope**: `git init` and initial commit; Vite + React + TS strict scaffold; ESLint, Prettier, Vitest, Playwright, Gitleaks; pre-commit and pre-push hooks; GitHub Actions CI covering adoption steps 1–2; Vercel static-build configuration; `docs/quality/gates.md`, `docs/security/threat-model.md`, `docs/privacy/assessment.md`; ADRs for stack and boundaries; bootstrap rule statuses recorded as adopted / deferred / not-applicable.
 - **Dependencies**: none remaining. Preview deployment additionally requires the Vercel/GitHub connection step you perform.
 - **Evidence**: clean checkout passes every step-1 and step-2 gate; a deliberately introduced type error, lint error, and planted fake secret each fail the correct gate.
 - **Stop condition**: any gate that cannot be made low-noise and actionable — stop and report rather than weakening it.

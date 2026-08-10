@@ -29,7 +29,9 @@ npm run dev   # http://localhost:5173
 | `npm run test:coverage` | Tests with a coverage report                          |
 | `npm run test:e2e`      | Playwright journeys at mobile and desktop viewports   |
 | `npm run scan:secrets`  | secretlint over the repository                        |
-| `npm run verify`        | Everything CI runs, in one command                    |
+| `npm run verify`        | Every mandatory gate, in one command                  |
+
+`verify` mirrors CI: types, lint, format, unit tests with coverage, secret scan, build, and browser journeys. It does not replace CI — gitleaks scans full history there, and CI runs from a clean checkout.
 
 First Playwright run needs browsers: `npx playwright install chromium`.
 
@@ -37,17 +39,18 @@ First Playwright run needs browsers: `npx playwright install chromium`.
 
 This repository follows a goal-first operating contract. The documents are the contract, in this order:
 
-| Document                     | Role                                            |
-| ---------------------------- | ----------------------------------------------- |
-| [`GOAL.md`](GOAL.md)         | The original brief, preserved verbatim          |
-| [`SPEC.md`](SPEC.md)         | The product contract — approved                 |
-| [`PLAN.md`](PLAN.md)         | The execution contract, slices S0–S7 — approved |
-| [`.bootstrap/`](.bootstrap/) | The operating rules themselves                  |
+| Document                       | Role                                             |
+| ------------------------------ | ------------------------------------------------ |
+| [`GOAL.md`](GOAL.md)           | The original brief, preserved verbatim           |
+| [`SPEC.md`](SPEC.md)           | The product contract — approved                  |
+| [`PLAN.md`](PLAN.md)           | The implementation plan, slices S0–S7 — approved |
+| [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved |
+| `.bootstrap/`                  | The operating rules themselves                   |
 
 Supporting records:
 
 - [`docs/quality/gates.md`](docs/quality/gates.md) — what blocks a merge, at which layer, and what is deliberately deferred
-- [`docs/quality/.bootstrap-adoption.md`](docs/quality/.bootstrap-adoption.md) — every .bootstrap rule marked adopted, deferred, or not-applicable
+- [`docs/quality/bootstrap-adoption.md`](docs/quality/bootstrap-adoption.md) — every bootstrap rule marked adopted, deferred, or not-applicable
 - [`docs/security/threat-model.md`](docs/security/threat-model.md) — assets, threats, controls, residual risk
 - [`docs/privacy/assessment.md`](docs/privacy/assessment.md) — the data position (short: we collect nothing)
 - [`docs/architecture/`](docs/architecture/) — ADRs for material decisions

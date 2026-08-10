@@ -51,7 +51,8 @@ function contentSecurityPolicy(): Plugin {
 export default defineConfig({
   plugins: [react(), contentSecurityPolicy()],
   build: {
-    // Fail the build on anything that would ship a broken bundle.
+    // Ship source maps so production stack traces stay readable. Build
+    // correctness is enforced by `tsc --noEmit` in the build script, not here.
     sourcemap: true,
   },
   test: {
