@@ -22,6 +22,17 @@ Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, t
 - Symbolic-link, vendored-copy, or product-owned `.bootstrap/` fallback authorized: No
 - Unpinned-branch tracking authorized: No
 
+**Known defects in the pinned version**, found while reviewing the `b66c337..dd978bf` engine diff. None blocks this product; all are upstream corrections to raise against `emada/sweai-builder` rather than patch here, since `.ai-engineering/` is not ours to edit.
+
+| Defect                                                                                                                                                   | Effect here                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| The reviewer contract prescribes a headerless no-findings report that its own guard refuses                                                              | Worked around by the deliberate divergence recorded under Semantic review                                                                   |
+| `06-tools/github/README.md` sentence "It and maintains one update-in-place…" lost its subject in an edit                                                 | Documentation only                                                                                                                          |
+| `06-tools/evidence/README.md` says "Three properties" above four bullets                                                                                 | Documentation only                                                                                                                          |
+| `collect-review-evidence.sh --help` prints lines 3-25 while the usage block runs to 28, hiding the three dependency-update outputs the pin exists to add | An operator reading `--help` would not learn the collector emits the engine diff                                                            |
+| `test-publish-claude-review.sh` is referenced by no document, unlike the sibling evidence suites                                                         | The guard's probes are undiscoverable, so a later change is unlikely to be re-probed                                                        |
+| No migration note tells an existing product to ignore `review-evidence/` before first collecting                                                         | Satisfied here in the same change; an unaware consumer would break `evidence-current`, because an untracked packet makes the worktree dirty |
+
 **Decided by the human on 2026-08-10.** This repository is public and its `emada/sweai-builder` dependency is private. The accepted position is that **only authorized clones initialize the submodule**. Rejected alternatives: making `sweai-builder` public, and adding a read-scoped deploy key or personal access token as a repository secret.
 
 Accepted consequences:
@@ -42,6 +53,10 @@ Accepted consequences:
 - May read, reply to, and resolve pull-request review threads: **Yes** — approved by the human on 2026-08-10
 
 These three grant external-write permissions on the pull request only. They do not extend to merging, to pushing `main`, or to any production action, all of which remain prohibited. A thread is resolved only when its finding was corrected or disproven with evidence, never to clear a blocker.
+
+- Review verdicts and the `SWEAI Review / Claude` status are published **only** through `.ai-engineering/.bootstrap/06-tools/github/publish-claude-review.sh`. Publishing the status with a raw `gh api` call is prohibited: it bypasses the guard that binds the verdict to the reviewed head, which would leave `review-current` declared but unenforced.
+
+**Deliberate divergence from the reviewer template.** `.claude/agents/semantic-reviewer.md` differs from `.ai-engineering/.bootstrap/templates/project-root/.claude/agents/semantic-reviewer.md` in one block, and the difference is intentional. The template instructs a reviewer with no findings to emit a report of exactly `Verdict: PASS` / `No findings.`, which has no `Reviewed head:` line — and `publish-claude-review.sh` refuses exactly that, so the clean-pass path could not publish its own verdict. Reproduced at pin `dd978bf`: the template's form exits 1 with "Review report has no 'Reviewed head:' line"; the same report with the header is accepted. The product copy keeps the header. Restore byte-identity only once the upstream contradiction is fixed; a future pin that reverts this block silently would reintroduce the break.
 
 ## Pre-discovery operator availability
 

@@ -67,11 +67,16 @@ Order findings by `P0 Critical`, `P1 High`, `P2 Medium`, then `P3 Low`. For each
 
 Also report test or negative-probe gaps and residual uncertainty.
 
-When there are no findings, the report is exactly:
+When there are no findings, the report keeps the header and adds nothing else:
 
 ```text
+Reviewed base: BASE_SHA
+Reviewed head: HEAD_SHA
 Verdict: PASS
+
 No findings.
 ```
+
+Never drop the header. `publish-claude-review.sh` refuses a report with no `Reviewed head:` line, so a headerless verdict cannot be published at all.
 
 Do not report style issues already enforced by formatters or linters. Do not include secrets or raw internal reasoning; the report may be published verbatim to the pull request. Return findings to the lead agent; do not implement them in this review.
