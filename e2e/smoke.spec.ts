@@ -29,10 +29,26 @@ test('the built output ships a content security policy that permits only TheMeal
     .locator('meta[http-equiv="Content-Security-Policy"]')
     .getAttribute('content');
 
-  expect(policy).toContain("default-src 'self'");
-  expect(policy).toContain("script-src 'self'");
-  expect(policy).toContain("connect-src 'self' https://www.themealdb.com");
-  expect(policy).toContain("object-src 'none'");
+  // Asserted as an exact policy, independently restated here. A substring
+  // check would stay green while a directive was deleted or widened, which
+  // is precisely how threat T1 gets neutralised without anyone noticing.
+  expect(policy).toBe(
+    [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self'",
+      "img-src 'self' https://www.themealdb.com data:",
+      "connect-src 'self' https://www.themealdb.com",
+      "font-src 'self'",
+      "form-action 'none'",
+      "frame-src 'none'",
+      "object-src 'none'",
+      "base-uri 'self'",
+    ].join('; '),
+  );
+
+  // Stated separately so the intent survives any future edit to the list.
+  expect(policy).not.toMatch(/unsafe-inline|unsafe-eval/);
 });
 
 test('no console errors are emitted on load', async ({ page }) => {

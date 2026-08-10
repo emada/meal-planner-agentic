@@ -70,7 +70,7 @@ Recorded retrospectively: this project reached Phase 3 under the previous versio
 - Default execution mode: One lead agent
 - Model and reasoning-effort policy: inherit the session model; no per-task overrides
 - Interface approval mode: whatever the session uses. **An interface permission mode is never authorization for an external action** — authorization comes only from this file or an explicit instruction
-- Dynamic workflows or automatic fleet orchestration allowed: No. Fleet readiness is not demonstrated; the first candidate is S4 + S5, and it requires a separate readiness decision recorded in `FLEET.md`
+- Dynamic workflows or automatic fleet orchestration allowed: No. Fleet readiness is not demonstrated; the first candidate is S4 + S5, and it requires a separate readiness decision to be recorded in a `FLEET.md` created at that point. No such file exists yet, deliberately
 - May create local commits: Yes
 - May create branches and worktrees: Yes
 - May push approved branches: Yes — feature branches only. Never `main`, which the ruleset enforces independently
@@ -85,7 +85,7 @@ Recorded retrospectively: this project reached Phase 3 under the previous versio
 - Source approved for this visibility: Yes
 - Provider account or organisation plan: GitHub Free
 - Default-branch protection supported for this visibility: Yes
-- Protection capability verified by: ruleset id 20604945 (live name still `AI Engineering: protect default branch`; rename to `SWEAI Builder: protect default branch` is pending — see `docs/quality/gates.md`), enforcement `active`, read back through the API; direct push rejected with `GH013`
+- Protection capability verified by: ruleset id 20604945, name `SWEAI Builder: protect default branch`, enforcement `active`, read back through the API on 2026-08-10; direct push rejected with `GH013`. Live name and versioned desired state agree, so the apply script updates rather than duplicates
 - Approved degraded-governance exception, if any: None. Full protection is in force
 - Authenticated CLI identity: `gh` as `emada`
 - Repository administration permission verified: Yes

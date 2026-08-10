@@ -103,15 +103,11 @@ export default defineConfig([
     },
   },
 
-  // This file spreads plugin configs that ship without type declarations
-  // upstream, so the type-aware safety rules cannot see through them.
+  // This file is JavaScript, so the type-aware config above (scoped to
+  // ts/tsx) never applies to it. It only needs Node globals.
   {
     files: ['eslint.config.js'],
     languageOptions: { globals: { ...globals.node } },
-    rules: {
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-    },
   },
 
   prettier,

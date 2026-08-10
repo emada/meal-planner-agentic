@@ -16,18 +16,19 @@ Owner: the human accountable for this repository (bmi.machado@gmail.com). Agents
 
 ## Mandatory gates in force (adoption steps 1–2)
 
-| Gate                                            | Tool                                                                                                                        | Blocks                                 | Failure action                                          |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------- |
-| Type safety                                     | TypeScript 5 `strict` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals`, `noUnusedParameters` | commit (via type-aware lint), push, CI | fix the type; suppressions require a recorded exception |
-| Lint                                            | ESLint 9 flat config, type-aware `strictTypeChecked`                                                                        | commit, CI                             | fix; no blanket disables                                |
-| Format                                          | Prettier                                                                                                                    | commit, CI                             | `npm run format`                                        |
-| Unit/integration tests                          | Vitest + Testing Library                                                                                                    | push, CI                               | fix the code or the test                                |
-| Secret scan, staged files                       | secretlint                                                                                                                  | commit                                 | remove the secret and rotate it                         |
-| Secret scan, full history                       | gitleaks (CI)                                                                                                               | CI                                     | remove and rotate; history rewrite if already pushed    |
-| Reproducible build                              | `npm ci` + `tsc --noEmit` + `vite build`                                                                                    | push, CI                               | fix                                                     |
-| Browser journeys, mobile + desktop              | Playwright, `desktop-chromium` and `mobile-chromium`                                                                        | CI                                     | fix                                                     |
-| Content Security Policy present in built output | Playwright assertion                                                                                                        | CI                                     | fix the policy, never delete the assertion              |
-| No console errors on load                       | Playwright assertion                                                                                                        | CI                                     | fix the cause                                           |
+| Gate                                | Tool                                                                                                                        | Blocks                                                         | Failure action                                          |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------- |
+| Type safety                         | TypeScript 5 `strict` plus `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals`, `noUnusedParameters` | commit (via type-aware lint), push, CI                         | fix the type; suppressions require a recorded exception |
+| Lint                                | ESLint 9 flat config, type-aware `strictTypeChecked`                                                                        | commit, CI                                                     | fix; no blanket disables                                |
+| Format                              | Prettier                                                                                                                    | commit (auto-fixed and re-staged, not rejected), CI (blocking) | `npm run format`                                        |
+| Unit/integration tests              | Vitest + Testing Library                                                                                                    | push, CI                                                       | fix the code or the test                                |
+| Secret scan, staged files           | secretlint                                                                                                                  | commit                                                         | remove the secret and rotate it                         |
+| Secret scan, full history           | gitleaks (CI)                                                                                                               | CI                                                             | remove and rotate; history rewrite if already pushed    |
+| Reproducible build                  | `tsc --noEmit` + `vite build` at pre-push; additionally `npm ci` from a clean checkout in CI                                | push, CI                                                       | fix                                                     |
+| Browser journeys, mobile + desktop  | Playwright, `desktop-chromium` and `mobile-chromium`                                                                        | CI                                                             | fix                                                     |
+| Content Security Policy exact-match | Playwright asserts the full directive string and the absence of `unsafe-inline`/`unsafe-eval`                               | CI                                                             | fix the policy, never weaken the assertion              |
+| Submodule installation integrity    | Vitest asserts `.ai-engineering` stays Git mode `160000` with no vendored or product-owned contract copy                    | push, CI                                                       | restore the submodule; never re-symlink or vendor       |
+| No console errors on load           | Playwright assertion                                                                                                        | CI                                                             | fix the cause                                           |
 
 ## Architectural rules enforced mechanically
 
@@ -72,31 +73,29 @@ Recorded because they differ from what the plan named:
 
 A gate is not adopted because it is configured. Each was proven to reject a deliberately broken change:
 
-| Probe                                                 | Result                                                                 |
-| ----------------------------------------------------- | ---------------------------------------------------------------------- |
-| `const broken: number = 'not a number'`               | `error TS2322` — type gate rejects                                     |
-| Floating promise, empty async function, `console.log` | 3 ESLint errors — lint gate rejects                                    |
-| `src/domain/` importing from `src/api/`               | `import/no-restricted-paths` — boundary gate rejects                   |
-| Mutually importing modules in `src/domain/`           | `import/no-cycle` — cycle gate rejects                                 |
-| Correctly formatted fake GitHub token                 | `[GITHUB_TOKEN]`, exit 1 — secret gate rejects                         |
-| Committing that token for real                        | `husky - pre-commit script failed (code 1)`, no commit created         |
-| Unformatted markdown                                  | `prettier --check` fails the format gate                               |
-| Full suite on the clean tree                          | `npm run verify` passes; 8 Playwright tests pass across both viewports |
-| Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects            |
+| Probe                                                 | Result                                                                        |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `const broken: number = 'not a number'`               | `error TS2322` — type gate rejects                                            |
+| Floating promise, empty async function, `console.log` | 3 ESLint errors — lint gate rejects                                           |
+| `src/domain/` importing from `src/api/`               | `import/no-restricted-paths` — boundary gate rejects                          |
+| Mutually importing modules in `src/domain/`           | `import/no-cycle` — cycle gate rejects                                        |
+| Correctly formatted fake GitHub token                 | `[GITHUB_TOKEN]`, exit 1 — secret gate rejects                                |
+| Committing that token for real                        | `husky - pre-commit script failed (code 1)`, no commit created                |
+| Unformatted markdown                                  | `prettier --check` fails the format gate                                      |
+| Full suite on the clean tree                          | `npm run verify` passes; 8 Playwright tests pass across both viewports        |
+| Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects                   |
+| `'unsafe-inline'` added to `script-src`               | CSP assertion fails on the exact-match comparison; passes again once reverted |
+
+Re-verified in full at head `ccd95ea` on 2026-08-10, after the migration to the pinned submodule changed `.prettierignore`, `AGENTS.md`, and every contract path in the documentation. A pass on an obsolete commit is not evidence.
+
+**Probes still outstanding**, tracked against `.ai-engineering/.bootstrap/02-quality/04-control-effectiveness.md`, which requires one per mandatory gate: the no-console-errors assertion, the browser-journey gate, the reproducible-build gate, gitleaks over history, and pre-push rejection. They land in S6 alongside the remaining gate adoption. Until then those gates are configured and green but unproven, which is recorded here rather than presented as verified.
 
 ### Default-branch protection
 
 Desired state is versioned at `.github/rulesets/protect-main.json` and applied through `.ai-engineering/.bootstrap/06-tools/github/apply-repository-ruleset.sh`. The committed JSON is not evidence; the live state was read back through the API.
 
-- Ruleset id 20604945, enforcement `active`. **Live name is still `AI Engineering: protect default branch`.** The desired state in `.github/rulesets/protect-main.json` was renamed to `SWEAI Builder: protect default branch`; the live rename is a pending human action. Do not run `apply-repository-ruleset.sh` before that rename — it matches by name and would create a duplicate ruleset. Rename in place with:
-
-  ```bash
-  gh api --method PUT -H 'Accept: application/vnd.github+json' \
-    repos/emada/meal-planner-agentic/rulesets/20604945 \
-    --input .github/rulesets/protect-main.json
-  ```
-
-- Effective rules on `refs/heads/main`: `deletion`, `non_fast_forward`, `pull_request`
+- Ruleset id 20604945, name `SWEAI Builder: protect default branch`, enforcement `active`. Live name and versioned desired state agree, so `apply-repository-ruleset.sh` — which selects by name — updates this ruleset rather than creating a second one. Verified on 2026-08-10 with `gh api repos/emada/meal-planner-agentic/rulesets`
+- Effective rules on `refs/heads/main`: `deletion`, `non_fast_forward`, `pull_request`, `required_status_checks`
 - Approvals required: 0 — a solo owner must not be locked out of their own repository. Review still happens; GitHub simply does not block on it
 - Negative probe: pushing a commit straight to `main` was rejected with `GH013 ... Changes must be made through a pull request`
 - <https://github.com/emada/meal-planner-agentic/rules/20604945>
@@ -120,6 +119,8 @@ required_status_contexts:
 `strict_required_status_checks_policy` is on, so a branch must be up to date with `main` before merging — two pull requests that pass in isolation cannot merge into a broken combination.
 
 `Vercel Preview Comments` is deliberately **not** required. It reports that a bot posted a comment, not that anything built or passed; requiring it would let a cosmetic integration change block merges.
+
+`SWEAI Review / Claude` is **not yet** a required context. The semantic review is mandatory by contract and runs on every head, but it is published by the lead agent rather than by an independent workflow, so requiring it would mean the agent under review controls its own merge gate. It becomes a required context when it is emitted by CI rather than by the implementer. Until then the human merge step carries that residual risk, which is recorded here rather than left implicit.
 
 ### Vercel deployment
 

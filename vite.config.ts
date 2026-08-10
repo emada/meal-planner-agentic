@@ -51,9 +51,11 @@ function contentSecurityPolicy(): Plugin {
 export default defineConfig({
   plugins: [react(), contentSecurityPolicy()],
   build: {
-    // Ship source maps so production stack traces stay readable. Build
-    // correctness is enforced by `tsc --noEmit` in the build script, not here.
-    sourcemap: true,
+    // Emitted but not referenced from the bundle, so browsers fetch them only
+    // when someone opens devtools deliberately. ADR-0003 declines error
+    // reporting, so no tooling consumes these -- they exist for manual
+    // inspection of a deployed build, nothing else.
+    sourcemap: 'hidden',
   },
   test: {
     globals: true,
