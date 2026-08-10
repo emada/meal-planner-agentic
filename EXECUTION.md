@@ -22,7 +22,14 @@ Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, t
 - Symbolic-link, vendored-copy, or product-owned `.bootstrap/` fallback authorized: No
 - Unpinned-branch tracking authorized: No
 
-**Open decision for the human.** This repository is public and `emada/sweai-builder` is private. Consequences: `git clone --recurse-submodules` fails for anyone without access to the private dependency, and CI cannot fetch it with the default token. Resolve by making `sweai-builder` public, by adding a read-scoped deploy key or PAT secret, or by accepting that only authorized clones initialize the submodule. Until this is decided, the recorded position is the last option.
+**Decided by the human on 2026-08-10.** This repository is public and its `emada/sweai-builder` dependency is private. The accepted position is that **only authorized clones initialize the submodule**. Rejected alternatives: making `sweai-builder` public, and adding a read-scoped deploy key or personal access token as a repository secret.
+
+Accepted consequences:
+
+- `git clone --recurse-submodules` fails for anyone without read access to `emada/sweai-builder`; a plain `git clone` still succeeds and produces a working application checkout.
+- `git submodule update --init --recursive` requires authenticated access to the private dependency.
+- CI must not depend on the operating contract, because `GITHUB_TOKEN` cannot fetch another private repository. No current job does.
+- Adding a contract-dependent CI check would reopen this decision and require a deploy key or token secret.
 
 ## Semantic review
 

@@ -47,6 +47,8 @@ This repository follows a goal-first operating contract. The documents are the c
 | [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved |
 | `.ai-engineering/`             | SWEAI Builder, pinned as a Git submodule         |
 
+`.ai-engineering/` is a pinned submodule of the private `emada/sweai-builder` repository. A plain `git clone` gives a complete, buildable application checkout. Initializing the submodule with `git submodule update --init --recursive` additionally requires read access to that private dependency; without access the application still builds, tests, and runs.
+
 Supporting records:
 
 - [`docs/quality/gates.md`](docs/quality/gates.md) — what blocks a merge, at which layer, and what is deliberately deferred
