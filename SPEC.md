@@ -68,7 +68,7 @@ Sourced from `GOAL.md`. Requirements marked _(derived)_ are implied by the brief
 
 ## Constraints
 
-- **External dependency**: TheMealDB public API, developer key `1` as specified in `GOAL.md`. That key is a test key: rate-limited, unsupported for production traffic, no availability commitment. The service can be slow or down, and the app must degrade visibly, never silently. Because the app is now intended for real users, the key itself is an open decision — see O1.
+- **External dependency**: TheMealDB public API, developer key `1` as specified in `GOAL.md`. That key is a test key: rate-limited, unsupported for production traffic, no availability commitment. The service can be slow or down, and the app must degrade visibly, never silently. Running production on this key is an accepted risk as of 2026-08-10 (O1, resolved), so degrading visibly is the whole mitigation.
 - **Persistence**: browser `localStorage` only. Capped (~5MB), synchronous, and can be unavailable in private-browsing modes — the app must not crash when writes fail.
 - **Privacy**: no personal data is collected, stored, or transmitted by us. Search terms go to TheMealDB as part of normal use; no analytics, no logging of user input to any third party. No cookie banner is required because no cookies are set. This is the whole privacy position — it should stay true, and any change to it is a material decision requiring approval.
 - **Security surface**: recipe text and image URLs are third-party content rendered in our UI. Instructions must be rendered as text, never as HTML, to avoid injection. Outbound links use `rel="noopener noreferrer"`.

@@ -52,7 +52,7 @@ Accepted consequences:
 - May create or update the `SWEAI Review / Claude` commit status: **Yes** — approved by the human on 2026-08-10
 - May read, reply to, and resolve pull-request review threads: **Yes** — approved by the human on 2026-08-10
 
-These three grant external-write permissions on the pull request only. They do not extend to merging, to pushing `main`, or to any production action, all of which remain prohibited. A thread is resolved only when its finding was corrected or disproven with evidence, never to clear a blocker.
+These three grant external-write permissions on the pull request. Merging is authorized separately under "Autonomous merge and release" and only while its three signatures hold; pushing `main` directly remains prohibited and the ruleset refuses it. A thread is resolved only when its finding was corrected or disproven with evidence, never to clear a blocker — and now that thread resolution is one of the merge signatures, resolving a thread to unblock a merge would be defeating a gate rather than passing it.
 
 - Review verdicts and the `SWEAI Review / Claude` status are published **only** through `.ai-engineering/.bootstrap/06-tools/github/publish-claude-review.sh`. Publishing the status with a raw `gh api` call is prohibited: it bypasses the guard that binds the verdict to the reviewed head, which would leave `review-current` declared but unenforced.
 
