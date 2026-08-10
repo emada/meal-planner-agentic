@@ -116,6 +116,15 @@ node .ai-engineering/.bootstrap/06-tools/evidence/generate-evidence.mjs verify
 
 `run` executes every declared gate — it does not stop at the first failure, so one broken gate cannot hide the others. `verify` exits non-zero unless the evidence describes the current head of a clean worktree with every gate passing, which makes a stale claim fail instead of merely reading as true.
 
+`verify` was probed in this repository rather than trusted from its own test suite, because a verifier that cannot reject is worse than no verifier:
+
+| Probe                                               | `verify` exit |
+| --------------------------------------------------- | ------------- |
+| Dirty worktree                                      | 1             |
+| Evidence stamped with a commit that is not the head | 1             |
+| Evidence recording a failed gate                    | 1             |
+| Clean worktree, evidence at the current head        | 0             |
+
 `evidence.json` and the rendered report are gitignored. Committing either would dirty the worktree the evidence describes and change the commit it is stamped with.
 
 The rendered report is published on the pull request under the marker `<!-- sweai-builder-evidence -->` and updated in place, separate from the semantic-review record.
