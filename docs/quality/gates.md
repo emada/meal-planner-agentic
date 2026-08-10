@@ -92,11 +92,11 @@ A gate is not adopted because it is configured. Per-gate probes and their `Last 
 | Correctly formatted fake GitHub token                 | `[GITHUB_TOKEN]`, exit 1 — secret gate rejects                                |
 | Committing that token for real                        | `husky - pre-commit script failed (code 1)`, no commit created                |
 | Unformatted markdown                                  | `prettier --check` fails the format gate                                      |
-| Full suite on the clean tree                          | `npm run verify` passes; 8 Playwright tests pass across both viewports        |
+| Full suite on the clean tree                          | `npm run verify` passes; 10 Playwright tests pass across both viewports       |
 | Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects                   |
 | `'unsafe-inline'` added to `script-src`               | CSP assertion fails on the exact-match comparison; passes again once reverted |
 
-Full gate sequence re-run on 2026-08-10 at head `f2e8c98`, and again after the CSP injection point moved so the policy precedes the tags it governs. The named head advances on any change to gate **behaviour** or to the artifact a gate inspects; the per-gate `Last proven` dates above are the authoritative account.
+Full gate sequence re-run on 2026-08-10 at head `b3b4d6d`. The named head advances on any change to gate **behaviour** or to the artifact a gate inspects; the per-gate `Last proven` dates above are the authoritative account.
 
 ### Default-branch protection
 
