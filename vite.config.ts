@@ -31,22 +31,23 @@ function contentSecurityPolicy(): Plugin {
     name: 'inject-csp',
     apply: 'build',
     transformIndexHtml(html) {
-      return {
-        html,
-        tags: [
-          {
-            tag: 'meta',
-            attrs: {
-              'http-equiv': 'Content-Security-Policy',
-              content: CONTENT_SECURITY_POLICY,
-            },
-            // After <meta charset>, not before it. The policy applies wherever
-            // it sits in <head>, but the charset declaration must stay within
-            // the first 1024 bytes or encoding detection falls back to guessing.
-            injectTo: 'head',
-          },
-        ],
-      };
+      // Placed immediately after <meta charset>, which satisfies both
+      // constraints at once. A meta-delivered policy does not govern content
+      // that precedes it, so injecting at the end of <head> would leave the
+      // script and stylesheet tags outside it; injecting before <meta charset>
+      // would push the charset declaration towards the 1024-byte limit that
+      // encoding detection depends on. Neither is necessary.
+      const charset = /<meta\s+charset=["']?[^>]*>/i;
+
+      if (!charset.test(html)) {
+        throw new Error(
+          'inject-csp: no <meta charset> found in index.html; refusing to guess where the policy belongs',
+        );
+      }
+
+      const meta = `<meta http-equiv="Content-Security-Policy" content="${CONTENT_SECURITY_POLICY}" />`;
+
+      return html.replace(charset, (match) => `${match}\n    ${meta}`);
     },
   };
 }

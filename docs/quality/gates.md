@@ -96,15 +96,15 @@ A gate is not adopted because it is configured. Per-gate probes and their `Last 
 | Direct push to `main` on the remote                   | `GH013: Repository rule violations found` — ruleset rejects                   |
 | `'unsafe-inline'` added to `script-src`               | CSP assertion fails on the exact-match comparison; passes again once reverted |
 
-Full gate sequence re-run at head `9c9a2c6` on 2026-08-10 with everything green. The named head advances whenever gate **behaviour** changes; a comment-only edit to a gate-defining file does not invalidate the record, though the per-gate `Last proven` dates above are the authoritative account.
+Full gate sequence re-run on 2026-08-10 at head `f2e8c98`, and again after the CSP injection point moved so the policy precedes the tags it governs. The named head advances on any change to gate **behaviour** or to the artifact a gate inspects; the per-gate `Last proven` dates above are the authoritative account.
 
 ### Default-branch protection
 
 Desired state is versioned at `.github/rulesets/protect-main.json` and applied through `.ai-engineering/.bootstrap/06-tools/github/apply-repository-ruleset.sh`. The committed JSON is not evidence; the live state was read back through the API.
 
 - Ruleset id 20604945, name `SWEAI Builder: protect default branch`, enforcement `active`. Live name and versioned desired state agree, so `apply-repository-ruleset.sh` — which selects by name — updates this ruleset rather than creating a second one. Verified on 2026-08-10 with `gh api repos/emada/meal-planner-agentic/rulesets`
-- Effective rules on `refs/heads/main`: `deletion`, `non_fast_forward`, `pull_request`, `required_status_checks`
-- Approvals required: 0 — a solo owner must not be locked out of their own repository. Review still happens; GitHub simply does not block on it
+- Effective rules on `refs/heads/main`: `deletion`, `non_fast_forward`, `pull_request` (with `required_review_thread_resolution: true`), `required_status_checks`
+- Approvals required: 0 — a solo owner must not be locked out of their own repository. GitHub does not block on approval, but it **does** block on an unresolved review thread. That is a real merge gate: a thread may be resolved only when its finding was corrected or disproven with evidence, never to clear a blocker (`EXECUTION.md`)
 - Negative probe: pushing a commit straight to `main` was rejected with `GH013 ... Changes must be made through a pull request`
 - <https://github.com/emada/meal-planner-agentic/rules/20604945>
 

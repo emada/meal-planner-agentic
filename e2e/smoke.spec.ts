@@ -51,6 +51,29 @@ test('the built output ships a content security policy that permits only TheMeal
   expect(policy).not.toMatch(/unsafe-inline|unsafe-eval/);
 });
 
+test('the policy precedes every resource-referencing tag it governs', async ({ page }) => {
+  const response = await page.goto('/');
+  const html = (await response?.text()) ?? '';
+
+  // A meta-delivered policy does not apply to content above it, so position is
+  // part of the control. Reading the attribute alone would stay green while a
+  // script tag drifted above the policy and escaped it entirely.
+  const policyAt = html.indexOf('Content-Security-Policy');
+  const charsetAt = html.search(/<meta\s+charset/i);
+
+  expect(policyAt).toBeGreaterThan(-1);
+  expect(charsetAt).toBeGreaterThan(-1);
+
+  // Encoding detection only inspects the first 1024 bytes.
+  expect(charsetAt).toBeLessThan(1024);
+  expect(charsetAt).toBeLessThan(policyAt);
+
+  for (const tag of ['<script', '<link']) {
+    const at = html.indexOf(tag);
+    if (at !== -1) expect(at).toBeGreaterThan(policyAt);
+  }
+});
+
 test('no console errors are emitted on load', async ({ page }) => {
   const errors: string[] = [];
   page.on('console', (message) => {
