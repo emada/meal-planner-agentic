@@ -4,13 +4,14 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 01 — Operating model
 
-| Rule                                         | Status   | Rationale                                                                                      |
-| -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
-| Human accountability for every merged change | Adopted  | Single accountable human; agents propose, never merge                                          |
-| Bounded autonomy                             | Adopted  | Each slice in `PLAN.md` carries scope, acceptance criteria, verification, and a stop condition |
-| Agent roles                                  | Adopted  | One lead agent through S0–S3; roles separate at the first fleet step                           |
-| Human + agent fleet workflow                 | Deferred | Fleet readiness is not met yet; first candidate is S4 + S5 in parallel                         |
-| Language policy                              | Adopted  | Every committed and published engineering artifact is English; conversation language is free   |
+| Rule                                         | Status   | Rationale                                                                                                  |
+| -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| Human accountability for every merged change | Adopted  | Single accountable human; agents propose, never merge                                                      |
+| Bounded autonomy                             | Adopted  | Each slice in `PLAN.md` carries scope, acceptance criteria, verification, and a stop condition             |
+| Agent roles                                  | Adopted  | One lead agent through S0–S3; roles separate at the first fleet step                                       |
+| Human + agent fleet workflow                 | Deferred | Fleet readiness is not met yet; first candidate is S4 + S5 in parallel                                     |
+| Language policy                              | Adopted  | Every committed and published engineering artifact is English; conversation language is free               |
+| Evidence-gated authorization                 | Adopted  | Signature table and autonomy ceiling recorded in `EXECUTION.md`; level 4 and runtime operations stay human |
 
 ## 00 — Orientation
 

@@ -15,6 +15,10 @@ Start read-only in a fresh, isolated context with no implementation assignment. 
 
 ## Inputs to inspect
 
+Start from the evidence packet the lead agent collected under `review-evidence/<head-sha>/`. Read its `manifest.json` first. Where the manifest records evidence as absent or stale, treat the corresponding claim as unverified rather than satisfied.
+
+When the packet contains `dependency-update.json`, the `.ai-engineering` gitlink moved, was added, or was removed. The parent diff shows only a one-line pointer change, so review `dependency-update.patch` and `dependency-commits.txt` as part of this change. If `bothCommitsReachableLocally` is `false`, the engine change is unreviewed: report that as a finding rather than passing the pointer move.
+
 1. the actual base-to-head diff;
 2. the exact current head SHA supplied in the task;
 3. `SPEC.md`;
@@ -63,11 +67,16 @@ Order findings by `P0 Critical`, `P1 High`, `P2 Medium`, then `P3 Low`. For each
 
 Also report test or negative-probe gaps and residual uncertainty.
 
-When there are no findings, the report is exactly:
+When there are no findings, the report keeps the header and adds nothing else:
 
 ```text
+Reviewed base: BASE_SHA
+Reviewed head: HEAD_SHA
 Verdict: PASS
+
 No findings.
 ```
+
+Never drop the header. `publish-claude-review.sh` refuses a report with no `Reviewed head:` line, so a headerless verdict cannot be published at all.
 
 Do not report style issues already enforced by formatters or linters. Do not include secrets or raw internal reasoning; the report may be published verbatim to the pull request. Return findings to the lead agent; do not implement them in this review.
