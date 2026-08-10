@@ -58,14 +58,15 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 06 — Tools
 
-| Rule                              | Status                  | Rationale                                                                                                                  |
-| --------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; steps 3–5 land in S6. Two substitutions and two version pins recorded in `docs/quality/gates.md` |
-| High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                 |
-| Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                       |
-| Provider CLI preflight            | Adopted                 | Both authenticated identities verified read-only; Vercel CLI telemetry confirmed disabled on 2026-08-10                    |
-| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified  |
-| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production reachable only by human merge    |
+| Rule                              | Status                  | Rationale                                                                                                                                       |
+| --------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; steps 3–5 land in S6. Two substitutions and two version pins recorded in `docs/quality/gates.md`                      |
+| High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                                      |
+| Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                                            |
+| Gate evidence                     | Adopted                 | Gates declared in `package.json` under `sweai.gates`; evidence derived per run, stamped with the head, and gitignored — `docs/quality/gates.md` |
+| Provider CLI preflight            | Adopted                 | Both authenticated identities verified read-only; Vercel CLI telemetry confirmed disabled on 2026-08-10                                         |
+| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified                       |
+| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production reachable only by human merge                         |
 
 ## 07 — Project adoption
 
