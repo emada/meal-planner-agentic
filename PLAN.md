@@ -5,7 +5,7 @@ Status: Approved
 ## Approved specification
 
 - Specification: `SPEC.md`, Status: Approved, approved 2026-08-09 by bmi.machado@gmail.com
-- Version or commit: to be recorded at S0's initial commit
+- Version or commit: `fcc80b2`, the initial commit that recorded the approved `SPEC.md`
 
 ## Architecture and constraints
 
@@ -15,18 +15,18 @@ A single static client-side application. No backend of ours (spec non-goal). The
 
 ### Selected stack
 
-Smallest stack that satisfies the approved spec, mapped to `bootstrap/06-tools/01-typescript-web-profile.md`.
+Smallest stack that satisfies the approved spec, mapped to `.ai-engineering/.bootstrap/06-tools/01-typescript-web-profile.md`.
 
-| Concern | Choice | Why this and not less |
-| --- | --- | --- |
-| Language | TypeScript, `strict` | Mandated by the tool profile |
-| Build/dev | Vite | Fast local feedback, static output, no config sprawl |
-| UI | React | The spec requires an accessible modal, list state, and responsive views; hand-rolled DOM for this is more code and more defect surface, not less |
-| Boundary validation | Zod | Spec R3.7 and the architecture rule "validate data at system boundaries" apply to both the API response and `localStorage` |
-| Unit/integration tests | Vitest | Profile default, shares Vite config |
-| Browser tests | Playwright | Required for the journey and dual-viewport criteria (AC14) |
-| Routing | Native History API behind a small internal module | Only two views plus a modal. A router dependency is not yet earned; revisit if view count grows |
-| Styling | Plain CSS with custom properties | No design system decided (spec O3); avoids a dependency that would be hard to remove |
+| Concern                | Choice                                            | Why this and not less                                                                                                                            |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Language               | TypeScript, `strict`                              | Mandated by the tool profile                                                                                                                     |
+| Build/dev              | Vite                                              | Fast local feedback, static output, no config sprawl                                                                                             |
+| UI                     | React                                             | The spec requires an accessible modal, list state, and responsive views; hand-rolled DOM for this is more code and more defect surface, not less |
+| Boundary validation    | Zod                                               | Spec R3.7 and the architecture rule "validate data at system boundaries" apply to both the API response and `localStorage`                       |
+| Unit/integration tests | Vitest                                            | Profile default, shares Vite config                                                                                                              |
+| Browser tests          | Playwright                                        | Required for the journey and dual-viewport criteria (AC14)                                                                                       |
+| Routing                | Native History API behind a small internal module | Only two views plus a modal. A router dependency is not yet earned; revisit if view count grows                                                  |
+| Styling                | Plain CSS with custom properties                  | No design system decided (spec O3); avoids a dependency that would be hard to remove                                                             |
 
 Deliberately **not** adopted yet: state-management library, component library, CSS framework, HTTP client. Each would need a named problem first.
 
@@ -81,21 +81,21 @@ Cheap and blocking. Must stay fast enough not to become a waiting ritual.
 
 Runs on every pull request and on `main`, from a clean checkout.
 
-| Check | Blocking | Adoption step |
-| --- | --- | --- |
-| Type-check, lint, format | yes | 1 |
-| Unit/integration tests (Vitest) | yes | 1 |
-| Gitleaks | yes | 1 |
-| Reproducible build | yes | 2 |
-| Playwright journeys, mobile + desktop viewports | yes | 2 |
-| Preview deployment | yes | 2 |
-| SCA — `npm audit` + OSV-Scanner | yes, high/critical | 3 |
-| SAST — CodeQL or Semgrep | yes | 3 |
-| Dependency-cycle check — madge | yes | 4 |
-| Duplication — jscpd | warn first, then block | 4 |
-| Automated accessibility checks in Playwright | yes | 4 |
-| Mutation testing — Stryker, changed files | warn only | 5 |
-| Bundle-size budget | warn first, then block | 5 |
+| Check                                           | Blocking               | Adoption step |
+| ----------------------------------------------- | ---------------------- | ------------- |
+| Type-check, lint, format                        | yes                    | 1             |
+| Unit/integration tests (Vitest)                 | yes                    | 1             |
+| Gitleaks                                        | yes                    | 1             |
+| Reproducible build                              | yes                    | 2             |
+| Playwright journeys, mobile + desktop viewports | yes                    | 2             |
+| Preview deployment                              | yes                    | 2             |
+| SCA — `npm audit` + OSV-Scanner                 | yes, high/critical     | 3             |
+| SAST — CodeQL or Semgrep                        | yes                    | 3             |
+| Dependency-cycle check — madge                  | yes                    | 4             |
+| Duplication — jscpd                             | warn first, then block | 4             |
+| Automated accessibility checks in Playwright    | yes                    | 4             |
+| Mutation testing — Stryker, changed files       | warn only              | 5             |
+| Bundle-size budget                              | warn first, then block | 5             |
 
 Steps 1–2 land in S0. Steps 3–4 land in S6. Step 5 lands in S6 as non-blocking signal.
 
@@ -111,7 +111,7 @@ Constrained by the spec's no-analytics, no-third-party position.
 
 Cross-cutting definition of done for every slice below: acceptance criteria demonstrated with evidence, mandatory gates green, responsive at 375px and desktop, keyboard operable, diff reviewed, docs updated, `main` deployable.
 
-### S0 — Harness bootstrap
+### S0 — Engineering harness
 
 - **Outcome**: repository, toolchain, and gates operational; `main` protected and deployable; control docs exist.
 - **Mapped AC**: none directly; enables AC14.
@@ -189,31 +189,31 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ## Fleet candidates
 
-Not yet. Against `bootstrap/AGENTS.md` Phase 4:
+Not yet. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
 
-| Condition | Status |
-| --- | --- |
-| Product direction and plan approved | spec yes; plan pending this approval |
-| Two independent bounded tasks | **not yet** — S0 through S3 are strictly sequential |
-| Acceptance criteria, scope, verification, stop condition per task | yes, defined above |
-| Explicit ownership boundaries | yes, module boundaries above |
-| Isolated worktrees available | yes, once S0 initializes git |
-| Gates reliably reject non-compliant changes | unproven until S0 evidence exists |
-| Human review capacity | your call |
+| Condition                                                         | Status                                              |
+| ----------------------------------------------------------------- | --------------------------------------------------- |
+| Product direction and plan approved                               | spec yes; plan pending this approval                |
+| Two independent bounded tasks                                     | **not yet** — S0 through S3 are strictly sequential |
+| Acceptance criteria, scope, verification, stop condition per task | yes, defined above                                  |
+| Explicit ownership boundaries                                     | yes, module boundaries above                        |
+| Isolated worktrees available                                      | yes, once S0 initializes git                        |
+| Gates reliably reject non-compliant changes                       | unproven until S0 evidence exists                   |
+| Human review capacity                                             | your call                                           |
 
 First genuine fleet opportunity is **S4 + S5 in parallel**, capped at two agents, once S3 has landed and S0's gates have proven themselves. Everything before that is one lead agent.
 
 ## Risks and mitigations
 
-| Risk | Mitigation |
-| --- | --- |
+| Risk                                                                        | Mitigation                                                                                                      |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | TheMealDB test key is rate-limited and unsupported for production (spec O1) | Build against it as specified; block S7 until the key decision is made; treat throttling as the AC3 error state |
-| TheMealDB availability or latency | Visible error and retry states are acceptance criteria, not polish |
-| Third-party recipe text rendered in our UI | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model |
-| `localStorage` unavailable or full | Write failures handled explicitly in S3; app stays usable without persistence |
-| Measure strings are free text and inconsistent | Spec forbids unit arithmetic; grouping is by name only, measures verbatim |
-| Full gate profile slows the first slice | Adoption is staged: steps 1–2 in S0, 3–5 deferred to S6 |
-| Gates become noise and get ignored | Each slice has a stop condition requiring a report instead of a weakened gate |
+| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                              |
+| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model  |
+| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                   |
+| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                       |
+| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 in S0, 3–5 deferred to S6                                                         |
+| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                   |
 
 ## Decisions resolved
 

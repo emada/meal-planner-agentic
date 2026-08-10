@@ -16,22 +16,22 @@ Single user type: a home cook planning meals on their own device.
 
 ## Requirements
 
-Sourced from `GOAL.md`. Requirements marked *(derived)* are implied by the brief and are proposed, not stated by the human.
+Sourced from `GOAL.md`. Requirements marked _(derived)_ are implied by the brief and are proposed, not stated by the human.
 
 ### R1 — Recipe search
 
 - R1.1 A search box accepts a free-text term and runs the search when the user presses Enter.
 - R1.2 Results come from TheMealDB search endpoint: `https://www.themealdb.com/api/json/v1/1/search.php?s={term}`.
 - R1.3 Results render in a grid. Each card shows image (`strMealThumb`), title (`strMeal`), category (`strCategory`), area (`strArea`).
-- R1.4 *(derived)* The empty-result case is a first-class state: TheMealDB returns `{"meals": null}` for no match, and the UI must say so rather than showing an empty grid.
-- R1.5 *(derived)* Loading and network-failure states are visible and recoverable (retry available).
+- R1.4 _(derived)_ The empty-result case is a first-class state: TheMealDB returns `{"meals": null}` for no match, and the UI must say so rather than showing an empty grid.
+- R1.5 _(derived)_ Loading and network-failure states are visible and recoverable (retry available).
 
 ### R2 — Recipe detail
 
 - R2.1 Clicking a result opens a modal/panel with the full recipe: ingredients with measures, instructions, YouTube link, source link.
 - R2.2 Ingredients come from the `strIngredient1..20` / `strMeasure1..20` field pairs; empty, null, and whitespace-only pairs are discarded.
-- R2.3 *(derived)* YouTube and source links render only when the field is non-empty, and open in a new tab.
-- R2.4 *(derived)* The modal is keyboard-accessible: focus moves into it on open, is trapped while open, Escape closes it, and focus returns to the element that opened it.
+- R2.3 _(derived)_ YouTube and source links render only when the field is non-empty, and open in a new tab.
+- R2.4 _(derived)_ The modal is keyboard-accessible: focus moves into it on open, is trapped while open, Escape closes it, and focus returns to the element that opened it.
 
 ### R3 — Shopping list builder
 
@@ -39,9 +39,9 @@ Sourced from `GOAL.md`. Requirements marked *(derived)* are implied by the brief
 - R3.2 Clicking it iterates the ingredient/measure pairs of that recipe and persists them to local storage.
 - R3.3 Every page/view has a button labelled "view my shopping list".
 - R3.4 Opening the shopping list shows all stored ingredients in alphabetical order with their measures.
-- R3.5 *(derived)* The list survives a page reload and a browser restart.
+- R3.5 _(derived)_ The list survives a page reload and a browser restart.
 - R3.6 Ingredients are grouped by name (case- and whitespace-insensitive), one entry per ingredient, with each contributing measure listed beneath it. Measures are never converted, summed, or otherwise arithmetically combined. (D1, resolved)
-- R3.7 *(derived)* Corrupt or foreign local-storage content is detected and recovered from rather than crashing the app. Data read from local storage is validated at the boundary, same as data read from the API.
+- R3.7 _(derived)_ Corrupt or foreign local-storage content is detected and recovered from rather than crashing the app. Data read from local storage is validated at the boundary, same as data read from the API.
 - R3.8 The user can remove a single ingredient entry and clear the whole list. Clearing the whole list asks for confirmation. (D2, resolved)
 
 ### R4 — Navigation
@@ -53,7 +53,7 @@ Sourced from `GOAL.md`. Requirements marked *(derived)* are implied by the brief
 
 - R5.1 Business logic (ingredient extraction, list grouping, sorting, storage validation) is unit-tested.
 - R5.2 The primary journeys are covered by browser tests at both a mobile and a desktop viewport: search → detail → add to list; view and edit list; surprise me → detail.
-- R5.3 The app targets real users (D3, resolved), so the full tooling profile applies in the adoption order of `bootstrap/06-tools`: types, format, lint, tests, secrets → CI, reproducible build, preview deploy → SCA and SAST → boundaries, duplication, cycles → mutation and performance. Exact mandatory set, layer, and owner per gate are fixed in `PLAN.md` and recorded in `docs/quality/gates.md`.
+- R5.3 The app targets real users (D3, resolved), so the full tooling profile applies in the adoption order of `.ai-engineering/.bootstrap/06-tools`: types, format, lint, tests, secrets → CI, reproducible build, preview deploy → SCA and SAST → boundaries, duplication, cycles → mutation and performance. Exact mandatory set, layer, and owner per gate are fixed in `PLAN.md` and recorded in `docs/quality/gates.md`.
 - R5.4 Because the app is user-facing, it needs a threat model (`docs/security/threat-model.md`) and a privacy assessment (`docs/privacy/assessment.md`) recording the no-personal-data position, however short.
 
 ## Non-goals
@@ -105,8 +105,8 @@ Each is observable and testable.
 
 Blocking — needs a human answer before the affected work starts.
 
-- **O1 — TheMealDB production access.** *Raised by D3.* Key `1` is TheMealDB's public test key. It is documented for development and testing, is rate-limited, and carries no availability commitment; the maintainers offer a supported key to Patreon supporters for production use. `GOAL.md` names the `v1/1/` endpoints explicitly, so the first slice will use them as specified. But "intended for real users" plus a test key is a genuine reliability and terms-of-use exposure that I should not accept on your behalf. Options: (a) obtain a supported key and read it from configuration, keeping the test key as the local-development default; (b) stay on key `1` and accept the risk explicitly, recorded in the threat model; (c) add a thin caching proxy of our own — which contradicts the "no backend of our own" non-goal and would need that non-goal revised. Recommendation: (a), with the key injected at build time and never committed. This does not block spec approval; it blocks the production-hosting slice.
-- **O2 — Hosting and deployment target.** *Raised by D3.* Real users implies a hosting decision (static host such as Vercel/Netlify/Cloudflare Pages, or existing infrastructure you already run) and whether preview deploys per pull request are wanted. Deferred to `PLAN.md` as a material decision requiring your approval — noted here so it is not silently chosen.
+- **O1 — TheMealDB production access.** _Raised by D3._ Key `1` is TheMealDB's public test key. It is documented for development and testing, is rate-limited, and carries no availability commitment; the maintainers offer a supported key to Patreon supporters for production use. `GOAL.md` names the `v1/1/` endpoints explicitly, so the first slice will use them as specified. But "intended for real users" plus a test key is a genuine reliability and terms-of-use exposure that I should not accept on your behalf. Options: (a) obtain a supported key and read it from configuration, keeping the test key as the local-development default; (b) stay on key `1` and accept the risk explicitly, recorded in the threat model; (c) add a thin caching proxy of our own — which contradicts the "no backend of our own" non-goal and would need that non-goal revised. Recommendation: (a), with the key injected at build time and never committed. This does not block spec approval; it blocks the production-hosting slice.
+- **O2 — Hosting and deployment target.** _Raised by D3._ Real users implies a hosting decision (static host such as Vercel/Netlify/Cloudflare Pages, or existing infrastructure you already run) and whether preview deploys per pull request are wanted. Deferred to `PLAN.md` as a material decision requiring your approval — noted here so it is not silently chosen.
 
 Non-blocking — recorded to prevent silent invention.
 

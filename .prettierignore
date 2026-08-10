@@ -1,0 +1,16 @@
+dist/
+coverage/
+node_modules/
+playwright-report/
+test-results/
+package-lock.json
+
+# Operating contract — owned by the human, not by our formatter.
+# GOAL.md must be preserved exactly as provided; .ai-engineering/, AGENTS.md,
+# CLAUDE.md and the reviewer definition may only change when an operating-rule
+# or dependency-version change is explicitly requested.
+GOAL.md
+AGENTS.md
+CLAUDE.md
+.claude/
+.ai-engineering/

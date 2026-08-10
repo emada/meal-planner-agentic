@@ -25,3 +25,6 @@ blob-report/
 # Logs
 *.log
 npm-debug.log*
+
+# SWEAI Builder is a submodule at .ai-engineering; a product-owned copy is invalid.
+.bootstrap/
