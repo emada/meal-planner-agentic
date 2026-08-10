@@ -136,7 +136,7 @@ The rendered report is published on the pull request under the marker `<!-- swea
 Three limits, stated because a green report is easy to over-read:
 
 - **A local counterpart is not the required context.** Four of the five contexts the ruleset requires have a locally runnable counterpart among the declared gates; `Vercel` has none, because it is a deployment and the generator can only run npm scripts. Where a counterpart exists it is not always equivalent: the `Secret scan` context is gitleaks over full history, while the local gate is secretlint over the working tree, so **CI remains authoritative for secrets**. `Reproducible build` in CI additionally installs from the lockfile with `npm ci`, which the local `build` gate does not.
-- **Gate evidence alone never demonstrates merge readiness.** The pull request's own checks do that, and they include the two things this evidence structurally cannot reach.
+- **Gate evidence alone never demonstrates merge readiness.** The pull request's own checks do that, and they include the deployment and the full-history secret scan this evidence cannot reach.
 - **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and seven of fifteen gates still have no probe.
 
 ### Default-branch protection
