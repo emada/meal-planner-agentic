@@ -33,3 +33,4 @@ npm-debug.log*
 # would dirty the worktree it describes and change the head it is stamped with.
 evidence.json
 evidence-report.md
+review-evidence/
