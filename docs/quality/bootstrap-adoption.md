@@ -1,6 +1,6 @@
 # Bootstrap rule adoption status
 
-Required by `.bootstrap/00-orientation/01-how-to-use.md`: every bootstrap rule records `adopted`, `deferred`, or `not-applicable`, with a short rationale. Reviewed at S0 (2026-08-09).
+Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every SWEAI Builder rule records `adopted`, `deferred`, or `not-applicable`, with a short rationale. Reviewed at S0 (2026-08-09).
 
 ## 01 — Operating model
 

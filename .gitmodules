@@ -1,0 +1,4 @@
+[submodule ".ai-engineering"]
+	path = .ai-engineering
+	url = https://github.com/emada/sweai-builder.git
+	branch = main

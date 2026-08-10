@@ -1,5 +1,5 @@
 {
-  "name": "AI Engineering: protect default branch",
+  "name": "SWEAI Builder: protect default branch",
   "target": "branch",
   "enforcement": "active",
   "bypass_actors": [],

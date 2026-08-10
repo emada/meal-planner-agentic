@@ -29,7 +29,7 @@ Both are enforced in `eslint.config.js` — `import/no-restricted-paths` for dir
 ## Alternatives considered
 
 - **Feature folders** (`src/search/`, `src/shopping-list/`). Better for large applications with many teams. Rejected here: the interesting boundary is trust, not feature, and there are two features.
-- **Documented convention with no enforcement.** Rejected. The .bootstrap contract is explicit that repeatable quality must not depend on heroic manual review.
+- **Documented convention with no enforcement.** Rejected. The SWEAI Builder contract is explicit that repeatable quality must not depend on heroic manual review.
 
 ## Consequences
 

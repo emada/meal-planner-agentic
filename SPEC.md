@@ -53,7 +53,7 @@ Sourced from `GOAL.md`. Requirements marked _(derived)_ are implied by the brief
 
 - R5.1 Business logic (ingredient extraction, list grouping, sorting, storage validation) is unit-tested.
 - R5.2 The primary journeys are covered by browser tests at both a mobile and a desktop viewport: search → detail → add to list; view and edit list; surprise me → detail.
-- R5.3 The app targets real users (D3, resolved), so the full tooling profile applies in the adoption order of `.bootstrap/06-tools`: types, format, lint, tests, secrets → CI, reproducible build, preview deploy → SCA and SAST → boundaries, duplication, cycles → mutation and performance. Exact mandatory set, layer, and owner per gate are fixed in `PLAN.md` and recorded in `docs/quality/gates.md`.
+- R5.3 The app targets real users (D3, resolved), so the full tooling profile applies in the adoption order of `.ai-engineering/.bootstrap/06-tools`: types, format, lint, tests, secrets → CI, reproducible build, preview deploy → SCA and SAST → boundaries, duplication, cycles → mutation and performance. Exact mandatory set, layer, and owner per gate are fixed in `PLAN.md` and recorded in `docs/quality/gates.md`.
 - R5.4 Because the app is user-facing, it needs a threat model (`docs/security/threat-model.md`) and a privacy assessment (`docs/privacy/assessment.md`) recording the no-personal-data position, however short.
 
 ## Non-goals

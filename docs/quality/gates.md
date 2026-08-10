@@ -43,7 +43,7 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 ## Deferred gates
 
-Deliberately not yet in force. Each has a named landing slice, per the adoption order in `.bootstrap/06-tools`.
+Deliberately not yet in force. Each has a named landing slice, per the adoption order in `.ai-engineering/.bootstrap/06-tools`.
 
 | Gate                               | Status                           | Lands in | Rationale                                                                                                              |
 | ---------------------------------- | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -86,9 +86,16 @@ A gate is not adopted because it is configured. Each was proven to reject a deli
 
 ### Default-branch protection
 
-Desired state is versioned at `.github/rulesets/protect-main.json` and applied through `.bootstrap/06-tools/github/apply-repository-ruleset.sh`. The committed JSON is not evidence; the live state was read back through the API.
+Desired state is versioned at `.github/rulesets/protect-main.json` and applied through `.ai-engineering/.bootstrap/06-tools/github/apply-repository-ruleset.sh`. The committed JSON is not evidence; the live state was read back through the API.
 
-- Ruleset `AI Engineering: protect default branch`, id 20604945, enforcement `active`
+- Ruleset id 20604945, enforcement `active`. **Live name is still `AI Engineering: protect default branch`.** The desired state in `.github/rulesets/protect-main.json` was renamed to `SWEAI Builder: protect default branch`; the live rename is a pending human action. Do not run `apply-repository-ruleset.sh` before that rename — it matches by name and would create a duplicate ruleset. Rename in place with:
+
+  ```bash
+  gh api --method PUT -H 'Accept: application/vnd.github+json' \
+    repos/emada/meal-planner-agentic/rulesets/20604945 \
+    --input .github/rulesets/protect-main.json
+  ```
+
 - Effective rules on `refs/heads/main`: `deletion`, `non_fast_forward`, `pull_request`
 - Approvals required: 0 — a solo owner must not be locked out of their own repository. Review still happens; GitHub simply does not block on it
 - Negative probe: pushing a commit straight to `main` was rejected with `GH013 ... Changes must be made through a pull request`

@@ -4,6 +4,38 @@ Status: Approved
 
 Availability preflight: Ready
 
+## SWEAI Builder dependency
+
+Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, target `../ai_native_se_fde/.bootstrap`) to the supported pinned-submodule installation. Every value below is live evidence, not intention.
+
+- Canonical `sweai-builder` repository URL: `https://github.com/emada/sweai-builder.git`
+- Tracked branch: `main`
+- Product mount path: `.ai-engineering`
+- Installation type: Pinned Git submodule
+- Pinned commit: `52e60f1b30f4d11ff3c397df081faa164cf77753`
+- Submodule initialized and `.ai-engineering/AGENTS.md` readable: Yes
+- Operating contract reachable at `.ai-engineering/.bootstrap/AGENTS.md`: Yes
+- Git index mode is `160000` rather than symbolic-link mode `120000`: Yes — verified with `git ls-files --stage .ai-engineering`
+- Product tracks no files inside `.ai-engineering/` and owns no `.bootstrap/`: Yes — `git ls-files .ai-engineering/*` is empty and `.bootstrap/` is ignored
+- CI fetches submodules recursively: No — deliberate. No CI job reads the operating contract, and `GITHUB_TOKEN` cannot fetch a private repository other than this one. Revisit if a contract-dependent CI check is ever added
+- May advance the pinned SWEAI Builder commit through a dependency-update pull request: Yes
+- Symbolic-link, vendored-copy, or product-owned `.bootstrap/` fallback authorized: No
+- Unpinned-branch tracking authorized: No
+
+**Open decision for the human.** This repository is public and `emada/sweai-builder` is private. Consequences: `git clone --recurse-submodules` fails for anyone without access to the private dependency, and CI cannot fetch it with the default token. Resolve by making `sweai-builder` public, by adding a read-scoped deploy key or PAT secret, or by accepting that only authorized clones initialize the submodule. Until this is decided, the recorded position is the last option.
+
+## Semantic review
+
+- Specialized Claude review required before merge handoff: Yes — mandatory, per `.ai-engineering/.bootstrap/02-quality/05-automated-semantic-review.md`
+- Reviewer definition: `.claude/agents/semantic-reviewer.md`, fresh isolated context, initially read-only, high reasoning effort
+- Primary semantic reviewer: Specialized Claude reviewer agent; provider review never replaces it
+- Optional provider review (GitHub Copilot) enabled: No — supplementary and disabled by default
+- May post or update the Claude review summary on the pull request: **Pending human approval**
+- May create or update the `SWEAI Review / Claude` commit status: **Pending human approval**
+- May read, reply to, and resolve pull-request review threads: **Pending human approval**
+
+The three pending items grant new external-write permissions and are not self-approvable. Until the human decides, the reviewer runs and reports locally without publishing to GitHub.
+
 ## Pre-discovery operator availability
 
 Recorded retrospectively: this project reached Phase 3 under the previous version of the operating contract, which had no execution contract. Every field below is live evidence read back through `gh`, not intention.
@@ -46,7 +78,7 @@ Recorded retrospectively: this project reached Phase 3 under the previous versio
 - Source approved for this visibility: Yes
 - Provider account or organisation plan: GitHub Free
 - Default-branch protection supported for this visibility: Yes
-- Protection capability verified by: ruleset `AI Engineering: protect default branch` id 20604945, enforcement `active`, read back through the API; direct push rejected with `GH013`
+- Protection capability verified by: ruleset id 20604945 (live name still `AI Engineering: protect default branch`; rename to `SWEAI Builder: protect default branch` is pending — see `docs/quality/gates.md`), enforcement `active`, read back through the API; direct push rejected with `GH013`
 - Approved degraded-governance exception, if any: None. Full protection is in force
 - Authenticated CLI identity: `gh` as `emada`
 - Repository administration permission verified: Yes

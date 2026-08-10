@@ -8,7 +8,7 @@ Scope: the application defined in `SPEC.md`. Last reviewed at S0 (2026-08-09). T
 
 ## The required questions
 
-Answered per `.bootstrap/03-security-privacy/02-privacy-gdpr-apps.md`.
+Answered per `.ai-engineering/.bootstrap/03-security-privacy/02-privacy-gdpr-apps.md`.
 
 | #   | Question                                                 | Answer                                                                                                                                                                               |
 | --- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

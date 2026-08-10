@@ -15,7 +15,7 @@ A single static client-side application. No backend of ours (spec non-goal). The
 
 ### Selected stack
 
-Smallest stack that satisfies the approved spec, mapped to `.bootstrap/06-tools/01-typescript-web-profile.md`.
+Smallest stack that satisfies the approved spec, mapped to `.ai-engineering/.bootstrap/06-tools/01-typescript-web-profile.md`.
 
 | Concern                | Choice                                            | Why this and not less                                                                                                                            |
 | ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -111,7 +111,7 @@ Constrained by the spec's no-analytics, no-third-party position.
 
 Cross-cutting definition of done for every slice below: acceptance criteria demonstrated with evidence, mandatory gates green, responsive at 375px and desktop, keyboard operable, diff reviewed, docs updated, `main` deployable.
 
-### S0 — Harness .bootstrap
+### S0 — Harness SWEAI Builder
 
 - **Outcome**: repository, toolchain, and gates operational; `main` protected and deployable; control docs exist.
 - **Mapped AC**: none directly; enables AC14.
@@ -189,7 +189,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ## Fleet candidates
 
-Not yet. Against `.bootstrap/AGENTS.md` Phase 4:
+Not yet. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
 
 | Condition                                                         | Status                                              |
 | ----------------------------------------------------------------- | --------------------------------------------------- |

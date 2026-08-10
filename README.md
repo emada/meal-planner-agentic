@@ -45,7 +45,7 @@ This repository follows a goal-first operating contract. The documents are the c
 | [`SPEC.md`](SPEC.md)           | The product contract — approved                  |
 | [`PLAN.md`](PLAN.md)           | The implementation plan, slices S0–S7 — approved |
 | [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved |
-| `.bootstrap/`                  | The operating rules themselves                   |
+| `.ai-engineering/`             | SWEAI Builder, pinned as a Git submodule         |
 
 Supporting records:
 
