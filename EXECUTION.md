@@ -12,7 +12,7 @@ Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, t
 - Tracked branch: `main`
 - Product mount path: `.ai-engineering`
 - Installation type: Pinned Git submodule
-- Pinned commit: `b66c337f41cb48d5fd4fb15c2065377649d5f77f`, advanced from `52e60f1` on 2026-08-10 through a reviewed dependency-update commit to adopt the gate-evidence profile
+- Pinned commit: `dd978bf03d39cdd7721d3d58c49536c30c24decb`, advanced from `b66c337` on 2026-08-10 through a reviewed dependency-update pull request. Earlier pins: `52e60f1` → `b66c337` for the gate-evidence profile
 - Submodule initialized and `.ai-engineering/AGENTS.md` readable: Yes
 - Operating contract reachable at `.ai-engineering/.bootstrap/AGENTS.md`: Yes
 - Git index mode is `160000` rather than symbolic-link mode `120000`: Yes — verified with `git ls-files --stage .ai-engineering`
@@ -61,6 +61,33 @@ Recorded retrospectively: this project reached Phase 3 under the previous versio
 - Likely application-hosting provider and account: Vercel, account `emada`, scope `emada1`
 - Human-only consent, login, billing, or installation action required before unattended work: **None remaining.** The human installed and authenticated the Vercel CLI on 2026-08-09, which was the only blocker
 - Availability blockers remaining: None. GitHub and Vercel are both authenticated and verified
+
+## Authorization model
+
+Applies `.ai-engineering/.bootstrap/01-operating-model/06-evidence-gated-authorization.md`, introduced by the `dd978bf` pin. Every `Yes` in this file is a ceiling, not a grant: the action is permitted only while its named signature holds at the moment it runs.
+
+| Action                      | Required signature   | Enforced by                                      |
+| --------------------------- | -------------------- | ------------------------------------------------ |
+| Publish gate evidence       | `evidence-current`   | `06-tools/evidence/generate-evidence.mjs verify` |
+| Publish a review verdict    | `review-current`     | `06-tools/github/publish-claude-review.sh`       |
+| Apply repository governance | `ruleset-verified`   | `06-tools/github/apply-repository-ruleset.sh`    |
+| Keep the contract installed | `installation-valid` | `src/test/repository-integrity.test.ts`, Phase 0 |
+
+- Highest autonomy level authorized: **3**. Level 3 actions — advancing this pin, changing required status contexts, applying the ruleset — are performed by an agent but never merged by one; a human reviews and merges. Level 4 remains human throughout, which is why production is reachable only as a consequence of a merge you perform.
+- New actions introduced without a named signature: None.
+
+`installation-valid` is enforced here by a product test rather than only by Phase 0, so a regression to a symlink or vendored contract fails a gate instead of relying on review.
+
+### Runtime operations
+
+SWEAI Builder does not yet model authorization for operating a running system. Until `ROADMAP.md` item 1 lands, these remain level 4 and are performed by a human:
+
+- Read production telemetry, logs, or traces: Human only
+- Execute a runbook or rollback: Human only
+- Restart, scale, or reconfigure a running service: Human only
+- Silence, suppress, or edit an alert: Human only
+
+This product does not need operational autonomy and is not constrained by the gap. It is a static bundle on Vercel with no backend, no runbook, no alerting, and no telemetry we collect — ADR-0003 declines error reporting outright. Rollback is promoting a previous Vercel deployment, which is yours to perform. If that ever changes, the change itself is the signal that this product has outgrown the current contract version.
 
 ## Autonomous execution
 
