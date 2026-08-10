@@ -37,11 +37,11 @@ Accepted consequences:
 - Reviewer definition: `.claude/agents/semantic-reviewer.md`, fresh isolated context, initially read-only, high reasoning effort
 - Primary semantic reviewer: Specialized Claude reviewer agent; provider review never replaces it
 - Optional provider review (GitHub Copilot) enabled: No — supplementary and disabled by default
-- May post or update the Claude review summary on the pull request: **Pending human approval**
-- May create or update the `SWEAI Review / Claude` commit status: **Pending human approval**
-- May read, reply to, and resolve pull-request review threads: **Pending human approval**
+- May post or update the Claude review summary on the pull request: **Yes** — approved by the human on 2026-08-10
+- May create or update the `SWEAI Review / Claude` commit status: **Yes** — approved by the human on 2026-08-10
+- May read, reply to, and resolve pull-request review threads: **Yes** — approved by the human on 2026-08-10
 
-The three pending items grant new external-write permissions and are not self-approvable. Until the human decides, the reviewer runs and reports locally without publishing to GitHub.
+These three grant external-write permissions on the pull request only. They do not extend to merging, to pushing `main`, or to any production action, all of which remain prohibited. A thread is resolved only when its finding was corrected or disproven with evidence, never to clear a blocker.
 
 ## Pre-discovery operator availability
 
