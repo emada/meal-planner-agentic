@@ -77,6 +77,14 @@ export function RecipeModal({ recipe, onClose, footer }: RecipeModalProps) {
     };
   }, []);
 
+  // Keyed on the recipe: "surprise me" from the footer swaps the recipe while
+  // the dialog stays mounted, so the mount-only effect above never re-runs.
+  // Without this, focus is left wherever the trigger was and the dialog's
+  // accessible name changes silently.
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, [recipe.id]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       // Stand down when something already consumed this key — a capture-phase
