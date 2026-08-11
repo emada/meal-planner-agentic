@@ -283,3 +283,109 @@ test('the busy state is visible and, inside the modal, announced there', async (
   await dialog.getByRole('button', { name: /surprise me/i }).click();
   await expect(dialog.locator('.modal__status')).toHaveText(/finding a random recipe/i);
 });
+
+test('a late surprise does not replace a recipe the user chose', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('16', 'Beef Pie')] }),
+    }),
+  );
+  await page.route(RANDOM_ROUTE, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('17', 'Tarte Tatin')] }),
+    });
+  });
+  await page.goto('/');
+
+  await surprise(page).click();
+
+  // While the random request is in flight the user picks their own recipe.
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+  await expect(page.getByRole('dialog', { name: /beef pie/i })).toBeVisible();
+
+  await page.waitForTimeout(1200);
+
+  // The late result must be dropped, not swapped in on top of their choice.
+  await expect(page.getByRole('dialog', { name: /beef pie/i })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: /tarte tatin/i })).toHaveCount(0);
+});
+
+test('a surprise abandoned by closing the modal does not re-open it', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('18', 'Beef Pie')] }),
+    }),
+  );
+  await page.route(RANDOM_ROUTE, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('19', 'Tarte Tatin')] }),
+    });
+  });
+  await page.goto('/');
+
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /surprise me/i })
+    .click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.waitForTimeout(1200);
+
+  // Re-opening unbidden is the flicker the in-place swap exists to avoid.
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('the failure takes focus when the user stayed on the trigger', async ({ page }) => {
+  await page.route(RANDOM_ROUTE, (route) => route.abort('failed'));
+  await page.goto('/');
+
+  await surprise(page).focus();
+  await page.keyboard.press('Enter');
+
+  // The guard has two branches; this is the one the retry test does not reach.
+  await expect(page.locator('.app__nav-error p')).toBeFocused();
+});
+
+test('a failed in-modal surprise does not re-announce a stale confirmation', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('20', 'Beef Pie')] }),
+    }),
+  );
+  await page.route(RANDOM_ROUTE, (route) => route.abort('failed'));
+  await page.goto('/');
+
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: /add to my shopping list/i }).click();
+  await expect(dialog.locator('.modal__status')).toHaveText(/added 2 ingredients/i);
+
+  await dialog.getByRole('button', { name: /surprise me/i }).click();
+  await expect(dialog.getByRole('alert')).toBeVisible();
+
+  // Both share the status region; restoring the old text would announce a
+  // success for something the user did not just do.
+  await expect(dialog.locator('.modal__status')).toHaveText('');
+});

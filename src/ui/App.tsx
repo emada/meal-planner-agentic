@@ -77,6 +77,9 @@ export function App() {
   const closeModal = () => {
     setOpenRecipe(null);
     setAddedRecipeId(null);
+    // A pending surprise would otherwise re-open the dialog the user just
+    // closed, and take focus with it.
+    surpriseRef.current?.cancel();
   };
 
   const openFromSurprise = useCallback((recipe: Recipe) => {
@@ -85,6 +88,10 @@ export function App() {
   }, []);
 
   const surprise = useSurpriseMe(openFromSurprise);
+  // closeModal is defined before `surprise` exists, so it reaches it through a
+  // ref rather than forcing the declaration order.
+  const surpriseRef = useRef<ReturnType<typeof useSurpriseMe> | null>(null);
+  surpriseRef.current = surprise;
   const navSurpriseRef = useRef<HTMLButtonElement>(null);
   const modalSurpriseRef = useRef<HTMLButtonElement>(null);
 
@@ -154,7 +161,15 @@ export function App() {
 
       <main className="app__main">
         {view === 'search' ? (
-          <SearchView onOpenRecipe={setOpenRecipe} />
+          <SearchView
+            onOpenRecipe={(recipe) => {
+              // The user picked this one; a pending random result must not
+              // replace it a moment later.
+              surprise.cancel();
+              setOpenRecipe(recipe);
+              setAddedRecipeId(null);
+            }}
+          />
         ) : (
           <ShoppingListView
             entries={shoppingList.entries}
@@ -201,6 +216,9 @@ export function App() {
                 ref={modalSurpriseRef}
                 onClick={() => {
                   if (surprise.state.status === 'loading') return;
+                  // A stale "Added N ingredients" would be re-announced when
+                  // this request settles, since both share the status region.
+                  setAddedRecipeId(null);
                   // Replaces the open recipe in place: the modal is already the
                   // right surface, so closing and reopening would only flicker.
                   void surprise.surpriseMe();

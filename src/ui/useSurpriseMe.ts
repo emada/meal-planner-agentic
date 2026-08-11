@@ -50,5 +50,16 @@ export function useSurpriseMe(onRecipe: (recipe: Recipe) => void) {
     setState({ status: 'idle' });
   }, []);
 
-  return { state, surpriseMe, dismiss };
+  /**
+   * Abandons an in-flight request. Without this a slow result arrives after the
+   * user has moved on — opened a recipe they chose, or closed the modal — and
+   * replaces what they are looking at, taking focus with it.
+   */
+  const cancel = useCallback(() => {
+    inFlight.current?.abort();
+    inFlight.current = null;
+    setState({ status: 'idle' });
+  }, []);
+
+  return { state, surpriseMe, dismiss, cancel };
 }
