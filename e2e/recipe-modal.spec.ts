@@ -79,12 +79,18 @@ test('AC5 — the modal is operable by keyboard alone and restores focus on clos
   await expect(dialog).toBeFocused();
 
   // Tab cycles inside the dialog rather than reaching the page behind it.
+  // Counting presses would break whenever the footer changes, so tab until the
+  // trap wraps and assert it never left.
   await page.keyboard.press('Tab');
-  await expect(dialog.getByRole('button', { name: /close recipe/i })).toBeFocused();
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await expect(dialog.getByRole('button', { name: /close recipe/i })).toBeFocused();
+  const close = dialog.getByRole('button', { name: /close recipe/i });
+  await expect(close).toBeFocused();
+
+  const controls = await dialog.locator('a[href], button').count();
+  for (let step = 0; step < controls; step += 1) {
+    await page.keyboard.press('Tab');
+    await expect(dialog.locator(':focus')).toHaveCount(1);
+  }
+  await expect(close).toBeFocused();
 
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
