@@ -88,22 +88,22 @@ Applies `.ai-engineering/.bootstrap/01-operating-model/06-evidence-gated-authori
 | Apply repository governance | `ruleset-verified`   | `06-tools/github/apply-repository-ruleset.sh`    |
 | Keep the contract installed | `installation-valid` | `src/test/repository-integrity.test.ts`, Phase 0 |
 
-- Highest autonomy level authorized: **4**, raised from 3 by the human on 2026-08-10. This is the "explicitly governed otherwise" case the operating contract reserves; without this record the standing rule is that agents never merge.
+- Highest autonomy level authorized: **4**, raised from 3 by the human on 2026-08-10. This is the "explicitly governed otherwise" case the operating contract reserves; the contract's default is that merging belongs to a human, and only this record displaces it.
 - New actions introduced without a named signature: None.
 
 ### Autonomous merge and release, authorized 2026-08-10
 
 The human authorized an agent to merge its own pull requests and, as a direct consequence, to release to production.
 
-| Action                         | Required signature                                         | Enforced by                                              |
-| ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------- |
-| Merge a pull request to `main` | `checks-green` ∧ `review-current` ∧ `threads-resolved`     | GitHub ruleset 20604945; `gh pr merge` refuses otherwise |
-| Release to production          | Automatic consequence of a merge; no separate agent action | Vercel git integration                                   |
+| Action                         | Required signature                                         | Enforced by                                                                                                          |
+| ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Merge a pull request to `main` | `checks-green` ∧ `review-current` ∧ `threads-resolved`     | GitHub ruleset 20604945. All three are required contexts or ruleset rules, so a merge missing any of them is refused |
+| Release to production          | Automatic consequence of a merge; no separate agent action | Vercel git integration                                                                                               |
 
 Merge is permitted only while all three hold at the moment it runs:
 
 - every required status context is `success` — the ruleset refuses the merge otherwise, so this is enforced by code rather than by intention;
-- the semantic review verdict is `PASS` **for the exact head being merged**, published through `publish-claude-review.sh`, whose guard binds the verdict to that head;
+- the semantic review verdict is `PASS` **for the exact head being merged**. `SWEAI Review / Claude` is a required context as of 2026-08-10, so a merge with no review, or with a `failure`, is refused by the ruleset; `publish-claude-review.sh` additionally binds the verdict to the head it was reached at. **This does not stop a wrong `PASS`** — the reviewer is a subagent of the agent that wrote the change, and that limit is the risk recorded in `docs/security/threat-model.md`;
 - every review thread is resolved.
 
 **What this gives up, recorded so it is not discovered later.** The reviewer is a subagent of the same lead agent that writes the change. Isolation of context is preserved, but no human evaluates the work before it reaches real users. The contract's requirement that the implementer not be its own only evaluator is satisfied in form; the human control point is not. The human accepted this trade deliberately.
@@ -180,7 +180,7 @@ This product does not need operational autonomy and is not constrained by the ga
 
 Git integration status: **already connected** by the human before this contract was approved. Verified read-only — Vercel publishes the `Vercel` and `Vercel Preview Comments` contexts on pull requests. No project was created and no integration was duplicated; `vercel link` was not needed.
 
-Resolved: the earlier failed production deployment (`● Error`, 2s, HTTP 404) was not a configuration defect. It built `main` at commit `fcc80b2`, which contained only the operating contract — no `package.json` and no lockfile — so `npm ci` exited with `EUSAGE: can only install with an existing package-lock.json`. The identical configuration built the preview for pull request #1 in 12 s. Production resolves itself when the human merges an application-bearing `main`.
+Resolved: the earlier failed production deployment (`● Error`, 2s, HTTP 404) was not a configuration defect. It built `main` at commit `fcc80b2`, which contained only the operating contract — no `package.json` and no lockfile — so `npm ci` exited with `EUSAGE: can only install with an existing package-lock.json`. The identical configuration built the preview for pull request #1 in 12 s. It resolved once an application-bearing `main` was merged.
 
 ## External services and credentials
 
@@ -207,7 +207,7 @@ Stop and request the user when:
 
 Project-specific additions:
 
-- Merging to `main` is authorized under "Autonomous merge and release", and only while its three signatures hold. Superseded the standing rule that agents never merge, by explicit human decision on 2026-08-10.
+- Merging to `main` is authorized under "Autonomous merge and release", and only while its three signatures hold. This displaced the contract's default that merging belongs to a human, by explicit human decision on 2026-08-10.
 - Any change that would introduce a data processor, analytics, tracking, cookies, or a third-party script stops for a `SPEC.md` revision — see `docs/privacy/assessment.md` and ADR-0003.
 - Spec O1 is resolved: the human accepted the test-key risk on 2026-08-10, so S7 is unblocked. The acceptance is recorded in `SPEC.md` and `docs/security/threat-model.md`.
 
@@ -215,3 +215,5 @@ Project-specific additions:
 
 - Approved by: bmi.machado@gmail.com
 - Approved on: 2026-08-09
+- Amended 2026-08-10: semantic-review publishing authorized; SWEAI Builder pin advanced to `dd978bf` with the authorization model adopted; autonomy ceiling raised from 3 to 4, authorizing autonomous merge and, as its consequence, automatic release to production; spec O1 resolved as accepted risk.
+- Amended 2026-08-10: unattended continuation confirmed — the human reviews at the end of the work rather than between slices.

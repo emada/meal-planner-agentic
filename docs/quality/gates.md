@@ -171,14 +171,18 @@ required_status_contexts:
 
 **AC13 is not yet exercised.** The horizontal-overflow assertion in `e2e/smoke.spec.ts` cannot currently fail: the shell renders a heading and an empty `<main>`, so overflow is impossible. It is a valid S0 smoke test and a valid regression guard once there is layout, but AC13 evidence begins at S1, when a real results grid renders. Recorded so the green tick is not mistaken for responsive-layout proof.
 
-`SWEAI Review / Claude` is **not yet** a required context. The semantic review is mandatory by contract and runs on every head, but it is published by the lead agent rather than by an independent workflow, so requiring it would mean the agent under review controls its own merge gate. It becomes a required context when it is emitted by CI rather than by the implementer. Until then the human merge step carries that residual risk, which is recorded here rather than left implicit.
+`SWEAI Review / Claude` **is** a required context, added on 2026-08-10 when autonomous merge was authorized.
+
+It was deliberately not required before, on the argument that the agent under review publishes it and so would control its own merge gate — with the human merge step carrying that risk. Authorizing autonomous merge removed the human step, which inverted the argument rather than settling it. Requiring the context does not stop a wrong `PASS`, but it does stop a merge with **no** review at all, and that was previously possible: nothing in the ruleset asked for the status to exist.
+
+What remains unprotected, stated plainly: the reviewer is a subagent of the agent that wrote the change, so a `PASS` it reaches in error still merges. The context is a floor, not a substitute for independent judgement.
 
 ### Vercel deployment
 
 - Git integration was already connected by the human; verified read-only. No project or integration was duplicated.
 - Preview for pull request #1: `● Ready` in 12 s. The preview URL returns HTTP 302 to Vercel SSO because Deployment Protection is enabled on previews — a security default, not a failure.
 - The earlier production deployment failed (`● Error`, 2 s) with `npm error code EUSAGE — can only install with an existing package-lock.json`. Root cause: it built `main` at `fcc80b2`, which held only the operating contract, with no `package.json` and no lockfile. Not a configuration defect; the same configuration builds the preview successfully. It resolves when an application-bearing `main` is merged.
-- Agents have no path to production. `vercel --prod` and deployment promotion are prohibited by `EXECUTION.md`; production may occur only as a consequence of a human-approved merge.
+- Direct production means remain prohibited by `EXECUTION.md`: no `vercel --prod`, no deployment promotion. Since 2026-08-10 production occurs as an automatic consequence of a merge, and merging is authorized for agents under `EXECUTION.md` "Autonomous merge and release" while its signatures hold.
 
 ### Two gates were silently passing and were fixed
 

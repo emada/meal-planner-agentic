@@ -97,7 +97,7 @@ Runs on every pull request and on `main`, from a clean checkout.
 | Mutation testing — Stryker, changed files       | warn only              | 5             |
 | Bundle-size budget                              | warn first, then block | 5             |
 
-Steps 1–2 land in S0. Steps 3–4 land in S6. Step 5 lands in S6 as non-blocking signal.
+Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. The rest of step 4 and step 5 land in S6.
 
 ### Post-deploy
 
@@ -180,8 +180,8 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 ### S7 — Production readiness
 
 - **Outcome**: the app is fit to serve real users.
-- **Scope**: resolve spec O1 (TheMealDB supported key, injected at build time, never committed, test key as local default); production deployment to Vercel; rollback via Vercel's previous-deployment promotion; post-deploy smoke check of the three journeys.
-- **Dependencies**: **blocked on spec O1.** Do not start until the key decision is made.
+- **Scope**: production deployment to Vercel; rollback via Vercel's previous-deployment promotion; post-deploy smoke check of the three journeys. Obtaining a supported TheMealDB key is **no longer in scope** — the human accepted the test-key risk on 2026-08-10 (spec O1).
+- **Dependencies**: none remaining. Production now releases automatically on merge, so S7 is a verification and hardening slice rather than a gate to pass through.
 
 ## First vertical slice
 
@@ -205,26 +205,26 @@ First genuine fleet opportunity is **S4 + S5 in parallel**, capped at two agents
 
 ## Risks and mitigations
 
-| Risk                                                                        | Mitigation                                                                                                      |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| TheMealDB test key is rate-limited and unsupported for production (spec O1) | Build against it as specified; block S7 until the key decision is made; treat throttling as the AC3 error state |
-| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                              |
-| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model  |
-| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                   |
-| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                       |
-| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 in S0, 3–5 deferred to S6                                                         |
-| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                   |
+| Risk                                                                        | Mitigation                                                                                                                                                   |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| TheMealDB test key is rate-limited and unsupported for production (spec O1) | Risk accepted by the human on 2026-08-10. Throttling surfaces as the AC3 error state; there is no further mitigation, which is what accepting the risk means |
+| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                                                                           |
+| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                               |
+| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                |
+| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                    |
+| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 in S0, 3–5 deferred to S6                                                                                                      |
+| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                |
 
 ## Decisions resolved
 
 - **P1 — Version control.** Resolved: `git init` in this directory, initial commit of the contract files, all subsequent work on short-lived branches into a protected `main`.
-- **P2 — Hosting and deployment target** (spec O2). Resolved: Vercel, static output, per-PR preview deployments. Unblocks the S0 preview gate; S7 remains blocked on spec O1 only.
+- **P2 — Hosting and deployment target** (spec O2). Resolved: Vercel, static output, per-PR preview deployments. Unblocks the S0 preview gate. Since 2026-08-10 the same integration also releases production automatically on merge.
 - **P4 — Repository hosting.** Resolved: GitHub, with GitHub Actions as the authoritative CI layer and branch protection on `main`.
 
 ## Open decisions
 
 - **P3 — Client-side error reporting.** Not adopted. Real users would normally justify it, but it adds an external service and data processor, which the spec's privacy constraint does not currently permit. Position: stay without it; rely on Vercel's availability and error metrics plus post-deploy smoke checks. Revisit only as an explicit spec revision.
-- **Spec O1 — TheMealDB supported key.** Still open. Blocks S7 only; S1–S6 proceed on the test key as `GOAL.md` specifies.
+- **Spec O1 — TheMealDB supported key.** Resolved 2026-08-10: the human accepted running production on the test key `1`. Nothing is blocked. Recorded in `SPEC.md` and `docs/security/threat-model.md`.
 
 ## Operational notes from resolved decisions
 

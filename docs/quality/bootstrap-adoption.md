@@ -4,14 +4,14 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 01 — Operating model
 
-| Rule                                         | Status   | Rationale                                                                                                  |
-| -------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| Human accountability for every merged change | Adopted  | Single accountable human; agents propose, never merge                                                      |
-| Bounded autonomy                             | Adopted  | Each slice in `PLAN.md` carries scope, acceptance criteria, verification, and a stop condition             |
-| Agent roles                                  | Adopted  | One lead agent through S0–S3; roles separate at the first fleet step                                       |
-| Human + agent fleet workflow                 | Deferred | Fleet readiness is not met yet; first candidate is S4 + S5 in parallel                                     |
-| Language policy                              | Adopted  | Every committed and published engineering artifact is English; conversation language is free               |
-| Evidence-gated authorization                 | Adopted  | Signature table and autonomy ceiling recorded in `EXECUTION.md`; level 4 and runtime operations stay human |
+| Rule                                         | Status   | Rationale                                                                                                                                                                                                                                                   |
+| -------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Human accountability for every merged change | Adopted  | One named accountable human owns every merge outcome. Since 2026-08-10 an agent performs the merge under authorization recorded in `EXECUTION.md`; accountability and rollback stay with the human, who did not delegate ownership by delegating the action |
+| Bounded autonomy                             | Adopted  | Each slice in `PLAN.md` carries scope, acceptance criteria, verification, and a stop condition                                                                                                                                                              |
+| Agent roles                                  | Adopted  | One lead agent through S0–S3; roles separate at the first fleet step                                                                                                                                                                                        |
+| Human + agent fleet workflow                 | Deferred | Fleet readiness is not met yet; first candidate is S4 + S5 in parallel                                                                                                                                                                                      |
+| Language policy                              | Adopted  | Every committed and published engineering artifact is English; conversation language is free                                                                                                                                                                |
+| Evidence-gated authorization                 | Adopted  | Signature table and autonomy ceiling recorded in `EXECUTION.md`. Ceiling raised to 4 on 2026-08-10 for merge and release; runtime operations stay human                                                                                                     |
 
 ## 00 — Orientation
 
@@ -33,13 +33,13 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 03 — Security and privacy
 
-| Rule                       | Status  | Rationale                                                                                          |
-| -------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
-| Security by design         | Adopted | Threat model written before feature code; CSP and security headers ship from S0                    |
-| Privacy and GDPR/APPs      | Adopted | Assessment complete; the finding is that no personal data is processed by us                       |
-| Secrets and supply chain   | Partial | Secret scanning adopted at two layers from S0; SCA and SAST deferred to S6 with rationale recorded |
-| Agent tool data handling   | Adopted | Agents touch no personal data; no secret value is printed, logged, or committed — `EXECUTION.md`   |
-| External service readiness | Partial | GitHub and Vercel verified live; TheMealDB production key is spec O1, still open and blocking S7   |
+| Rule                       | Status  | Rationale                                                                                                            |
+| -------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| Security by design         | Adopted | Threat model written before feature code; CSP and security headers ship from S0                                      |
+| Privacy and GDPR/APPs      | Adopted | Assessment complete; the finding is that no personal data is processed by us                                         |
+| Secrets and supply chain   | Partial | Secret scanning adopted at two layers from S0; SCA and SAST deferred to S6 with rationale recorded                   |
+| Agent tool data handling   | Adopted | Agents touch no personal data; no secret value is printed, logged, or committed — `EXECUTION.md`                     |
+| External service readiness | Adopted | GitHub and Vercel verified live; the TheMealDB test key runs in production as an accepted risk (spec O1, 2026-08-10) |
 
 ## 04 — Product
 
@@ -59,15 +59,15 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 06 — Tools
 
-| Rule                              | Status                  | Rationale                                                                                                                                       |
-| --------------------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; steps 3–5 land in S6. Two substitutions and two version pins recorded in `docs/quality/gates.md`                      |
-| High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                                      |
-| Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                                            |
-| Gate evidence                     | Adopted                 | Gates declared in `package.json` under `sweai.gates`; evidence derived per run, stamped with the head, and gitignored — `docs/quality/gates.md` |
-| Provider CLI preflight            | Adopted                 | Both authenticated identities verified read-only; Vercel CLI telemetry confirmed disabled on 2026-08-10                                         |
-| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified                       |
-| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production reachable only by human merge                         |
+| Rule                              | Status                  | Rationale                                                                                                                                        |
+| --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; steps 3–5 land in S6. Two substitutions and two version pins recorded in `docs/quality/gates.md`                       |
+| High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                                       |
+| Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                                             |
+| Gate evidence                     | Adopted                 | Gates declared in `package.json` under `sweai.gates`; evidence derived per run, stamped with the head, and gitignored — `docs/quality/gates.md`  |
+| Provider CLI preflight            | Adopted                 | Both authenticated identities verified read-only; Vercel CLI telemetry confirmed disabled on 2026-08-10                                          |
+| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified                        |
+| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production released automatically on merge, never pushed directly |
 
 ## 07 — Project adoption
 

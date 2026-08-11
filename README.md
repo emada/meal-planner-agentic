@@ -72,4 +72,4 @@ Everything crossing a boundary is schema-parsed. See [ADR-0002](docs/architectur
 
 ## Notes
 
-The app calls TheMealDB with the public developer key `1`, as the brief specifies. That is a test key with no availability guarantee — moving to a supported key is an open decision recorded in `SPEC.md` (O1) and blocks production release.
+The app calls TheMealDB with the public developer key `1`, as the brief specifies. That is a test key with no availability guarantee, and running production on it is a risk the owner accepted on 2026-08-10 (`SPEC.md` O1, `docs/security/threat-model.md`). When the service throttles or fails, the app says so and offers a retry — that is the whole mitigation.

@@ -37,6 +37,9 @@
           { "context": "Secret scan" },
           { "context": "Reproducible build" },
           { "context": "Browser journeys (mobile + desktop)" },
+          { "context": "Dependency scan" },
+          { "context": "Static analysis" },
+          { "context": "SWEAI Review / Claude" },
           { "context": "Vercel" }
         ]
       }

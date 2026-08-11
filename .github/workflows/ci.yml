@@ -65,6 +65,50 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Pulled forward from S6. Every merge to `main` now releases to production,
+  # and the threat model records that shipping without dependency and code
+  # analysis is not acceptable there. Deferring these to S6 would mean five
+  # slices reaching real users under a condition already declared unacceptable.
+  sca:
+    name: Dependency scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.2.4
+        with:
+          scan-args: |-
+            --lockfile=package-lock.json
+
+  sast:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          # Security-focused rules only; the style dimension is already covered
+          # by type-aware ESLint and would be noise here.
+          queries: security-extended
+
+      - uses: github/codeql-action/analyze@v3
+
   build:
     name: Reproducible build
     runs-on: ubuntu-latest
