@@ -52,7 +52,7 @@ Accepted consequences:
 - May create or update the `SWEAI Review / Claude` commit status: **Yes** — approved by the human on 2026-08-10
 - May read, reply to, and resolve pull-request review threads: **Yes** — approved by the human on 2026-08-10
 
-These three grant external-write permissions on the pull request only. They do not extend to merging, to pushing `main`, or to any production action, all of which remain prohibited. A thread is resolved only when its finding was corrected or disproven with evidence, never to clear a blocker.
+These three grant external-write permissions on the pull request. Merging is authorized separately under "Autonomous merge and release" and only while its three signatures hold; pushing `main` directly remains prohibited and the ruleset refuses it. A thread is resolved only when its finding was corrected or disproven with evidence, never to clear a blocker — and now that thread resolution is one of the merge signatures, resolving a thread to unblock a merge would be defeating a gate rather than passing it.
 
 - Review verdicts and the `SWEAI Review / Claude` status are published **only** through `.ai-engineering/.bootstrap/06-tools/github/publish-claude-review.sh`. Publishing the status with a raw `gh api` call is prohibited: it bypasses the guard that binds the verdict to the reviewed head, which would leave `review-current` declared but unenforced.
 
@@ -88,8 +88,36 @@ Applies `.ai-engineering/.bootstrap/01-operating-model/06-evidence-gated-authori
 | Apply repository governance | `ruleset-verified`   | `06-tools/github/apply-repository-ruleset.sh`    |
 | Keep the contract installed | `installation-valid` | `src/test/repository-integrity.test.ts`, Phase 0 |
 
-- Highest autonomy level authorized: **3**. Level 3 actions — advancing this pin, changing required status contexts, applying the ruleset — are performed by an agent but never merged by one; a human reviews and merges. Level 4 remains human throughout, which is why production is reachable only as a consequence of a merge you perform.
+- Highest autonomy level authorized: **4**, raised from 3 by the human on 2026-08-10. This is the "explicitly governed otherwise" case the operating contract reserves; the contract's default is that merging belongs to a human, and only this record displaces it.
 - New actions introduced without a named signature: None.
+
+### Autonomous merge and release, authorized 2026-08-10
+
+The human authorized an agent to merge its own pull requests and, as a direct consequence, to release to production.
+
+| Action                         | Required signature                                         | Enforced by                                                                                                          |
+| ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Merge a pull request to `main` | `checks-green` ∧ `review-current` ∧ `threads-resolved`     | GitHub ruleset 20604945. All three are required contexts or ruleset rules, so a merge missing any of them is refused |
+| Release to production          | Automatic consequence of a merge; no separate agent action | Vercel git integration                                                                                               |
+
+Merge is permitted only while all three hold at the moment it runs:
+
+- every required status context is `success` — the ruleset refuses the merge otherwise, so this is enforced by code rather than by intention;
+- the semantic review verdict is `PASS` **for the exact head being merged**. `SWEAI Review / Claude` is a required context as of 2026-08-10, so a merge with no review, or with a `failure`, is refused by the ruleset; `publish-claude-review.sh` additionally binds the verdict to the head it was reached at. **This does not stop a wrong `PASS`** — the reviewer is a subagent of the agent that wrote the change, and that limit is the risk recorded in `docs/security/threat-model.md`;
+- every review thread is resolved.
+
+**What this gives up, recorded so it is not discovered later.** The reviewer is a subagent of the same lead agent that writes the change. Isolation of context is preserved, but no human evaluates the work before it reaches real users. The contract's requirement that the implementer not be its own only evaluator is satisfied in form; the human control point is not. The human accepted this trade deliberately.
+
+**What still stops.** Autonomy is raised, not unbounded. These remain human decisions and an agent must stop and ask:
+
+- a material product decision, or any change to approved `SPEC.md` requirements or acceptance criteria;
+- introducing a data processor, analytics, tracking, cookies, or a third-party script;
+- any spend, or any action that would exceed the US$0 cost ceiling;
+- weakening or removing a gate, a required context, or a branch rule;
+- a security or privacy risk not already accepted in writing;
+- repeated gate failure with no safe resolution.
+
+Rollback remains a human action: promoting a previous Vercel deployment. An agent does not roll back production.
 
 `installation-valid` is enforced here by a product test rather than only by Phase 0, so a regression to a symlink or vendored contract fails a gate instead of relying on review.
 
@@ -146,13 +174,13 @@ This product does not need operational autonomy and is not constrained by the ga
 - Project name: `meal-planner-agentic`, id `prj_MLHWJj7uE1Qi7FLfxTBCydNyFyb4`, framework preset Vite, created by the human on 2026-08-09
 - May create or link the hosting project: Yes — the project exists; linking it to the GitHub repository so that pull requests receive preview deployments is authorized
 - May create preview deployments: Yes. Once the git integration is connected, previews are produced by Vercel itself rather than by our workflow, and Vercel publishes its own status context on each pull request
-- May deploy to production: **No.** Explicitly prohibited by the human on 2026-08-09: agents must not run `vercel --prod`, promote a deployment, or publish to production by any other direct means
-- Production release model: Production may occur **only** as an automatic consequence of a pull request that the human approved and merged into `main` after every mandatory gate passed. There is no agent path to production, and spec O1 blocks production release independently
+- May deploy to production: **Only as a consequence of an authorized merge.** Direct means remain prohibited: no `vercel --prod`, no deployment promotion, no publishing to production by any other route. The distinction is deliberate — production is reached by merging a change that passed every gate, never by an agent pushing a build
+- Production release model: automatic on merge to `main`. Merge itself is authorized under "Autonomous merge and release" above and requires green checks, a `PASS` review bound to the merged head, and resolved threads. Spec O1 no longer blocks release; the human accepted the test-key risk on 2026-08-10
 - Do not create a second Vercel project or a duplicate git integration. Inspect the existing integration first; use `vercel link` only to attach the local directory to the existing project when that is actually required
 
 Git integration status: **already connected** by the human before this contract was approved. Verified read-only — Vercel publishes the `Vercel` and `Vercel Preview Comments` contexts on pull requests. No project was created and no integration was duplicated; `vercel link` was not needed.
 
-Resolved: the earlier failed production deployment (`● Error`, 2s, HTTP 404) was not a configuration defect. It built `main` at commit `fcc80b2`, which contained only the operating contract — no `package.json` and no lockfile — so `npm ci` exited with `EUSAGE: can only install with an existing package-lock.json`. The identical configuration built the preview for pull request #1 in 12 s. Production resolves itself when the human merges an application-bearing `main`.
+Resolved: the earlier failed production deployment (`● Error`, 2s, HTTP 404) was not a configuration defect. It built `main` at commit `fcc80b2`, which contained only the operating contract — no `package.json` and no lockfile — so `npm ci` exited with `EUSAGE: can only install with an existing package-lock.json`. The identical configuration built the preview for pull request #1 in 12 s. It resolved once an application-bearing `main` was merged.
 
 ## External services and credentials
 
@@ -179,11 +207,13 @@ Stop and request the user when:
 
 Project-specific additions:
 
-- Merging to `main` is always the human's action. Agents open and update pull requests; they never merge.
+- Merging to `main` is authorized under "Autonomous merge and release", and only while its three signatures hold. This displaced the contract's default that merging belongs to a human, by explicit human decision on 2026-08-10.
 - Any change that would introduce a data processor, analytics, tracking, cookies, or a third-party script stops for a `SPEC.md` revision — see `docs/privacy/assessment.md` and ADR-0003.
-- Spec O1 (TheMealDB supported key) blocks slice S7 and is not an agent decision.
+- Spec O1 is resolved: the human accepted the test-key risk on 2026-08-10, so S7 is unblocked. The acceptance is recorded in `SPEC.md` and `docs/security/threat-model.md`.
 
 ## Approval
 
 - Approved by: bmi.machado@gmail.com
 - Approved on: 2026-08-09
+- Amended 2026-08-10: semantic-review publishing authorized; SWEAI Builder pin advanced to `dd978bf` with the authorization model adopted; autonomy ceiling raised from 3 to 4, authorizing autonomous merge and, as its consequence, automatic release to production; spec O1 resolved as accepted risk.
+- Amended 2026-08-10: unattended continuation confirmed — the human reviews at the end of the work rather than between slices.

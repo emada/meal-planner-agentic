@@ -36,9 +36,11 @@ Failure action for every row: fix the cause. Never weaken, disable, or delete th
 | Reproducible build                  | `tsc --noEmit` + `vite build` at pre-push; additionally `npm ci` from a clean checkout in CI                                | push, CI                                                                                                                                           | **none recorded** — lands S6                                                               | —           |
 | Browser journeys, mobile + desktop  | Playwright, `desktop-chromium` and `mobile-chromium`                                                                        | CI                                                                                                                                                 | **none recorded** — lands S6                                                               | —           |
 | No console errors on load           | Playwright assertion                                                                                                        | CI                                                                                                                                                 | **none recorded** — lands S6                                                               | —           |
+| Dependency scan                     | `npm audit --audit-level=high` + OSV-Scanner over the lockfile                                                              | CI                                                                                                                                                 | **none recorded** — pulled forward 2026-08-10; lands S6                                    | —           |
+| Static analysis                     | CodeQL `security-extended`, required as both the job and the `CodeQL` result check                                          | CI                                                                                                                                                 | **none recorded** — pulled forward 2026-08-10; lands S6                                    | —           |
 | Preview deployment                  | Vercel git integration, `Vercel` status context                                                                             | CI (required context on `main`)                                                                                                                    | **none recorded** — lands S6                                                               | —           |
 
-**Eight of fifteen mandatory gates are proven; seven are not.** The unproven seven are configured and green but have never demonstrated rejection, which is stated here rather than presented as verified. They land in S6. The pre-push layer additionally has no probe showing it rejects a failing build or test — that is a layer, not a table row, and lands with them.
+**Eight of seventeen mandatory gates are proven; nine are not.** The unproven nine are configured and green but have never demonstrated rejection, which is stated here rather than presented as verified. They land in S6. The pre-push layer additionally has no probe showing it rejects a failing build or test — that is a layer, not a table row, and lands with them.
 
 ## Architectural rules enforced mechanically
 
@@ -58,8 +60,6 @@ Deliberately not yet in force. Each has a named landing slice, per the adoption 
 
 | Gate                               | Status                           | Lands in | Rationale                                                                                                              |
 | ---------------------------------- | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| SCA (`npm audit`, OSV-Scanner)     | deferred                         | S6       | Step 3. Dependency set is still changing during S1–S5                                                                  |
-| SAST (CodeQL or Semgrep)           | deferred                         | S6       | Step 3. Little application code exists to analyse yet                                                                  |
 | Duplication (jscpd)                | deferred                         | S6       | Step 4. Meaningless before there is code to duplicate                                                                  |
 | Automated accessibility assertions | deferred                         | S6       | Step 4. Keyboard and landmark behaviour is asserted per slice in the meantime                                          |
 | Mutation testing (Stryker)         | deferred, warn-only when adopted | S6       | Step 5. Expensive; only useful once the domain logic exists                                                            |
@@ -135,9 +135,9 @@ The rendered report is published on the pull request under the marker `<!-- swea
 
 Three limits, stated because a green report is easy to over-read:
 
-- **A local counterpart is not the required context.** Four of the five contexts the ruleset requires have a locally runnable counterpart among the declared gates; `Vercel` has none, because it is a deployment and the generator can only run npm scripts. Where a counterpart exists it is not always equivalent: the `Secret scan` context is gitleaks over full history, while the local gate is secretlint over the working tree, so **CI remains authoritative for secrets**. `Reproducible build` in CI additionally installs from the lockfile with `npm ci`, which the local `build` gate does not.
-- **Gate evidence alone never demonstrates merge readiness.** The pull request's own checks do that, and they include the deployment and the full-history secret scan this evidence cannot reach.
-- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and seven of fifteen gates still have no probe.
+- **A local counterpart is not the required context.** Four of the nine required contexts have a locally runnable counterpart among the declared gates. Five have none: `Vercel`, `Dependency scan`, `Static analysis`, `CodeQL`, and `SWEAI Review / Claude` — deployments, security analysis, and a review verdict are not npm scripts. Where a counterpart exists it is not always equivalent: the `Secret scan` context is gitleaks over full history against a local secretlint over the working tree, so **CI remains authoritative for secrets**, and `Reproducible build` in CI additionally installs from the lockfile with `npm ci`.
+- **Gate evidence alone never demonstrates merge readiness.** It reaches four of nine required contexts. The pull request's own checks are what demonstrate readiness.
+- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and nine of seventeen gates still have no probe.
 
 ### Default-branch protection
 
@@ -162,8 +162,16 @@ required_status_contexts:
   Secret scan
   Reproducible build
   Browser journeys (mobile + desktop)
+  Dependency scan
+  Static analysis
+  CodeQL
+  SWEAI Review / Claude
   Vercel
 ```
+
+This list is bound to `.github/rulesets/protect-main.json` by `src/test/governance-consistency.test.ts`, which fails when the ruleset declares a context this document does not mention. It drifted twice before that binding existed.
+
+`Static analysis` is the CodeQL **job**; `CodeQL` is the code-scanning **result** check. `github/codeql-action/analyze` uploads its SARIF and exits 0 regardless of what it found, so requiring only the job would have let a high-severity alert merge and ship. Both are required.
 
 `strict_required_status_checks_policy` is on, so a branch must be up to date with `main` before merging — two pull requests that pass in isolation cannot merge into a broken combination.
 
@@ -171,14 +179,20 @@ required_status_contexts:
 
 **AC13 is not yet exercised.** The horizontal-overflow assertion in `e2e/smoke.spec.ts` cannot currently fail: the shell renders a heading and an empty `<main>`, so overflow is impossible. It is a valid S0 smoke test and a valid regression guard once there is layout, but AC13 evidence begins at S1, when a real results grid renders. Recorded so the green tick is not mistaken for responsive-layout proof.
 
-`SWEAI Review / Claude` is **not yet** a required context. The semantic review is mandatory by contract and runs on every head, but it is published by the lead agent rather than by an independent workflow, so requiring it would mean the agent under review controls its own merge gate. It becomes a required context when it is emitted by CI rather than by the implementer. Until then the human merge step carries that residual risk, which is recorded here rather than left implicit.
+`SWEAI Review / Claude` **is** a required context, added on 2026-08-10 when autonomous merge was authorized.
+
+It was deliberately not required before, on the argument that the agent under review publishes it and so would control its own merge gate — with the human merge step carrying that risk. Authorizing autonomous merge removed the human step, which inverted the argument rather than settling it. Requiring the context does not stop a wrong `PASS`, but it does stop a merge with **no** review at all, and that was previously possible: nothing in the ruleset asked for the status to exist.
+
+What remains unprotected, stated plainly: the reviewer is a subagent of the agent that wrote the change, so a `PASS` it reaches in error still merges. The context is a floor, not a substitute for independent judgement.
+
+**Owner recovery.** Requiring a context only an agent publishes reintroduces, by a different route, the lockout that zero required approvals was chosen to avoid: if the agent or `publish-claude-review.sh` is unavailable, nothing can merge — including a fix to the ruleset. `bypass_actors` is empty by design. The recovery is for the owner to edit ruleset 20604945, remove the context, merge, and restore it. Publishing the status by hand with `gh api` is not the recovery; `EXECUTION.md` prohibits it precisely because it would defeat the head binding.
 
 ### Vercel deployment
 
 - Git integration was already connected by the human; verified read-only. No project or integration was duplicated.
 - Preview for pull request #1: `● Ready` in 12 s. The preview URL returns HTTP 302 to Vercel SSO because Deployment Protection is enabled on previews — a security default, not a failure.
 - The earlier production deployment failed (`● Error`, 2 s) with `npm error code EUSAGE — can only install with an existing package-lock.json`. Root cause: it built `main` at `fcc80b2`, which held only the operating contract, with no `package.json` and no lockfile. Not a configuration defect; the same configuration builds the preview successfully. It resolves when an application-bearing `main` is merged.
-- Agents have no path to production. `vercel --prod` and deployment promotion are prohibited by `EXECUTION.md`; production may occur only as a consequence of a human-approved merge.
+- Direct production means remain prohibited by `EXECUTION.md`: no `vercel --prod`, no deployment promotion. Since 2026-08-10 production occurs as an automatic consequence of a merge, and merging is authorized for agents under `EXECUTION.md` "Autonomous merge and release" while its signatures hold.
 
 ### Two gates were silently passing and were fixed
 
