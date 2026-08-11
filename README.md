@@ -58,6 +58,7 @@ Supporting records:
 
 - [`docs/quality/gates.md`](docs/quality/gates.md) — what blocks a merge, at which layer, and what is deliberately deferred
 - [`docs/quality/bootstrap-adoption.md`](docs/quality/bootstrap-adoption.md) — every bootstrap rule marked adopted, deferred, or not-applicable
+- [`docs/engineering/learning-log.md`](docs/engineering/learning-log.md) — what went wrong building this, and what would have caught it earlier
 - [`docs/security/threat-model.md`](docs/security/threat-model.md) — assets, threats, controls, residual risk
 - [`docs/privacy/assessment.md`](docs/privacy/assessment.md) — the data position (short: we collect nothing)
 - [`docs/architecture/`](docs/architecture/) — ADRs for material decisions
