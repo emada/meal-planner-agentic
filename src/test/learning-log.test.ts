@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
@@ -23,7 +23,11 @@ describe('the engineering learning log counts what it contains', () => {
   });
 
   it('gives every entry a scope the log defines', () => {
-    const allowed = ['local', 'propose', 'promoted', 'promoted-candidate'];
+    const legend = /^- \*\*Scope\*\*([\s\S]*?)\n- \*\*Caught by/m.exec(log)?.[1] ?? '';
+    const allowed = [...legend.matchAll(/`([a-z-]+)`/g)].map((match) => match[1]);
+
+    expect(allowed.length, 'the legend must define at least one scope').toBeGreaterThan(0);
+
     const wrong = rows
       .filter((row) => !allowed.includes(scopeOf(row)))
       .map((row) => `${row[1] ?? ''}: ${scopeOf(row)}`);
@@ -74,6 +78,20 @@ describe('the engineering learning log counts what it contains', () => {
     expect(words.indexOf(stated ?? ''), 'the stated entry count disagrees with the table').toBe(
       rows.length,
     );
+  });
+
+  it('names only guards that exist', () => {
+    // A guard cell naming a file that is not there is the log's own class B.
+    // It does not prove the guard fires — A2 named a real file that did not
+    // guard it — but it catches the cheaper mistake.
+    const missing = rows.flatMap((row) =>
+      [...(row[5] ?? '').matchAll(/`([\w.-]+\.test\.ts)`/g)]
+        .map((match) => match[1] ?? '')
+        .filter((file) => !existsSync(`src/test/${file}`))
+        .map((file) => `${row[1] ?? ''}: ${file}`),
+    );
+
+    expect(missing, 'a guard cell names a test file that does not exist').toEqual([]);
   });
 
   it('gives every entry a guard column, even when the guard is none', () => {
