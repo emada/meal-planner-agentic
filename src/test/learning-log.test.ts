@@ -15,7 +15,8 @@ const rows = log
   .filter((line) => /^\|\s*[A-D]\d+\s*\|/.test(line))
   .map((line) => line.split('|').map((cell) => cell.trim()));
 
-const scopeOf = (row: string[]) => row[row.length - 2] ?? '';
+const scopeOf = (row: string[]) => row[row.length - 3] ?? '';
+const promotedToOf = (row: string[]) => row[row.length - 2] ?? '';
 
 describe('the engineering learning log counts what it contains', () => {
   it('records entries at all', () => {
@@ -108,6 +109,27 @@ describe('the engineering learning log counts what it contains', () => {
       .map((row) => `${row[1] ?? ''}: ${row[5] ?? ''}`);
 
     expect(indirect, 'a guard cell must name its guard, not refer to another row').toEqual([]);
+  });
+
+  it('makes a promoted entry name where it landed', () => {
+    // The first promotion left every entry marked `propose` in the same commit
+    // that promoted them, and the count agreed with the labels because both
+    // were stale. Naming the destination is what makes the label checkable.
+    const bootstrap = '.ai-engineering/.bootstrap';
+    const wrong = rows
+      .filter((row) => scopeOf(row) === 'promoted')
+      .flatMap((row) => {
+        const cell = promotedToOf(row);
+        const file = /`([\w./-]+\.md)`/.exec(cell)?.[1];
+
+        if (file === undefined) return [`${row[1] ?? ''}: names no contract file`];
+
+        return existsSync(`${bootstrap}/${file}`)
+          ? []
+          : [`${row[1] ?? ''}: ${file} does not exist`];
+      });
+
+    expect(wrong, 'a promoted entry must name a contract file that exists').toEqual([]);
   });
 
   it('gives every entry a guard column, even when the guard is none', () => {
