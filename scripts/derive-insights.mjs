@@ -11,8 +11,12 @@
  *
  * Run: node scripts/derive-insights.mjs [--check]
  *
- * `--check` recomputes and exits non-zero if the committed JSON is stale, which
- * is what `src/test/insights-figures.test.ts` and the local gate use.
+ * `--check` recomputes and exits non-zero if the committed JSON is stale. It is
+ * run by hand (`npm run check:insights`) and by nothing else: the slices it
+ * measures live on branches that were deleted after merge, so a CI checkout —
+ * which has `main` and the pull-request head, not those tips — cannot reproduce
+ * them. Making it a gate would fail for reasons that are not defects. That is a
+ * real limit, not a preference, and `INSIGHTS.md` says so.
  *
  * Deliberately git-only. The pull-request count and the CI median come from the
  * GitHub API, which a test cannot reach offline; those two are carried in the
@@ -114,6 +118,20 @@ function derive() {
   const buildSeconds = rows.reduce((sum, r) => sum + r.buildSeconds, 0);
   const reviewSeconds = rows.reduce((sum, r) => sum + r.reviewSeconds, 0);
 
+  // The one stretch the human left running unattended: S1's first commit to
+  // S9's merge, with the same 30-minute truncation as the header figures.
+  const s1 = log.findIndex((c) => c.subject.startsWith('feat(s1)'));
+  const s9 = log.findIndex((c) => /^feat\(s9\).*\(#\d+\)$/.test(c.subject));
+  let stretch = 0;
+
+  for (let i = s1 + 1; i <= s9; i += 1) stretch += Math.min(log[i].time - log[i - 1].time, CAP);
+
+  // The pair the plan called independent. S4 is not separable: it shipped in
+  // the same pull request as S3.
+  const pair = rows.filter((r) => /feat\(s3,s4\)|feat\(s5\)/.test(r.slice));
+  const pairSeconds = pair.reduce((sum, r) => sum + r.buildSeconds + r.reviewSeconds, 0);
+  const pairReviewSeconds = pair.reduce((sum, r) => sum + r.reviewSeconds, 0);
+
   return {
     snapshotCommit: THROUGH,
     wallClockHours: Number(((last - first) / 3600).toFixed(1)),
@@ -137,6 +155,22 @@ function derive() {
     // Printed cells are rounded individually, so their sum can differ from a
     // total computed from exact timestamps. Stated rather than hidden.
     printedBuildColumnSum: rows.reduce((sum, r) => sum + r.buildMinutes, 0),
+    exactBuildMinutes: Number((buildSeconds / MINUTE).toFixed(1)),
+    autonomousStretchActiveHours: Number((stretch / 3600).toFixed(1)),
+    pairTotalMinutes: round(pairSeconds),
+    pairReviewMinutes: round(pairReviewSeconds),
+    // Halving the build column against the combined total.
+    doublingBuildSavesMinutes: round(buildSeconds / 2),
+    combinedMinutes: round(buildSeconds + reviewSeconds),
+    doublingBuildSavesPercent: Math.round(
+      (buildSeconds / 2 / (buildSeconds + reviewSeconds)) * 100,
+    ),
+    // What review would cost if the same remediation arrived in 9 rounds rather
+    // than the 23 it took. An extrapolation, not a measurement, and INSIGHTS.md
+    // labels it as one.
+    nineRoundEquivalentMinutes: round(
+      (reviewSeconds * 9) / rows.reduce((sum, r) => sum + r.rounds, 0),
+    ),
     apiDerived: {
       note: 'From the GitHub API on 2026-08-11; not recomputed by this script.',
       mergedPullRequests: 13,
