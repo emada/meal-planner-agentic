@@ -56,6 +56,13 @@ Sourced from `GOAL.md`. Requirements marked _(derived)_ are implied by the brief
 - R5.3 The app targets real users (D3, resolved), so the full tooling profile applies in the adoption order of `.ai-engineering/.bootstrap/06-tools`: types, format, lint, tests, secrets → CI, reproducible build, preview deploy → SCA and SAST → boundaries, duplication, cycles → mutation and performance. Exact mandatory set, layer, and owner per gate are fixed in `PLAN.md` and recorded in `docs/quality/gates.md`.
 - R5.4 Because the app is user-facing, it needs a threat model (`docs/security/threat-model.md`) and a privacy assessment (`docs/privacy/assessment.md`) recording the no-personal-data position, however short.
 
+### R6 — Recipe browsing (added by amendment A1)
+
+- R6.1 A user who has not searched is shown the recipe categories from `https://www.themealdb.com/api/json/v1/1/categories.php`, not an empty view.
+- R6.2 Opening a category lists its recipes from `filter.php?c={category}`. That endpoint returns partial meals, so opening one fetches the full recipe from `lookup.php?i={id}` before the modal opens.
+- R6.3 The user can return to the categories from inside a category and from a search.
+- R6.4 Each of the three requests has its own visible loading and failure state; a failure in one does not blank the others.
+
 ## Non-goals
 
 - User accounts, login, server-side persistence, or syncing a list across devices.
@@ -133,7 +140,7 @@ the approved contract and what shipped never quietly diverge.
 
 ### A1 — Category browsing becomes a requirement (2026-08-11)
 
-**What changed.** AC15 added. O4 partially resolved.
+**What changed.** AC15 and requirement R6 added. O4 partially resolved.
 
 **Why.** `GOAL.md` asks for "good user experience to find and **navigate**
 through various recipes". AC1–AC14 delivered finding — search — and never

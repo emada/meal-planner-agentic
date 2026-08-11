@@ -49,7 +49,7 @@ describe('SearchView', () => {
     respondWith({ meals: [meal('1', 'Beef Pie'), meal('2', 'Beef Stew')] });
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox', { name: /search recipes/i }), 'beef{Enter}');
 
     expect(await screen.findByText('Beef Pie')).toBeInTheDocument();
@@ -65,7 +65,7 @@ describe('SearchView', () => {
     respondWith({ meals: null });
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'zzzzz{Enter}');
 
     expect(await screen.findByText(/no recipes found/i)).toBeInTheDocument();
@@ -76,7 +76,7 @@ describe('SearchView', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'beef{Enter}');
 
     const alert = await screen.findByRole('alert');
@@ -94,7 +94,7 @@ describe('SearchView', () => {
     respondWith({ meals: null });
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), '   {Enter}');
 
     expect(searchRequests()).toHaveLength(0);
@@ -119,7 +119,7 @@ describe('SearchView', () => {
     );
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'beef{Enter}');
 
     const region = await screen.findByText(/searching/i);
@@ -151,7 +151,7 @@ describe('SearchView', () => {
     );
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     const box = screen.getByRole('searchbox');
 
     await user.type(box, 'beef{Enter}');
@@ -196,7 +196,7 @@ describe('SearchView', () => {
     );
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     const box = screen.getByRole('searchbox');
 
     await user.type(box, 'beef{Enter}');
@@ -222,7 +222,7 @@ describe('SearchView', () => {
     const onOpenRecipe = vi.fn();
     const user = userEvent.setup();
 
-    render(<SearchView onOpenRecipe={onOpenRecipe} />);
+    render(<SearchView onOpenRecipe={onOpenRecipe} recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'beef{Enter}');
     await user.click(await screen.findByRole('button', { name: /beef pie/i }));
 

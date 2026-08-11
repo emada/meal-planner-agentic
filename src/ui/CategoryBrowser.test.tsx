@@ -72,7 +72,7 @@ describe('CategoryBrowser', () => {
   it('shows the categories a first-time visitor can start from (AC15)', async () => {
     route();
 
-    render(<CategoryBrowser />);
+    render(<CategoryBrowser recipeOpen={false} />);
 
     expect(await screen.findByRole('button', { name: 'Beef' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Seafood' })).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('CategoryBrowser', () => {
     route();
     const user = userEvent.setup();
 
-    render(<CategoryBrowser />);
+    render(<CategoryBrowser recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
 
     expect(await screen.findByText('Beef Pie')).toBeInTheDocument();
@@ -95,7 +95,7 @@ describe('CategoryBrowser', () => {
     route();
     const user = userEvent.setup();
 
-    render(<CategoryBrowser />);
+    render(<CategoryBrowser recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
     await user.click(await screen.findByRole('button', { name: /all categories/i }));
 
@@ -108,7 +108,7 @@ describe('CategoryBrowser', () => {
     const onOpenRecipe = vi.fn();
     const user = userEvent.setup();
 
-    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} />);
+    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
     await user.click(await screen.findByRole('button', { name: /beef pie/i }));
 
@@ -137,7 +137,7 @@ describe('CategoryBrowser', () => {
     route({ categoriesFail: true });
     const user = userEvent.setup();
 
-    render(<CategoryBrowser />);
+    render(<CategoryBrowser recipeOpen={false} />);
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not load the categories/i);
 
     vi.unstubAllGlobals();
@@ -151,7 +151,7 @@ describe('CategoryBrowser', () => {
     route({ filterFail: true });
     const user = userEvent.setup();
 
-    render(<CategoryBrowser />);
+    render(<CategoryBrowser recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not load Beef/i);
@@ -164,7 +164,7 @@ describe('CategoryBrowser', () => {
     const onOpenRecipe = vi.fn();
     const user = userEvent.setup();
 
-    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} />);
+    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
     await user.click(await screen.findByRole('button', { name: /beef pie/i }));
 
@@ -181,7 +181,7 @@ describe('CategoryBrowser', () => {
     const onOpenRecipe = vi.fn();
     const user = userEvent.setup();
 
-    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} />);
+    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
     await user.click(await screen.findByRole('button', { name: /beef pie/i }));
 
@@ -207,7 +207,7 @@ describe('CategoryBrowser', () => {
     );
     const user = userEvent.setup();
 
-    render(<CategoryBrowser onOpenRecipe={vi.fn()} />);
+    render(<CategoryBrowser onOpenRecipe={vi.fn()} recipeOpen={false} />);
     await user.click(await screen.findByRole('button', { name: 'Beef' }));
     const card = await screen.findByRole('button', { name: /beef pie/i });
     await user.click(card);
@@ -274,7 +274,7 @@ describe('CategoryBrowser', () => {
   it('does not render a category grid that has no categories in it', async () => {
     route({ categories: { categories: null } });
 
-    render(<CategoryBrowser />);
+    render(<CategoryBrowser recipeOpen={false} />);
 
     await waitFor(() => {
       expect(screen.queryByText(/loading categories/i)).not.toBeInTheDocument();

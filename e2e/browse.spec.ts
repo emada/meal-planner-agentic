@@ -9,6 +9,7 @@ import { expect, json, test } from './themealdb';
 const FILTER = 'https://www.themealdb.com/api/json/v1/1/filter.php*';
 const LOOKUP = 'https://www.themealdb.com/api/json/v1/1/lookup.php*';
 const SEARCH = 'https://www.themealdb.com/api/json/v1/1/search.php*';
+const RANDOM = 'https://www.themealdb.com/api/json/v1/1/random.php*';
 
 /** filter.php sends id, title and thumbnail only — no category, area or ingredients. */
 const FILTERED = {
@@ -211,4 +212,51 @@ test('AC13 — the browse view fits a 375px viewport without clipping', async ({
       ).length,
   );
   expect(clipped).toBe(0);
+});
+
+test('a late browse lookup does not replace a recipe the user opened another way', async ({
+  page,
+}) => {
+  await json(page, FILTER, FILTERED);
+  await json(page, RANDOM, {
+    meals: [
+      {
+        idMeal: '99',
+        strMeal: 'Random Dish',
+        strMealThumb: 'https://x/9.jpg',
+        strCategory: 'Misc',
+        strArea: 'Nowhere',
+        strInstructions: 'Improvise.',
+        strIngredient1: 'Luck',
+        strMeasure1: 'a pinch',
+      },
+    ],
+  });
+  // Slow enough that "surprise me" wins the race, which is the point.
+  await page.route(LOOKUP, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(FULL),
+    });
+  });
+  await page.goto('/');
+
+  await page.getByRole('button', { name: 'Beef' }).click();
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  // The lookup is in flight; the user gives up on it and asks for a random one.
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: /surprise me/i })
+    .click();
+  await expect(page.getByRole('dialog')).toContainText('Random Dish');
+
+  // Covers the wiring App -> SearchView -> CategoryBrowser end to end, which a
+  // component test injecting the prop directly cannot see.
+  await page.waitForTimeout(1600);
+  await expect(page.getByRole('dialog')).toContainText('Random Dish');
+  await expect(page.getByRole('dialog')).not.toContainText('Beef Pie');
 });

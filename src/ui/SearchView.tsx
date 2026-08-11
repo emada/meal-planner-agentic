@@ -7,10 +7,11 @@ import { useRecipeSearch } from './useRecipeSearch';
 
 interface SearchViewProps {
   readonly onOpenRecipe?: (recipe: Recipe) => void;
-  readonly recipeOpen?: boolean;
+  /** Required for the same reason as on `CategoryBrowser`. */
+  readonly recipeOpen: boolean;
 }
 
-export function SearchView({ onOpenRecipe, recipeOpen = false }: SearchViewProps) {
+export function SearchView({ onOpenRecipe, recipeOpen }: SearchViewProps) {
   const { state, search, retry } = useRecipeSearch();
   const [term, setTerm] = useState('');
   const inputId = useId();

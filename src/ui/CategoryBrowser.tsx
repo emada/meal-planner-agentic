@@ -4,8 +4,13 @@ import { useCategoryBrowse } from './useCategoryBrowse';
 
 interface CategoryBrowserProps {
   readonly onOpenRecipe?: (recipe: Recipe) => void;
-  /** True while a recipe modal is open, from any route (see `useCategoryBrowse`). */
-  readonly recipeOpen?: boolean;
+  /**
+   * True while a recipe modal is open, from any route. Required, not optional:
+   * this prop carries the guard that stops a late lookup replacing the recipe
+   * the user is reading, and a default would let the wiring be deleted
+   * silently (see `useCategoryBrowse`).
+   */
+  readonly recipeOpen: boolean;
 }
 
 /**
@@ -15,7 +20,7 @@ interface CategoryBrowserProps {
  * over an empty region serves only the user who already knows a dish to type;
  * this gives everyone else somewhere to start.
  */
-export function CategoryBrowser({ onOpenRecipe, recipeOpen = false }: CategoryBrowserProps) {
+export function CategoryBrowser({ onOpenRecipe, recipeOpen }: CategoryBrowserProps) {
   const browse = useCategoryBrowse(onOpenRecipe, recipeOpen);
   const { list, meals } = browse;
 

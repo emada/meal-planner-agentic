@@ -181,6 +181,26 @@ describe('governance documents agree with the current authorization model', () =
     expect(planned).toEqual([]);
   });
 
+  it('quotes a slice range that matches the slices PLAN.md declares', () => {
+    // README said "slices S0-S7" for a full slice after S8 existed. Nothing
+    // bound a range written in prose to the plan it described.
+    const plan = readFileSync('PLAN.md', 'utf8');
+    const slices = [...plan.matchAll(/^### S(\d+) — /gm)].map((match) => Number(match[1]));
+
+    expect(slices.length).toBeGreaterThan(0);
+
+    const first = `S${String(Math.min(...slices))}`;
+    const last = `S${String(Math.max(...slices))}`;
+
+    const wrong = documents.flatMap(({ path, text }) =>
+      [...text.matchAll(/slices (S\d+)[–-](S\d+)/g)]
+        .filter((match) => match[1] !== first || match[2] !== last)
+        .map((match) => `${path}: "${match[0]}"`),
+    );
+
+    expect(wrong).toEqual([]);
+  });
+
   it('states gate counts that match the gate table they summarise', () => {
     // These counts drifted in three consecutive review rounds because they were
     // written by hand next to a table that already held the answer. Deriving

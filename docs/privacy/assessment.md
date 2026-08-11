@@ -1,6 +1,6 @@
 # Privacy assessment
 
-Scope: the application defined in `SPEC.md`. Last reviewed at S0 (2026-08-09). This is a short assessment because the application collects nothing — that is the finding, not an omission.
+Scope: the application defined in `SPEC.md`. Last reviewed at S8 (2026-08-11). This is a short assessment because the application collects nothing — that is the finding, not an omission.
 
 ## Summary
 
@@ -30,12 +30,21 @@ Answered per `.ai-engineering/.bootstrap/03-security-privacy/02-privacy-gdpr-app
 
 Users can type anything into a free-text field. The application never stores search terms, never logs them, and never sends them anywhere except TheMealDB as the search query itself.
 
+**When contact with TheMealDB happens changed at S8 (2026-08-11).** Until then no
+request was made until the user acted, so a visitor who arrived and left without
+searching never contacted the third party. The category browser (AC15) loads on
+arrival, so every visitor's IP address now reaches TheMealDB — and its image
+host — with no interaction at all. Nothing new is collected and no new
+subprocessor is involved, so the no-consent-banner position is unchanged; what
+changed is the timing, which is recorded here rather than left for a reader to
+infer from the code.
+
 ## Third parties and subprocessors
 
-| Party     | Role                   | What reaches them                                                                     | Basis                                            |
-| --------- | ---------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| TheMealDB | Recipe data and images | The search term; the user's IP address as an unavoidable property of any HTTP request | Necessary to deliver the product's core function |
-| Vercel    | Static hosting         | The user's IP address and standard request metadata in server logs                    | Necessary to serve the application               |
+| Party     | Role                   | What reaches them                                                                                                | Basis                                            |
+| --------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| TheMealDB | Recipe data and images | The search term; the browsed category name; the user's IP address as an unavoidable property of any HTTP request | Necessary to deliver the product's core function |
+| Vercel    | Static hosting         | The user's IP address and standard request metadata in server logs                                               | Necessary to serve the application               |
 
 No other subprocessor. No international transfer beyond what these two involve inherently.
 
