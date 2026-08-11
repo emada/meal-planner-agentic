@@ -33,13 +33,13 @@ product only when its pin advances.
 ## Pending promotion
 
 Entries below marked `propose` and not yet in a contract pull request:
-**<!-- derived:pending-promotion -->0<!-- /derived -->**.
+**<!-- derived:pending-promotion -->1<!-- /derived -->**.
 
 ---
 
 ## The recurring classes
 
-Twenty-four entries, and they are not twenty-four different mistakes. Three
+Twenty-five entries, and they are not twenty-five different mistakes. Three
 shapes account for most of them.
 
 ### A. Claim accuracy — a document asserting what the code does not do
@@ -105,11 +105,12 @@ not commented. `propose`: a checklist item for review.
 
 ## Everything else
 
-| #   | What happened                                                                                                                                                                                       | Caught by | Scope    | Promoted to                                                      |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------- | ---------------------------------------------------------------- |
-| D1  | `.bootstrap` was committed as a symlink pointing outside the repository. Installation integrity needs a mechanical assertion, and now has one.                                                      | human     | promoted | already covered by `07-project-adoption/01-project-checklist.md` |
-| D2  | CodeQL flagged a file-system race in a script written for this project. Fixed, not suppressed.                                                                                                      | gate      | local    | —                                                                |
-| D3  | The preview-deployment gate was left unproven on the argument that deploy logs already showed it. They show success, not refusal — different claims, and "the logs already show it" is not a probe. | human     | promoted | `02-quality/04-control-effectiveness.md`                         |
+| #   | What happened                                                                                                                                                                                                             | Caught by | Scope    | Promoted to                                                      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------- | ---------------------------------------------------------------- |
+| D1  | `.bootstrap` was committed as a symlink pointing outside the repository. Installation integrity needs a mechanical assertion, and now has one.                                                                            | human     | promoted | already covered by `07-project-adoption/01-project-checklist.md` |
+| D2  | CodeQL flagged a file-system race in a script written for this project. Fixed, not suppressed.                                                                                                                            | gate      | local    | —                                                                |
+| D3  | The preview-deployment gate was left unproven on the argument that deploy logs already showed it. They show success, not refusal — different claims, and "the logs already show it" is not a probe.                       | human     | promoted | `02-quality/04-control-effectiveness.md`                         |
+| D4  | The check added to verify a promoted entry read `.ai-engineering/.bootstrap`, which is a private submodule. It passed locally and failed on all twenty rows in CI, where the checkout has the product and not the engine. | gate      | propose  | —                                                                |
 
 ---
 

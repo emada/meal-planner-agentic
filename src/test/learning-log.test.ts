@@ -111,25 +111,38 @@ describe('the engineering learning log counts what it contains', () => {
     expect(indirect, 'a guard cell must name its guard, not refer to another row').toEqual([]);
   });
 
+  const BOOTSTRAP = '.ai-engineering/.bootstrap';
+  const promoted = () => rows.filter((row) => scopeOf(row) === 'promoted');
+
   it('makes a promoted entry name where it landed', () => {
     // The first promotion left every entry marked `propose` in the same commit
     // that promoted them, and the count agreed with the labels because both
     // were stale. Naming the destination is what makes the label checkable.
-    const bootstrap = '.ai-engineering/.bootstrap';
-    const wrong = rows
-      .filter((row) => scopeOf(row) === 'promoted')
-      .flatMap((row) => {
-        const cell = promotedToOf(row);
-        const file = /`([\w./-]+\.md)`/.exec(cell)?.[1];
+    const unnamed = promoted()
+      .filter((row) => !/`[\w./-]+\.md`/.test(promotedToOf(row)))
+      .map((row) => row[1] ?? '');
 
-        if (file === undefined) return [`${row[1] ?? ''}: names no contract file`];
+    expect(unnamed, 'a promoted entry must name a contract file').toEqual([]);
+  });
 
-        return existsSync(`${bootstrap}/${file}`)
-          ? []
-          : [`${row[1] ?? ''}: ${file} does not exist`];
-      });
+  /**
+   * The contract is a private submodule. A CI checkout has the product and not
+   * the engine, so resolving these paths there fails for a reason that is not a
+   * defect — which is exactly what happened: this check passed locally and
+   * failed on all twenty rows in CI.
+   *
+   * `skipIf` rather than an early return: a skipped test is reported as
+   * skipped, where a conditional `return` would report success for a check that
+   * never ran.
+   */
+  it.skipIf(!existsSync(BOOTSTRAP))('resolves each destination in the contract', () => {
+    const missing = promoted().flatMap((row) => {
+      const file = /`([\w./-]+\.md)`/.exec(promotedToOf(row))?.[1] ?? '';
 
-    expect(wrong, 'a promoted entry must name a contract file that exists').toEqual([]);
+      return existsSync(`${BOOTSTRAP}/${file}`) ? [] : [`${row[1] ?? ''}: ${file}`];
+    });
+
+    expect(missing, 'a promoted entry names a contract file that does not exist').toEqual([]);
   });
 
   it('gives every entry a guard column, even when the guard is none', () => {
