@@ -133,11 +133,11 @@ describe('toRecipe', () => {
   });
 
   it('reads each link from its own field (AC4)', () => {
-    // Mutation testing found that nothing asserted the source link's
-    // destination: the only mapping test asserted `sourceUrl` was `null`, and
-    // the component and browser tests asserted the link was present without
-    // checking its href. Reading the wrong field here would have passed all
-    // 143 unit and 120 browser tests.
+    // Mutation testing found that no test asserted either link's destination
+    // from a populated field. `sourceUrl` was only ever asserted as `null`,
+    // and the component and browser tests checked the source link's presence
+    // without its href — so a read of a field that happens to be empty in the
+    // fixture, or no read at all, survived the unit suite.
     const recipe = toRecipe({
       idMeal: '1',
       strMeal: 'Beef Pie',
