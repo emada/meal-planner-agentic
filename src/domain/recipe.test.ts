@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractIngredients, optionalUrl, toRecipe } from './recipe';
+import { extractIngredients, optionalUrl, toCategory, toRecipe, toRecipeSummary } from './recipe';
 
 const slots = (pairs: [string, string][]): Record<string, string | null> => {
   const fields: Record<string, string | null> = {};
@@ -138,5 +138,69 @@ describe('toRecipe', () => {
     const recipe = toRecipe({ idMeal: 1, strMeal: true, strCategory: null });
 
     expect(recipe).toMatchObject({ id: '', title: '', category: '', ingredients: [] });
+  });
+});
+
+describe('toCategory', () => {
+  it('maps a validated category', () => {
+    expect(
+      toCategory({
+        idCategory: '1',
+        strCategory: ' Beef ',
+        strCategoryThumb: ' https://x/beef.png ',
+        strCategoryDescription: ' Meat from cattle. ',
+      }),
+    ).toEqual({
+      id: '1',
+      name: 'Beef',
+      thumbnailUrl: 'https://x/beef.png',
+      description: 'Meat from cattle.',
+    });
+  });
+
+  it('yields empty strings rather than null for the fields the API omits', () => {
+    // The tile renders the thumbnail conditionally on `!== ''`; a null here
+    // would render `src="null"` and request a broken image.
+    expect(toCategory({ idCategory: '2', strCategory: 'Pasta' })).toEqual({
+      id: '2',
+      name: 'Pasta',
+      thumbnailUrl: '',
+      description: '',
+    });
+  });
+});
+
+describe('toRecipeSummary', () => {
+  it('maps the fields a card needs', () => {
+    expect(
+      toRecipeSummary({
+        idMeal: '1',
+        strMeal: 'Beef Pie',
+        strMealThumb: 'https://x/1.jpg',
+        strCategory: 'Beef',
+        strArea: 'British',
+      }),
+    ).toEqual({
+      id: '1',
+      title: 'Beef Pie',
+      thumbnailUrl: 'https://x/1.jpg',
+      category: 'Beef',
+      area: 'British',
+    });
+  });
+
+  it('leaves category and area empty for a filter result that omits them', () => {
+    // filter.php sends id, title and thumbnail only. The card joins category
+    // and area with a separator, so absent fields must be '' and not 'null'.
+    const summary = toRecipeSummary({ idMeal: '1', strMeal: 'Acaraje', strArea: null });
+
+    expect(summary).toEqual({
+      id: '1',
+      title: 'Acaraje',
+      thumbnailUrl: '',
+      category: '',
+      area: '',
+    });
+    expect([summary.category, summary.area].filter(Boolean).join(' · ')).toBe('');
   });
 });

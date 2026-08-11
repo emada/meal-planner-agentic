@@ -137,7 +137,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Mapped AC**: AC4, AC5.
 - **Scope**: ingredient/measure extraction in `domain/` discarding empty pairs; modal with focus trap, Escape to close, focus restoration; conditional YouTube and source links with `rel="noopener noreferrer"`; instructions rendered as text.
 - **Dependencies**: S1.
-- **Evidence**: unit tests for extraction across recipes with 3, 9, and 20 filled slots plus whitespace-only measures; keyboard-only Playwright test. The automated a11y check is deferred to S6 with the other accessibility assertions (`docs/quality/gates.md`); keyboard, focus-trap, and landmark behaviour are asserted directly instead.
+- **Evidence**: unit tests for extraction across recipes with 3, 9, and 20 filled slots plus whitespace-only measures; keyboard-only Playwright test. The automated a11y check landed at S6 with the other accessibility assertions (`docs/quality/gates.md`); this slice asserted keyboard, focus-trap, and landmark behaviour directly instead.
 - **Stop condition**: focus management cannot satisfy AC5 with the chosen approach.
 - **Parallelization**: none.
 
@@ -184,6 +184,17 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Scope**: production deployment to Vercel; rollback via Vercel's previous-deployment promotion; post-deploy smoke check of the three journeys. Obtaining a supported TheMealDB key is **no longer in scope** — the human accepted the test-key risk on 2026-08-10 (spec O1).
 - **Dependencies**: none remaining. Production now releases automatically on merge, so S7 is a verification and hardening slice rather than a gate to pass through.
 
+### S8 — Browse by category
+
+- **Status**: complete, 2026-08-11.
+- **Outcome**: a user who has not searched has somewhere to start, and can reach a full recipe without typing.
+- **Mapped AC**: AC15, added by spec amendment A1.
+- **Scope**: `categories.php` and `filter.php` clients with their own schemas; a category browser occupying the idle search view; a `lookup.php` follow-up because filter results are partial; a return path from a search back to the categories; the shared `RecipeCard` extracted so the two grids cannot drift.
+- **Dependencies**: S1 for the grid, S2 for the modal.
+- **Evidence**: unit tests for the three new endpoints and both new domain mappings; component tests for every browse state including a failed lookup; ten browser tests at both viewports; a Playwright fixture that fails any spec reaching the live API, probed both ways.
+- **Stop condition**: `filter.php` turning out to carry full meals after all, which would make the lookup dead weight — report rather than keep it.
+- **Parallelization**: none. Single agent.
+
 ## First vertical slice
 
 **S1 — Search and results grid**, immediately after S0. It exercises every architectural layer, both external boundaries relevant at that point, all three UI states, the responsive requirement, and the full deploy path — while remaining small enough to review in one sitting.
@@ -194,7 +205,7 @@ Not yet. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
 
 | Condition                                                         | Status                                              |
 | ----------------------------------------------------------------- | --------------------------------------------------- |
-| Product direction and plan approved                               | spec yes; plan pending this approval                |
+| Product direction and plan approved                               | yes — spec 2026-08-09, plan 2026-08-09              |
 | Two independent bounded tasks                                     | **not yet** — S0 through S3 are strictly sequential |
 | Acceptance criteria, scope, verification, stop condition per task | yes, defined above                                  |
 | Explicit ownership boundaries                                     | yes, module boundaries above                        |
@@ -213,7 +224,7 @@ Not yet. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
 | Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                               |
 | `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                |
 | Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                    |
-| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 in S0, step 3 pulled forward to 2026-08-10, steps 4–5 in S6                                                                    |
+| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 at S0, step 3 pulled forward to 2026-08-10, step 4 at S6. Step 5 is unscheduled — see the gate register                        |
 | Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                |
 
 ## Decisions resolved

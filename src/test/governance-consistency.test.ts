@@ -95,10 +95,18 @@ describe('governance documents agree with the current authorization model', () =
     const threats = readFileSync('docs/security/threat-model.md', 'utf8');
     const plan = readFileSync('PLAN.md', 'utf8');
 
-    // A slice is shipped once PLAN.md stops describing it as upcoming; S0-S6
-    // are all merged at the time of writing, so any reference to them as a
-    // future landing point is stale by construction.
-    const shipped = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+    // Derived from PLAN.md rather than listed here. A hand-kept list stops
+    // growing the moment someone forgets it, and this one had already fallen a
+    // slice behind: S7 shipped while the list still ended at S6, so nothing
+    // would have caught a "lands in S7".
+    // Bounded to each slice's own section. A non-greedy match from one
+    // heading ran to the next `Status: planned` anywhere below it, which marked
+    // every slice planned as soon as one was.
+    const shipped = [...plan.matchAll(/^### (S\d+) — [^\n]*\n([\s\S]*?)(?=^#{2,3} )/gm)]
+      .filter((match) => !(match[2] ?? '').includes('**Status**: planned'))
+      .map((match) => match[1] ?? '');
+
+    expect(shipped).toContain('S8');
     // Selected by content, not by table syntax: the bullet this guard was
     // written for was prose, and a `startsWith('| ')` filter excluded it
     // before the slice regex was ever evaluated.
@@ -125,21 +133,37 @@ describe('governance documents agree with the current authorization model', () =
     expect(isStale('| Coverage thresholds | deferred | unscheduled | ... |')).toBe(false);
     expect(isStale('Coverage is reported from S0 and enforced later.')).toBe(false);
 
-    expect(plan).toContain('S7');
-
     // Three documents, not one: the step-5 cell and three "Planned" threat rows
     // survived a full slice because only gates.md was being read.
-    for (const [name, text] of [
+    const guarded = [
       ['gates.md', gates],
       ['bootstrap-adoption.md', adoption],
-    ] as const) {
+      ['PLAN.md', plan],
+    ] as const;
+
+    for (const [name, text] of guarded) {
       expect([name, ...text.split('\n').filter(isStale)]).toEqual([name]);
+    }
+
+    // Step 5 is unscheduled, and three documents have now claimed otherwise in
+    // three different phrasings — "steps 4-5 land in S6", "steps 4-5 in S6",
+    // and a table cell. Asserting the fact catches phrasings not yet invented.
+    for (const [name, text] of guarded) {
+      const scheduled = text
+        .split('\n')
+        .filter((line) => /steps? 4[–—-]5/i.test(line) && /\bS\d\b/.test(line));
+
+      expect([name, ...scheduled]).toEqual([name]);
     }
 
     // A control cannot still be "planned" for a slice that has shipped.
     const planned = threats
       .split('\n')
-      .filter((line) => new RegExp(`Planned\\s*—\\s*(${shipped.join('|')})\\b`).test(line));
+      // Any dash, or a parenthesised slice: the em-dash-only form matched the
+      // one row that existed when this was written and nothing else.
+      .filter((line) =>
+        new RegExp(`Planned\\s*(?:[—–-]|\\()\\s*(${shipped.join('|')})\\b`).test(line),
+      );
 
     expect(planned).toEqual([]);
   });
@@ -204,6 +228,18 @@ describe('governance documents agree with the current authorization model', () =
         const numeratorValid = numerator === spell(proven) || numerator === spell(unproven);
 
         if (!numeratorValid || denominator !== spell(rows.length)) {
+          wrong.push(`${name}: "${claim}"`);
+        }
+      }
+
+      // "…; the other nine remain unproven" is the same hand-written count
+      // wearing different words, and it survived the sweep above when the
+      // table grew by one because it names no denominator.
+      for (const match of text.matchAll(/the other (\w+) (?:remain|are)\b[^.]*/gi)) {
+        const [claim, left] = match;
+        const remainder = (left ?? '').toLowerCase();
+
+        if (remainder !== spell(proven) && remainder !== spell(unproven)) {
           wrong.push(`${name}: "${claim}"`);
         }
       }

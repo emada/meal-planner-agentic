@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './themealdb';
 
 /**
  * S0 smoke test: proves the built artefact loads and the harness can drive it

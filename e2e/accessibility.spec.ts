@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { expect, test } from './themealdb';
 
 const SEARCH_ROUTE = 'https://www.themealdb.com/api/json/v1/1/search.php*';
 const RANDOM_ROUTE = 'https://www.themealdb.com/api/json/v1/1/random.php*';

@@ -29,7 +29,24 @@ const responseSchema = z.object({
   meals: z.array(mealSchema).nullable(),
 });
 
+/**
+ * `categories.php` answers under a different key and a different shape from
+ * every meal endpoint, so it gets its own schema rather than a widened one that
+ * would let a malformed meal response through as an empty category list.
+ */
+const categorySchema = z.object({
+  idCategory: z.string(),
+  strCategory: z.string(),
+  strCategoryThumb: z.string().nullish(),
+  strCategoryDescription: z.string().nullish(),
+});
+
+const categoriesResponseSchema = z.object({
+  categories: z.array(categorySchema).nullable(),
+});
+
 export type Meal = z.infer<typeof mealSchema>;
+export type MealCategory = z.infer<typeof categorySchema>;
 
 /** Distinguishes "nothing matched" from "we could not ask", which the UI renders differently. */
 export class RecipeApiError extends Error {
@@ -39,7 +56,7 @@ export class RecipeApiError extends Error {
   }
 }
 
-async function request(url: string, signal?: AbortSignal): Promise<Meal[]> {
+async function fetchJson(url: string, signal?: AbortSignal): Promise<unknown> {
   let response: Response;
 
   try {
@@ -53,15 +70,15 @@ async function request(url: string, signal?: AbortSignal): Promise<Meal[]> {
     throw new RecipeApiError(`TheMealDB responded with ${String(response.status)}.`);
   }
 
-  let payload: unknown;
-
   try {
-    payload = await response.json();
+    return await response.json();
   } catch (cause) {
     throw new RecipeApiError('TheMealDB returned a response that is not JSON.', cause);
   }
+}
 
-  const parsed = responseSchema.safeParse(payload);
+async function request(url: string, signal?: AbortSignal): Promise<Meal[]> {
+  const parsed = responseSchema.safeParse(await fetchJson(url, signal));
 
   if (!parsed.success) {
     // Unparsed third-party data never reaches ui/ (ADR-0002).
@@ -78,6 +95,37 @@ export async function searchRecipes(term: string, signal?: AbortSignal): Promise
 
 export async function randomMeal(signal?: AbortSignal): Promise<Meal | null> {
   const meals = await request(`${BASE_URL}/random.php`, signal);
+
+  return meals[0] ?? null;
+}
+
+/** The category list backing the browse view (AC15). */
+export async function listCategories(signal?: AbortSignal): Promise<MealCategory[]> {
+  const parsed = categoriesResponseSchema.safeParse(
+    await fetchJson(`${BASE_URL}/categories.php`, signal),
+  );
+
+  if (!parsed.success) {
+    throw new RecipeApiError('TheMealDB returned an unexpected category list.', parsed.error);
+  }
+
+  return parsed.data.categories ?? [];
+}
+
+/**
+ * Meals in a category. Unlike `search.php`, this endpoint answers with partial
+ * meals — id, title and thumbnail only, with no category, area, ingredients or
+ * instructions — so a caller that needs detail must follow up with
+ * `lookupMeal`. Treating these as whole recipes is the defect this comment
+ * exists to prevent: the modal would open with an empty ingredient list.
+ */
+export async function mealsInCategory(category: string, signal?: AbortSignal): Promise<Meal[]> {
+  return request(`${BASE_URL}/filter.php?c=${encodeURIComponent(category)}`, signal);
+}
+
+/** Full detail for one meal, for opening a partial result from `mealsInCategory`. */
+export async function lookupMeal(id: string, signal?: AbortSignal): Promise<Meal | null> {
+  const meals = await request(`${BASE_URL}/lookup.php?i=${encodeURIComponent(id)}`, signal);
 
   return meals[0] ?? null;
 }

@@ -4,7 +4,7 @@ Search recipes from [TheMealDB](https://www.themealdb.com) and build a shopping 
 
 Status: **complete.** Every acceptance criterion in [`SPEC.md`](SPEC.md) is implemented and live at <https://meal-planner-agentic.vercel.app>.
 
-Search recipes, open one for its ingredients and instructions, add them to a shopping list that survives a browser restart, edit that list, or let "surprise me" pick for you.
+Browse the categories, or search by name. Open a recipe for its ingredients and instructions, add them to a shopping list that survives a browser restart, edit that list, or let "surprise me" pick for you.
 
 ## Requirements
 

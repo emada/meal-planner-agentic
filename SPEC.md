@@ -93,6 +93,7 @@ Each is observable and testable.
 - **AC12** A user can remove one ingredient from the shopping list and can clear the list entirely after confirming; both changes survive a reload.
 - **AC13** Every view is usable at a 375px-wide mobile viewport and at desktop width, with no horizontal scrolling and no clipped or unreachable controls.
 - **AC14** The primary journeys pass as automated browser tests at both viewports, and the mandatory gate set passes on CI from a clean checkout.
+- **AC15** A user who has not searched yet is shown the recipe categories rather than an empty view, can open one to see its recipes, can open any of those recipes in the same modal with full detail and the same add-to-list behaviour, and can return to the categories from a search. Added by amendment A1.
 
 ## Decisions resolved
 
@@ -114,10 +115,45 @@ Resolved — recorded here with the reasoning that produced them.
 Non-blocking — recorded to prevent silent invention.
 
 - **O3** Visual direction is unspecified. Default: clean, neutral, system-font UI with no design-system dependency, unless directed otherwise.
-- **O4** Deferred scope from D2 (browse/filter by category and area; check-off while shopping) is recorded as candidate future slices, not requirements.
+- **O4 — PARTIALLY RESOLVED 2026-08-11 by amendment A1.** Browsing by category is promoted from candidate scope to AC15. Filtering by area and checking items off while shopping remain candidate future slices, not requirements. Original text follows.
+
+  Superseded discussion — Deferred scope from D2 (browse/filter by category and area; check-off while shopping) is recorded as candidate future slices, not requirements.
+
 - **O5** No formal WCAG conformance level has been set. Default: meet the accessibility constraints listed above and keep automated a11y checks in CI; a specific conformance target can be set later.
 
 ## Approval
 
 - Approved by: bmi.machado@gmail.com
 - Approved on: 2026-08-09
+
+## Amendments
+
+Changes made after approval. Each names what prompted it and what it costs, so
+the approved contract and what shipped never quietly diverge.
+
+### A1 — Category browsing becomes a requirement (2026-08-11)
+
+**What changed.** AC15 added. O4 partially resolved.
+
+**Why.** `GOAL.md` asks for "good user experience to find and **navigate**
+through various recipes". AC1–AC14 delivered finding — search — and never
+delivered navigating. The shipped result was a landing view containing a search
+box above an empty region: a user who does not already know a dish to type has
+nothing to act on. The human reviewed production on 2026-08-11 and rejected it
+as unfinished. This closes the unserved half of the goal clause rather than
+adding new scope: O4 had already recorded category browsing as candidate scope,
+so this promotes it rather than inventing it.
+
+**What it costs.** Two further TheMealDB endpoints enter the trust boundary —
+`categories.php` and `filter.php` — and both are validated at the same boundary
+as the existing two. `filter.php` returns partial meals with no category, area,
+ingredients, or instructions, so opening one requires a second `lookup.php`
+request; that latency is visible to the user and is given its own loading state
+rather than hidden.
+
+**Authority.** Made by the agent under the autonomy envelope in `EXECUTION.md`
+and the standing instruction of 2026-08-11 ("continua aprovando tudo. termina o
+app"), which followed a report naming this view as the product's weakest point.
+Recorded here for explicit review rather than left as implementation drift, per
+the operating contract. The human has not counter-signed this amendment; it is
+theirs to reverse.
