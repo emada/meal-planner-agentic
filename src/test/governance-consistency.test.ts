@@ -43,14 +43,27 @@ describe('governance documents agree with the current authorization model', () =
   forbid('spec O1 is still open', /O1[^.\n]{0,60}(still open|remains open)/i);
   forbid('S7 is blocked', /blocked on spec O1|S7 (remains |is )?blocked/i);
 
-  it('records that the review status is not machine-enforced wherever it claims a merge signature', () => {
-    const execution = readFileSync('EXECUTION.md', 'utf8');
+  it('documents the same required contexts the versioned ruleset declares', () => {
+    // The previous round of this document drifted from the ruleset twice: the
+    // gate registry kept transcribing a five-context list after the ruleset had
+    // grown. Binding the two mechanically is what stops a reader auditing the
+    // merge gate from being told the wrong answer by the authoritative file.
+    const ruleset: unknown = JSON.parse(readFileSync('.github/rulesets/protect-main.json', 'utf8'));
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
 
-    // The signature that replaced the human checkpoint must never be described
-    // as enforced without the qualification that a required context is what
-    // would enforce it.
-    if (execution.includes('review-current')) {
-      expect(execution).toMatch(/required status context|required context/i);
-    }
+    const contexts = (
+      ruleset as {
+        rules: { type: string; parameters?: { required_status_checks?: { context: string }[] } }[];
+      }
+    ).rules
+      .find((rule) => rule.type === 'required_status_checks')
+      ?.parameters?.required_status_checks?.map((check) => check.context);
+
+    expect(contexts).toBeDefined();
+    expect(contexts?.length).toBeGreaterThan(0);
+
+    const undocumented = (contexts ?? []).filter((context) => !gates.includes(context));
+
+    expect(undocumented).toEqual([]);
   });
 });

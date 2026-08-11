@@ -173,7 +173,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 - **Outcome**: the full gate profile is in force and the app is verified across the required matrix.
 - **Mapped AC**: AC13, AC14.
-- **Scope**: adoption steps 3–5 — SCA, SAST, madge, jscpd, automated a11y, Stryker on changed files, bundle-size budget; complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
+- **Scope**: remaining adoption steps 4–5 — madge, jscpd, automated a11y, Stryker on changed files, bundle-size budget; negative probes for the nine gates that still have none; (SCA and SAST already landed on 2026-08-10); complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
 - **Dependencies**: S4, S5.
 - **Stop condition**: a new blocking gate produces noise rather than actionable findings — report before making it mandatory.
 
@@ -212,7 +212,7 @@ First genuine fleet opportunity is **S4 + S5 in parallel**, capped at two agents
 | Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                               |
 | `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                |
 | Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                    |
-| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 in S0, 3–5 deferred to S6                                                                                                      |
+| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 in S0, step 3 pulled forward to 2026-08-10, steps 4–5 in S6                                                                    |
 | Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                |
 
 ## Decisions resolved

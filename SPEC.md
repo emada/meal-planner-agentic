@@ -103,7 +103,7 @@ Each is observable and testable.
 
 ## Open decisions
 
-Blocking — needs a human answer before the affected work starts.
+Resolved — recorded here with the reasoning that produced them.
 
 - **O1 — TheMealDB production access. RESOLVED 2026-08-10: risk accepted.** The human accepted running production on the public test key `1`, with its rate limiting, absent availability commitment, and use outside what the provider documents for production. S7 is unblocked. The acceptance is recorded in `docs/security/threat-model.md` under residual risk. Should throttling appear in practice, it surfaces as the AC3 error state; adding a caching layer or a proxy would contradict the no-backend non-goal and requires a spec revision. Original text follows.
 

@@ -39,6 +39,7 @@
           { "context": "Browser journeys (mobile + desktop)" },
           { "context": "Dependency scan" },
           { "context": "Static analysis" },
+          { "context": "CodeQL" },
           { "context": "SWEAI Review / Claude" },
           { "context": "Vercel" }
         ]
