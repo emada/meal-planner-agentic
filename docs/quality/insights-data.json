@@ -1,0 +1,90 @@
+{
+  "snapshotCommit": "5a366e4893e753d0e27cc7d5409b89b7e6a5f517",
+  "wallClockHours": 47.3,
+  "activeHours": 14.2,
+  "waitingHours": 33.1,
+  "waitingSharePercent": 70,
+  "commits": 78,
+  "fixCommits": 38,
+  "fixSharePercent": 49,
+  "medianCommitToFixMinutes": 8.8,
+  "slices": [
+    {
+      "slice": "feat(s1): recipe search with results gri",
+      "buildMinutes": 8,
+      "reviewMinutes": 9,
+      "rounds": 2
+    },
+    {
+      "slice": "feat(s2): accessible recipe detail modal",
+      "buildMinutes": 11,
+      "reviewMinutes": 15,
+      "rounds": 2
+    },
+    {
+      "slice": "feat(s3,s4): shopping list with grouped ",
+      "buildMinutes": 10,
+      "reviewMinutes": 22,
+      "rounds": 3
+    },
+    {
+      "slice": "feat(s5): surprise me, completing every ",
+      "buildMinutes": 8,
+      "reviewMinutes": 27,
+      "rounds": 3
+    },
+    {
+      "slice": "feat(s6): adopt the remaining gates and ",
+      "buildMinutes": 9,
+      "reviewMinutes": 39,
+      "rounds": 5
+    },
+    {
+      "slice": "chore(s7): record the production smoke c",
+      "buildMinutes": 7,
+      "reviewMinutes": 5,
+      "rounds": 1
+    },
+    {
+      "slice": "feat(s8): browse by category so arriving",
+      "buildMinutes": 12,
+      "reviewMinutes": 25,
+      "rounds": 3
+    },
+    {
+      "slice": "feat(s9): close the gaps this project di",
+      "buildMinutes": 10,
+      "reviewMinutes": 14,
+      "rounds": 2
+    },
+    {
+      "slice": "fix: verify the source link, which nothi",
+      "buildMinutes": 7,
+      "reviewMinutes": 9,
+      "rounds": 2
+    }
+  ],
+  "autonomousStretchPullRequests": 8,
+  "totalBuildMinutes": 83,
+  "totalReviewMinutes": 165,
+  "totalRounds": 23,
+  "reviewSharePercent": 66,
+  "printedBuildColumnSum": 82,
+  "exactBuildMinutes": 83.4,
+  "gapsOverAnHour": 7,
+  "gapsOverTwelveHours": 2,
+  "longestGapHours": 13,
+  "autonomousStretchActiveHours": 4.9,
+  "pairTotalMinutes": 67,
+  "pairReviewMinutes": 48,
+  "doublingBuildSavesMinutes": 42,
+  "combinedMinutes": 248,
+  "doublingBuildSavesPercent": 17,
+  "nineRoundEquivalentMinutes": 65,
+  "apiDerived": {
+    "note": "From the GitHub API on 2026-08-11; not recomputed by this script.",
+    "mergedPullRequests": 13,
+    "medianCiSeconds": 74,
+    "ciRunsMeasured": 73
+  }
+}

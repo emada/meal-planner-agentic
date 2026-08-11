@@ -197,6 +197,8 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S8 — Browse by category
 
+- **Approved**: bmi.machado@gmail.com, 2026-08-11, after the slice shipped.
+
 - **Status**: complete, 2026-08-11 (PR #11).
 - **Outcome**: a user who has not searched has somewhere to start, and can reach a full recipe without typing.
 - **Mapped AC**: AC15, added by spec amendment A1.
@@ -208,13 +210,15 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S9 — Close the disclosed gaps
 
+- **Approved**: bmi.machado@gmail.com, 2026-08-11, after the slice shipped.
+
 - **Status**: complete, 2026-08-11 (PR #12).
 - **Outcome**: the limits this project disclosed are closed or, where closing them costs more than it is worth, recorded with the reason.
 - **Mapped AC**: none new; strengthens AC14.
 - **Scope**: the production smoke check becomes a committed suite (`npm run smoke:prod`) covering browsing and list editing, which the manual version did not; negative probes for the seven gates that could be proven without touching this repository's history; the threat model records that the accepted key-`1` risk is now spent per page view rather than per search.
 - **Dependencies**: S8.
 - **Evidence**: seven dated probes in the gate register, each with its input and diagnostic; fourteen smoke runs against the live deployment; the count of unproven gates derived from the table by an existing test.
-- **Stop condition**: a probe that requires putting a broken artifact into a shared system — a failed deployment, a secret in remote history. Record the reason instead. Preview deployment is left unproven on exactly this ground.
+- **Stop condition**: a probe that requires putting a broken artifact into a shared system — a failed deployment, a secret in remote history. Record the reason instead. Preview deployment was left unproven on exactly this ground — **reversed on 2026-08-11**, when the human pointed out that a preview build is not production and that deploy logs showing success say nothing about whether a failure refuses the merge. See `docs/quality/gates.md`.
 - **Parallelization**: none. Single agent.
 
 ## First vertical slice

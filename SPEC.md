@@ -121,12 +121,17 @@ Resolved — recorded here with the reasoning that produced them.
 
 Non-blocking — recorded to prevent silent invention.
 
-- **O3** Visual direction is unspecified. Default: clean, neutral, system-font UI with no design-system dependency, unless directed otherwise.
+- **O3 — RESOLVED 2026-08-11: the default stands.** The human reviewed the shipped interface and accepted the neutral, system-font direction with no design-system dependency, for now. Original text follows.
+
+  Superseded discussion — Visual direction is unspecified. Default: clean, neutral, system-font UI with no design-system dependency, unless directed otherwise.
+
 - **O4 — PARTIALLY RESOLVED 2026-08-11 by amendment A1.** Browsing by category is promoted from candidate scope to AC15. Filtering by area and checking items off while shopping remain candidate future slices, not requirements. Original text follows.
 
   Superseded discussion — Deferred scope from D2 (browse/filter by category and area; check-off while shopping) is recorded as candidate future slices, not requirements.
 
-- **O5** No formal WCAG conformance level has been set. Default: meet the accessibility constraints listed above and keep automated a11y checks in CI; a specific conformance target can be set later.
+- **O5 — RESOLVED 2026-08-11: the target is WCAG 2.1 level AA.** Set by the human. What this changes and what it does not is recorded in `docs/quality/accessibility.md`: the automated scan already runs the A and AA rule set, but passing an automated scan is not conformance, and the criteria a scanner cannot judge are now listed as an open audit rather than assumed. Original text follows.
+
+  Superseded discussion — No formal WCAG conformance level has been set. Default: meet the accessibility constraints listed above and keep automated a11y checks in CI; a specific conformance target can be set later.
 
 ## Approval
 
@@ -158,9 +163,11 @@ returns partial meals with no category, area, ingredients, or instructions, so
 opening one requires a second request; that latency is visible to the user and
 is given its own loading state rather than hidden.
 
+**Counter-signed by bmi.machado@gmail.com on 2026-08-11**, after reviewing the deployed result.
+
 **Authority.** Made by the agent under the autonomy envelope in `EXECUTION.md`
 and the standing instruction of 2026-08-11 ("continua aprovando tudo. termina o
 app" — "keep approving everything; finish the app"), which followed a report naming this view as the product's weakest point.
 Recorded here for explicit review rather than left as implementation drift, per
-the operating contract. The human has not counter-signed this amendment; it is
-theirs to reverse.
+the operating contract. Counter-signed on 2026-08-11, after the human reviewed
+the deployed result; it remains theirs to reverse.

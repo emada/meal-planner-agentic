@@ -22,11 +22,24 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'desktop-chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /reflow\.spec\.ts/,
+    },
     // AC13 names 375px explicitly; the Pixel 7 descriptor is 412px.
     {
       name: 'mobile-chromium',
       use: { ...devices['Pixel 7'], viewport: { width: 375, height: 667 } },
+      testIgnore: /reflow\.spec\.ts/,
+    },
+    // WCAG 2.1 AA success criterion 1.4.10 (Reflow) is specified at 320 CSS
+    // pixels, not the 375 AC13 names. Scoped to one spec rather than run as a
+    // third full project: the journeys are the same, only the width differs.
+    {
+      name: 'reflow-320',
+      testMatch: /reflow\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 320, height: 700 } },
     },
   ],
 

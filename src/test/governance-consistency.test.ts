@@ -276,7 +276,7 @@ describe('governance documents agree with the current authorization model', () =
       ['gates.md', gates],
       ['bootstrap-adoption.md', adoption],
     ] as const) {
-      for (const match of text.matchAll(/([\w-]+) of ([\w-]+) (?:mandatory )?gates/gi)) {
+      for (const match of text.matchAll(/([\w-]+) of (?:the )?([\w-]+) (?:mandatory )?gates/gi)) {
         const [claim, left, right] = match;
         const numerator = (left ?? '').toLowerCase();
         const denominator = (right ?? '').toLowerCase();
@@ -284,6 +284,17 @@ describe('governance documents agree with the current authorization model', () =
         const numeratorValid = numerator === spell(proven) || numerator === spell(unproven);
 
         if (!numeratorValid || denominator !== spell(rows.length)) {
+          wrong.push(`${name}: "${claim}"`);
+        }
+      }
+
+      // Once every gate had a probe, the documents stopped saying "N of M"
+      // and started saying "All M" — which matched no pattern here, so the
+      // guard fell silent at the moment the numbers were most likely to move.
+      for (const match of text.matchAll(/All ([\w-]+) (?:mandatory )?gates/gi)) {
+        const [claim, left] = match;
+
+        if ((left ?? '').toLowerCase() !== spell(rows.length) || unproven !== 0) {
           wrong.push(`${name}: "${claim}"`);
         }
       }

@@ -38,3 +38,6 @@ review-evidence/
 # Produced by `npm run smoke:prod`; the record lives in docs/quality/gates.md.
 smoke-results.json
 test-results/
+
+# Personal, not shared: topics the human asked to keep for study.
+USER_LEARN.md
