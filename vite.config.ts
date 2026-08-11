@@ -67,8 +67,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    // Playwright owns e2e; Vitest must not try to run those files.
-    exclude: ['e2e/**', 'node_modules/**', 'dist/**'],
+    // Playwright owns both e2e trees; Vitest must not try to run those files.
+    exclude: ['e2e/**', 'e2e-prod/**', 'node_modules/**', 'dist/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

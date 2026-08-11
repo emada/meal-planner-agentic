@@ -34,3 +34,7 @@ npm-debug.log*
 evidence.json
 evidence-report.md
 review-evidence/
+
+# Produced by `npm run smoke:prod`; the record lives in docs/quality/gates.md.
+smoke-results.json
+test-results/
