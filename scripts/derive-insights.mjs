@@ -148,6 +148,7 @@ function derive() {
       reviewMinutes: row.reviewMinutes,
       rounds: row.rounds,
     })),
+    sliceCount: rows.length,
     totalBuildMinutes: round(buildSeconds),
     totalReviewMinutes: round(reviewSeconds),
     totalRounds: rows.reduce((sum, r) => sum + r.rounds, 0),
@@ -157,6 +158,9 @@ function derive() {
     printedBuildColumnSum: rows.reduce((sum, r) => sum + r.buildMinutes, 0),
     exactBuildMinutes: Number((buildSeconds / MINUTE).toFixed(1)),
     gapsOverAnHour: log.filter((c, i) => i > 0 && c.time - log[i - 1].time > 3600).length,
+    // The overnight ones. "Two of about 13 hours" pinned the count in prose
+    // while only the duration was derived.
+    gapsOverTwelveHours: log.filter((c, i) => i > 0 && c.time - log[i - 1].time > 12 * 3600).length,
     longestGapHours: Number(
       (Math.max(...log.map((c, i) => (i > 0 ? c.time - log[i - 1].time : 0))) / 3600).toFixed(0),
     ),

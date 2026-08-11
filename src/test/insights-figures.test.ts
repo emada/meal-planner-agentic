@@ -42,6 +42,8 @@ interface InsightsData {
   readonly printedBuildColumnSum: number;
   readonly exactBuildMinutes: number;
   readonly gapsOverAnHour: number;
+  readonly gapsOverTwelveHours: number;
+  readonly sliceCount: number;
   readonly longestGapHours: number;
   readonly autonomousStretchActiveHours: number;
   readonly pairTotalMinutes: number;
@@ -147,13 +149,22 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     statesNumber(data.nineRoundEquivalentMinutes, /to roughly (\d+) minutes/);
     statesNumber(Math.round(data.waitingHours), /(\d+) of \d+ hours were spent waiting/);
     statesNumber(Math.round(data.wallClockHours), /\d+ of (\d+) hours were spent waiting/);
-    statesNumber(data.autonomousStretchActiveHours, /nine slices in ([\d.]+) hours/);
+    statesNumber(data.autonomousStretchActiveHours, /slices in ([\d.]+) hours/);
     statesNumber(data.medianCommitToFixMinutes, /is \*\*([\d.]+) minutes\*\*/);
     statesNumber(data.gapsOverAnHour, /The (\d+) gaps over an hour/);
-    statesNumber(data.longestGapHours, /two of about (\d+) hours/);
+    statesNumber(data.longestGapHours, /of about (\d+) hours/);
     // The caveat repeats the round total. Round 3's defect was exactly a prose
     // repeat left behind by a table correction, and this one was still loose.
     statesNumber(data.totalRounds, /fraction of the (\d+) remediation/);
+    statesNumber(data.gapsOverTwelveHours, /including (\d+) of about \d+ hours/);
+    statesNumber(data.sliceCount, /covered (\d+) slices/);
+
+    // The definition paragraph quotes AC4's round count back. It was the last
+    // derived figure the prose repeated without a check.
+    const ac4 = data.slices.find((slice) => slice.slice.startsWith('fix: verify'));
+
+    expect(ac4, 'no AC4 slice in the derivation').toBeDefined();
+    statesNumber(ac4?.rounds ?? -1, /AC4 shows the gap — (\d+) remediation/);
   });
 
   it('states the rounding convention whenever its own columns need one', () => {

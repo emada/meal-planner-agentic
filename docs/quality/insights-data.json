@@ -64,6 +64,7 @@
       "rounds": 2
     }
   ],
+  "sliceCount": 9,
   "totalBuildMinutes": 83,
   "totalReviewMinutes": 165,
   "totalRounds": 23,
@@ -71,6 +72,7 @@
   "printedBuildColumnSum": 82,
   "exactBuildMinutes": 83.4,
   "gapsOverAnHour": 7,
+  "gapsOverTwelveHours": 2,
   "longestGapHours": 13,
   "autonomousStretchActiveHours": 4.9,
   "pairTotalMinutes": 67,
