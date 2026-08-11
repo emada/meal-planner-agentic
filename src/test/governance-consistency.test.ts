@@ -288,6 +288,17 @@ describe('governance documents agree with the current authorization model', () =
         }
       }
 
+      // Once every gate had a probe, the documents stopped saying "N of M"
+      // and started saying "All M" — which matched no pattern here, so the
+      // guard fell silent at the moment the numbers were most likely to move.
+      for (const match of text.matchAll(/All ([\w-]+) (?:mandatory )?gates/gi)) {
+        const [claim, left] = match;
+
+        if ((left ?? '').toLowerCase() !== spell(rows.length) || unproven !== 0) {
+          wrong.push(`${name}: "${claim}"`);
+        }
+      }
+
       // "…; the other nine remain unproven" is the same hand-written count
       // wearing different words, and it survived the sweep above when the
       // table grew by one because it names no denominator.

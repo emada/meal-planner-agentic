@@ -197,6 +197,8 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S8 — Browse by category
 
+- **Approved**: bmi.machado@gmail.com, 2026-08-11, after the slice shipped.
+
 - **Status**: complete, 2026-08-11 (PR #11).
 - **Outcome**: a user who has not searched has somewhere to start, and can reach a full recipe without typing.
 - **Mapped AC**: AC15, added by spec amendment A1.
@@ -207,6 +209,8 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Parallelization**: none. Single agent.
 
 ### S9 — Close the disclosed gaps
+
+- **Approved**: bmi.machado@gmail.com, 2026-08-11, after the slice shipped.
 
 - **Status**: complete, 2026-08-11 (PR #12).
 - **Outcome**: the limits this project disclosed are closed or, where closing them costs more than it is worth, recorded with the reason.
