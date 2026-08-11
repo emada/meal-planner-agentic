@@ -89,9 +89,9 @@ export default defineConfig([
     },
   },
 
-  // Node context: build tooling and browser-test files.
+  // Node context: build tooling, scripts, and browser-test files.
   {
-    files: ['*.config.ts', 'e2e/**/*.ts'],
+    files: ['*.config.ts', 'e2e/**/*.ts', 'scripts/**/*.mjs'],
     languageOptions: { globals: { ...globals.node } },
   },
 

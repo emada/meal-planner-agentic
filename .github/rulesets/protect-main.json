@@ -40,6 +40,7 @@
           { "context": "Dependency scan" },
           { "context": "Static analysis" },
           { "context": "CodeQL" },
+          { "context": "Duplication and bundle budget" },
           { "context": "SWEAI Review / Claude" },
           { "context": "Vercel" }
         ]

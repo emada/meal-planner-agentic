@@ -38,9 +38,12 @@ Failure action for every row: fix the cause. Never weaken, disable, or delete th
 | No console errors on load           | Playwright assertion                                                                                                        | CI                                                                                                                                                 | **none recorded** — lands S6                                                               | —           |
 | Dependency scan                     | `npm audit --audit-level=high` + OSV-Scanner over the lockfile                                                              | CI                                                                                                                                                 | **none recorded** — pulled forward 2026-08-10; lands S6                                    | —           |
 | Static analysis                     | CodeQL `security-extended`, required as both the job and the `CodeQL` result check                                          | CI                                                                                                                                                 | **none recorded** — pulled forward 2026-08-10; lands S6                                    | —           |
-| Preview deployment                  | Vercel git integration, `Vercel` status context                                                                             | CI (required context on `main`)                                                                                                                    | **none recorded** — lands S6                                                               | —           |
+| Preview deployment                  | Vercel git integration, `Vercel` status context                                                                             | CI (required context on `main`)                                                                                                                    | **none recorded** — a deployment, not a locally runnable gate                              | —           |
+| Automated accessibility             | axe-core through Playwright over six states: search, results, modal, shopping list, confirmation, error                     | CI                                                                                                                                                 | contrast dropped below AA → axe reports a `color-contrast` violation and the run fails     | 2026-08-11  |
+| Duplication                         | jscpd over `src/`, 60-token minimum                                                                                         | CI                                                                                                                                                 | **none recorded** — 0 clones today; lands with the next probe cycle                        | —           |
+| Bundle budget                       | gzipped size of the shipped assets against a recorded ceiling                                                               | CI                                                                                                                                                 | budget lowered below the real size → exits 1 naming the file and both numbers              | 2026-08-11  |
 
-**Eight of seventeen mandatory gates are proven; nine are not.** The unproven nine are configured and green but have never demonstrated rejection, which is stated here rather than presented as verified. They land in S6. The pre-push layer additionally has no probe showing it rejects a failing build or test — that is a layer, not a table row, and lands with them.
+**Ten of twenty mandatory gates are proven; ten are not.** The unproven ten are configured and green but have never demonstrated rejection, which is stated here rather than presented as verified. They land in S6. The pre-push layer additionally has no probe showing it rejects a failing build or test — that is a layer, not a table row, and lands with them.
 
 ## Architectural rules enforced mechanically
 
@@ -58,13 +61,10 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 Deliberately not yet in force. Each has a named landing slice, per the adoption order in `.ai-engineering/.bootstrap/06-tools`.
 
-| Gate                               | Status                           | Lands in | Rationale                                                                                                                                         |
-| ---------------------------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Duplication (jscpd)                | deferred                         | S6       | Step 4. Meaningless before there is code to duplicate                                                                                             |
-| Automated accessibility assertions | deferred                         | S6       | Step 4. Keyboard and landmark behaviour is asserted per slice in the meantime                                                                     |
-| Mutation testing (Stryker)         | deferred, warn-only when adopted | S6       | Step 5. Expensive; only useful once the domain logic exists                                                                                       |
-| Bundle-size budget                 | deferred                         | S6       | Step 5. No meaningful baseline yet                                                                                                                |
-| Coverage thresholds                | deferred                         | S6       | Coverage is reported from S0. A threshold lands in S6 with the other deferred gates, once the domain logic has stopped changing shape every slice |
+| Gate                       | Status                           | Lands in | Rationale                                                                                                                                         |
+| -------------------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mutation testing (Stryker) | deferred, warn-only when adopted | S6       | Step 5. Expensive; only useful once the domain logic exists                                                                                       |
+| Coverage thresholds        | deferred                         | S6       | Coverage is reported from S0. A threshold lands in S6 with the other deferred gates, once the domain logic has stopped changing shape every slice |
 
 ## Substitutions from `PLAN.md`
 
@@ -135,9 +135,9 @@ The rendered report is published on the pull request under the marker `<!-- swea
 
 Three limits, stated because a green report is easy to over-read:
 
-- **A local counterpart is not the required context.** Four of the nine required contexts have a locally runnable counterpart among the declared gates. Five have none: `Vercel`, `Dependency scan`, `Static analysis`, `CodeQL`, and `SWEAI Review / Claude` — deployments, security analysis, and a review verdict are not npm scripts. Where a counterpart exists it is not always equivalent: the `Secret scan` context is gitleaks over full history against a local secretlint over the working tree, so **CI remains authoritative for secrets**, and `Reproducible build` in CI additionally installs from the lockfile with `npm ci`.
-- **Gate evidence alone never demonstrates merge readiness.** It reaches four of nine required contexts. The pull request's own checks are what demonstrate readiness.
-- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and nine of seventeen gates still have no probe.
+- **A local counterpart is not the required context.** Five of the ten required contexts have a locally runnable counterpart among the declared gates. Five have none: `Vercel`, `Dependency scan`, `Static analysis`, `CodeQL`, and `SWEAI Review / Claude` — deployments, security analysis, and a review verdict are not npm scripts. Where a counterpart exists it is not always equivalent: the `Secret scan` context is gitleaks over full history against a local secretlint over the working tree, so **CI remains authoritative for secrets**, and `Reproducible build` in CI additionally installs from the lockfile with `npm ci`.
+- **Gate evidence alone never demonstrates merge readiness.** It reaches five of ten required contexts. The pull request's own checks are what demonstrate readiness.
+- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and ten of twenty gates still have no probe.
 
 ### Default-branch protection
 
@@ -165,6 +165,7 @@ required_status_contexts:
   Dependency scan
   Static analysis
   CodeQL
+  Duplication and bundle budget
   SWEAI Review / Claude
   Vercel
 ```

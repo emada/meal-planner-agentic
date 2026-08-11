@@ -1,0 +1,9 @@
+{
+  "threshold": 1,
+  "reporters": ["consoleFull"],
+  "absolute": true,
+  "gitignore": true,
+  "pattern": "src/**/*.{ts,tsx}",
+  "ignore": ["**/*.test.ts", "**/*.test.tsx", "**/node_modules/**"],
+  "minTokens": 60
+}
