@@ -154,7 +154,7 @@ Three limits, stated because a green report is easy to over-read:
 
 - **A local counterpart is not the required context.** Five of the ten required contexts have a locally runnable counterpart among the declared gates. Five have none: `Vercel`, `Dependency scan`, `Static analysis`, `CodeQL`, and `SWEAI Review / Claude` — deployments, security analysis, and a review verdict are not npm scripts. Where a counterpart exists it is not always equivalent: the `Secret scan` context is gitleaks over full history against a local secretlint over the working tree, so **CI remains authoritative for secrets**, and `Reproducible build` in CI additionally installs from the lockfile with `npm ci`.
 - **Gate evidence alone never demonstrates merge readiness.** It reaches five of ten required contexts. The pull request's own checks are what demonstrate readiness.
-- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and every row in that table has now been made to reject.
+- **It records that gates ran and what they returned, not that they work.** A passing run over an ineffective gate is still a failing control. Effectiveness is the negative-probe cycle above, and every row of the mandatory-gate table has now been made to reject.
 
 ### Default-branch protection
 
