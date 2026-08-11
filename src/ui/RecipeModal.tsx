@@ -8,8 +8,23 @@ interface RecipeModalProps {
   readonly footer?: React.ReactNode;
 }
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ');
+
+/** A hidden control cannot take focus, so it cannot bound the trap. */
+const isFocusable = (element: HTMLElement) => {
+  if (element.hidden) return false;
+
+  const style = getComputedStyle(element);
+
+  return style.display !== 'none' && style.visibility !== 'hidden';
+};
 
 /**
  * Dialog pattern per SPEC R2.4: focus moves in on open, is trapped while open,
@@ -32,12 +47,26 @@ export function RecipeModal({ recipe, onClose, footer }: RecipeModalProps) {
     dialogRef.current?.focus();
 
     return () => {
-      if (restoreFocusTo.current instanceof HTMLElement) restoreFocusTo.current.focus();
+      const target = restoreFocusTo.current;
+
+      // The trigger can be gone by the time the dialog closes — a new search
+      // replaces the grid. focus() on a detached node silently does nothing,
+      // dropping the keyboard user back to the top of the document.
+      if (target instanceof HTMLElement && target.isConnected && target !== document.body) {
+        target.focus();
+        return;
+      }
+
+      document.querySelector<HTMLElement>('.results__message')?.focus();
     };
   }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // A dialog stacked on top of this one handles the key first and marks it
+      // handled; without this, one Escape would dismiss both.
+      if (event.defaultPrevented) return;
+
       if (event.key === 'Escape') {
         event.preventDefault();
         onClose();
@@ -49,7 +78,7 @@ export function RecipeModal({ recipe, onClose, footer }: RecipeModalProps) {
       const dialog = dialogRef.current;
       if (!dialog) return;
 
-      const focusable = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const focusable = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(isFocusable);
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
 
@@ -58,6 +87,16 @@ export function RecipeModal({ recipe, onClose, footer }: RecipeModalProps) {
       if (!first || !last) {
         event.preventDefault();
         dialog.focus();
+        return;
+      }
+
+      // Focus can leave the document entirely — the address bar, or Cmd-L —
+      // and return to <body>. Tabbing from there matches none of the wrap
+      // conditions below, so without this the next Tab lands in the page
+      // behind an aria-modal dialog.
+      if (!dialog.contains(document.activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
         return;
       }
 

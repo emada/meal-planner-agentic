@@ -38,7 +38,7 @@ describe('RecipeModal', () => {
     expect(screen.getByRole('link', { name: /original source/i })).toBeInTheDocument();
   });
 
-  it('renders no blank ingredient rows (AC4)', () => {
+  it('omits the measure span when a recipe supplies no measure', () => {
     render(
       <RecipeModal
         recipe={recipe({ ingredients: [{ name: 'Beef', measure: '' }] })}
@@ -177,6 +177,81 @@ describe('RecipeModal', () => {
 
     await user.keyboard('{Escape}');
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it('pulls focus back in when Tab arrives from outside the dialog', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <>
+        <button type="button">Behind the dialog</button>
+        <RecipeModal recipe={recipe()} onClose={vi.fn()} />
+      </>,
+    );
+
+    // Focus can leave for browser chrome and return to <body>. Tabbing from
+    // there previously landed in the page behind an aria-modal dialog.
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.activeElement).toBe(document.body);
+
+    await user.tab();
+    expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement);
+
+    (document.activeElement as HTMLElement | null)?.blur();
+    await user.tab({ shift: true });
+    expect(screen.getByRole('dialog')).toContainElement(document.activeElement as HTMLElement);
+  });
+
+  it('does not act on a key another dialog already handled', async () => {
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+
+    render(<RecipeModal recipe={recipe()} onClose={onClose} />);
+
+    // A dialog stacked above marks the event handled; this one must stand down
+    // so a single Escape does not dismiss both.
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        event.preventDefault();
+      },
+      { capture: true, once: true },
+    );
+
+    await user.keyboard('{Escape}');
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the results summary when the trigger is gone', async () => {
+    const user = userEvent.setup();
+
+    function Harness() {
+      const [open, setOpen] = useState(true);
+
+      return (
+        <>
+          <p className="results__message" tabIndex={-1}>
+            2 recipes for beef.
+          </p>
+          {open && (
+            <RecipeModal
+              recipe={recipe()}
+              onClose={() => {
+                setOpen(false);
+              }}
+            />
+          )}
+        </>
+      );
+    }
+
+    render(<Harness />);
+    await user.keyboard('{Escape}');
+
+    // The trigger never existed here, standing in for a card removed by a new
+    // search. focus() on a detached node is a silent no-op, so without the
+    // fallback the user restarts tabbing from the top of the document.
+    expect(document.activeElement).toBe(screen.getByText(/2 recipes for beef/));
   });
 
   it('renders a footer when one is supplied', () => {

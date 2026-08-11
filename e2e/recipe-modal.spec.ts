@@ -106,15 +106,34 @@ test('the modal fits a 375px viewport without horizontal overflow', async ({ pag
 });
 
 test('the stylesheet is served as CSS and actually applies', async ({ page }) => {
-  // A deploy that serves the stylesheet with the wrong MIME type renders an
-  // unstyled page that still passes every content assertion. This catches it.
+  // A deploy that serves the stylesheet as text/plain renders an unstyled page
+  // that passes every content assertion. This must assert something only our
+  // own stylesheet can produce: an h1's weight comes from the UA stylesheet and
+  // is identical either way.
   await page.goto('/');
 
-  const applied = await page.evaluate(() => {
-    const header = document.querySelector('.app__header h1');
-    return header ? getComputedStyle(header).fontWeight : '';
-  });
+  const styling = await page.evaluate(() => ({
+    spacingToken: getComputedStyle(document.documentElement).getPropertyValue('--space-4').trim(),
+    bodyBackground: getComputedStyle(document.body).backgroundColor,
+  }));
 
-  expect(applied).not.toBe('');
-  expect(Number(applied)).toBeGreaterThanOrEqual(600);
+  expect(styling.spacingToken).toBe('1rem');
+  expect(styling.bodyBackground).not.toBe('rgba(0, 0, 0, 0)');
+});
+
+test('that stylesheet assertion fails when the stylesheet does not load', async ({ page }) => {
+  // The negative probe for the gate above. Without it the assertion could be
+  // vacuous, which is exactly how the production defect went undetected.
+  await page.route('**/*.css', (route) =>
+    route.fulfill({ status: 404, contentType: 'text/plain', body: 'Not found' }),
+  );
+  await page.goto('/');
+
+  const styling = await page.evaluate(() => ({
+    spacingToken: getComputedStyle(document.documentElement).getPropertyValue('--space-4').trim(),
+    bodyBackground: getComputedStyle(document.body).backgroundColor,
+  }));
+
+  expect(styling.spacingToken).toBe('');
+  expect(styling.bodyBackground).toBe('rgba(0, 0, 0, 0)');
 });
