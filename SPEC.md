@@ -169,5 +169,5 @@ is given its own loading state rather than hidden.
 and the standing instruction of 2026-08-11 ("continua aprovando tudo. termina o
 app" — "keep approving everything; finish the app"), which followed a report naming this view as the product's weakest point.
 Recorded here for explicit review rather than left as implementation drift, per
-the operating contract. The human has not counter-signed this amendment; it is
-theirs to reverse.
+the operating contract. Counter-signed on 2026-08-11, after the human reviewed
+the deployed result; it remains theirs to reverse.
