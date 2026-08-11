@@ -204,7 +204,7 @@ What remains unprotected, stated plainly: the reviewer is a subagent of the agen
 
 ### Mutation testing, measured once
 
-Run on 2026-08-11 against a scratch copy, not adopted. `@stryker-mutator/core` + the vitest runner, 987 mutants across 14 files, 3 minutes 5 seconds at concurrency 4 on a developer machine.
+Run on 2026-08-11 against a scratch copy that was not retained, so unlike the derived gate evidence these figures cannot be re-derived from this repository. Not adopted. `@stryker-mutator/core` + the vitest runner, 987 mutants across 14 files, 3 minutes 5 seconds at concurrency 4 on a developer machine.
 
 | Module     | Score  |
 | ---------- | ------ |
@@ -216,7 +216,7 @@ Run on 2026-08-11 against a scratch copy, not adopted. `@stryker-mutator/core` +
 
 **The headline number is misleading and should not be published as a quality figure.** Stryker runs the Vitest suite only, so `App.tsx` scores 2.94% with 87 uncovered mutants — that component is exercised almost entirely by Playwright, which the mutation runner does not invoke. The number measures the unit suite, not the test suite.
 
-**It found a real hole, which is the argument for the cost.** A surviving mutant showed that nothing asserted where `sourceUrl` came from: the mapping test asserted `null`, and the component and browser tests checked the source link's presence without its `href`. `toRecipe` could stop reading `strSource` — or read the wrong field — with 143 unit and 118 browser tests green. AC4 requires "working YouTube and source links"; the YouTube half was verified at both levels and the source half was not. Fixed on 2026-08-11 with assertions at all three levels, each probed.
+**It found a real hole, which is the argument for the cost.** Nothing verified the source link's _destination_ at any level: the mapping test asserted `sourceUrl` was `null`, and the component and browser tests asserted the link was present without checking its `href`. So `toRecipe` reading the wrong field would have passed all 143 unit and 120 browser tests. Dropping the field entirely was narrower — the anchor disappears, which the browser suite's presence assertion caught — but not the unit suite, which is why Stryker saw that mutant survive: it runs Vitest only. AC4 requires "working YouTube and source links"; the YouTube half was verified at all three levels and the source half at none. Fixed on 2026-08-11, each assertion probed.
 
 Whether to adopt it as a gate is unresolved. The costs are ~9 MB of dev dependency, roughly three minutes locally and more on a two-core CI runner, and triage of 258 surviving mutants of which an unknown share are equivalent — mutants that change the code without changing behaviour, which no test can or should kill.
 
