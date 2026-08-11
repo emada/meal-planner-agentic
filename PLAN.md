@@ -202,7 +202,7 @@ Not yet. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
 | Gates reliably reject non-compliant changes                       | unproven until S0 evidence exists                   |
 | Human review capacity                                             | your call                                           |
 
-First genuine fleet opportunity is **S4 + S5 in parallel**, capped at two agents, once S3 has landed and S0's gates have proven themselves. Everything before that is one lead agent.
+**Outcome: no fleet step was taken.** S4 and S5 were the only independent pair, and by the time S3 landed they were small enough that running them sequentially cost less than coordinating two workspaces. The whole plan was delivered by one lead agent with an independent reviewer per head.
 
 ## Risks and mitigations
 

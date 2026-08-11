@@ -27,7 +27,7 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 | ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Policy as code            | Adopted | Types, lint, tests, boundaries, and CSP presence are executable checks, not review conventions                                                                          |
 | Layered gates             | Adopted | Development → pre-commit → pre-push → CI, mapped in `docs/quality/gates.md`                                                                                             |
-| Definition of done        | Adopted | Applied per slice; S0's evidence is recorded in this commit's pull request                                                                                              |
+| Definition of done        | Adopted | Applied per slice; each slice's evidence is recorded in its own pull request, S0 in #1                                                                                  |
 | Control effectiveness     | Partial | Eleven of twenty mandatory gates have a recorded negative probe; the other nine remain unproven. Per-gate status and `Last proven` dates are in `docs/quality/gates.md` |
 | Automated semantic review | Adopted | Mandatory independent reviewer at `.claude/agents/semantic-reviewer.md`; publishing authorized in `EXECUTION.md` on 2026-08-10                                          |
 
@@ -59,15 +59,15 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 06 — Tools
 
-| Rule                              | Status                  | Rationale                                                                                                                                                       |
-| --------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; step 3 pulled forward to 2026-08-10; steps 4–5 land in S6. Two substitutions and two version pins recorded in `docs/quality/gates.md` |
-| High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                                                      |
-| Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                                                            |
-| Gate evidence                     | Adopted                 | Gates declared in `package.json` under `sweai.gates`; evidence derived per run, stamped with the head, and gitignored — `docs/quality/gates.md`                 |
-| Provider CLI preflight            | Adopted                 | Both authenticated identities verified read-only; Vercel CLI telemetry confirmed disabled on 2026-08-10                                                         |
-| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified                                       |
-| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production released automatically on merge, never pushed directly                |
+| Rule                              | Status                  | Rationale                                                                                                                                                                                                           |
+| --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript web profile            | Adopted in staged order | Steps 1–2 in force at S0; step 3 pulled forward to 2026-08-10; step 4 landed at S6; step 5 is unscheduled — see `docs/quality/gates.md`. Two substitutions and two version pins recorded in `docs/quality/gates.md` |
+| High-velocity TypeScript monorepo | Not applicable          | Single-package application, not a monorepo                                                                                                                                                                          |
+| Tailwind CSS                      | Not applicable          | Plain CSS with custom properties; no design system adopted (spec O3)                                                                                                                                                |
+| Gate evidence                     | Adopted                 | Gates declared in `package.json` under `sweai.gates`; evidence derived per run, stamped with the head, and gitignored — `docs/quality/gates.md`                                                                     |
+| Provider CLI preflight            | Adopted                 | Both authenticated identities verified read-only; Vercel CLI telemetry confirmed disabled on 2026-08-10                                                                                                             |
+| GitHub repository automation      | Adopted                 | `.github/rulesets/protect-main.json` generated from the profile template and applied with its script; live state verified                                                                                           |
+| Vercel automation                 | Adopted                 | Existing project and git integration verified read-only; no duplicate created; production released automatically on merge, never pushed directly                                                                    |
 
 ## 07 — Project adoption
 
