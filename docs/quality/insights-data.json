@@ -70,6 +70,8 @@
   "reviewSharePercent": 66,
   "printedBuildColumnSum": 82,
   "exactBuildMinutes": 83.4,
+  "gapsOverAnHour": 7,
+  "longestGapHours": 13,
   "autonomousStretchActiveHours": 4.9,
   "pairTotalMinutes": 67,
   "pairReviewMinutes": 48,

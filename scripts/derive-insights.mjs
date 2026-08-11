@@ -156,6 +156,10 @@ function derive() {
     // total computed from exact timestamps. Stated rather than hidden.
     printedBuildColumnSum: rows.reduce((sum, r) => sum + r.buildMinutes, 0),
     exactBuildMinutes: Number((buildSeconds / MINUTE).toFixed(1)),
+    gapsOverAnHour: log.filter((c, i) => i > 0 && c.time - log[i - 1].time > 3600).length,
+    longestGapHours: Number(
+      (Math.max(...log.map((c, i) => (i > 0 ? c.time - log[i - 1].time : 0))) / 3600).toFixed(0),
+    ),
     autonomousStretchActiveHours: Number((stretch / 3600).toFixed(1)),
     pairTotalMinutes: round(pairSeconds),
     pairReviewMinutes: round(pairReviewSeconds),

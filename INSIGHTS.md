@@ -14,9 +14,13 @@ drifted. It runs by hand and by nothing else: the slices it measures live on
 branches deleted after merge, so a CI checkout cannot reproduce them, and making
 it a gate would fail for reasons that are not defects.
 
-The merged-pull-request count and the median CI duration come from the GitHub
-API, which an offline test cannot reach. They are carried in the JSON as
-`apiDerived` and are **not** re-checked.
+Three things are outside that. The merged-pull-request count and the median CI
+duration come from the GitHub API, which an offline test cannot reach; they are
+carried in the JSON as `apiDerived` and are **not** re-checked. Ratios and
+characterisations stated in words — "about ten minutes per slice", "twice as
+long", "two thirds to more than four times" — are read off the table rather than
+derived, so they can drift without failing. And the reviewer-pass counts and the
+"at least six" dead guards are session observations git cannot record at all.
 
 The question that prompted it: **is this slow because only one agent is
 building?** The data says no, and points somewhere else.
@@ -33,7 +37,7 @@ building?** The data says no, and points somewhere else.
 | Pull requests merged                   | 13           |
 | Median CI run                          | **74 s**     |
 
-70% of the calendar time was the agent waiting. The seven gaps over an
+70% of the calendar time was the agent waiting. The 7 gaps over an
 hour — including two of about 13 hours — are overnight, not work. Comparing
 "two days" against "an app this size" measures the wrong thing.
 

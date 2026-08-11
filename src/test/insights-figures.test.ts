@@ -41,6 +41,8 @@ interface InsightsData {
   readonly reviewSharePercent: number;
   readonly printedBuildColumnSum: number;
   readonly exactBuildMinutes: number;
+  readonly gapsOverAnHour: number;
+  readonly longestGapHours: number;
   readonly autonomousStretchActiveHours: number;
   readonly pairTotalMinutes: number;
   readonly pairReviewMinutes: number;
@@ -135,13 +137,23 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     statesNumber(data.doublingBuildSavesMinutes, /throughput saves (\d+) of/);
     statesNumber(data.combinedMinutes, /saves \d+ of (\d+) minutes/);
     statesNumber(data.doublingBuildSavesPercent, /minutes — about (\d+)%/);
-    statesNumber(data.slices[4]?.rounds ?? -1, /S6 took (\w+) remediation/);
+    // Resolved by name. A positional index would silently compare the wrong
+    // slice if one were inserted or reordered.
+    const s6 = data.slices.find((slice) => slice.slice.startsWith('feat(s6)'));
+
+    expect(s6, 'no S6 slice in the derivation').toBeDefined();
+    statesNumber(s6?.rounds ?? -1, /S6 took (\d+) remediation/);
     statesNumber(data.totalRounds, /9 rounds instead of (\d+)/);
     statesNumber(data.nineRoundEquivalentMinutes, /to roughly (\d+) minutes/);
     statesNumber(Math.round(data.waitingHours), /(\d+) of \d+ hours were spent waiting/);
     statesNumber(Math.round(data.wallClockHours), /\d+ of (\d+) hours were spent waiting/);
     statesNumber(data.autonomousStretchActiveHours, /nine slices in ([\d.]+) hours/);
     statesNumber(data.medianCommitToFixMinutes, /is \*\*([\d.]+) minutes\*\*/);
+    statesNumber(data.gapsOverAnHour, /The (\d+) gaps over an hour/);
+    statesNumber(data.longestGapHours, /two of about (\d+) hours/);
+    // The caveat repeats the round total. Round 3's defect was exactly a prose
+    // repeat left behind by a table correction, and this one was still loose.
+    statesNumber(data.totalRounds, /fraction of the (\d+) remediation/);
   });
 
   it('states the rounding convention whenever its own columns need one', () => {
@@ -155,7 +167,16 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
   it('does not carry a figure the derivation no longer supports', () => {
     // Values that were published and wrong. A number that has already shipped
     // once is the one most likely to be copied back in.
-    for (const retired of ['**90 s**', '76 minutes of building', '**25**', '49 of them review']) {
+    // Bare numbers are excluded on purpose: `**25**` would fail on correct data
+    // the day a total legitimately became 25. Each entry carries its context.
+    const retiredValues = [
+      '**90 s**',
+      '76 minutes of building',
+      '49 of them review',
+      'one and a half to four',
+    ];
+
+    for (const retired of retiredValues) {
       expect(insights, `${retired} was corrected and must not return`).not.toContain(retired);
     }
   });
