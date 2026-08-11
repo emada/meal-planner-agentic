@@ -67,6 +67,43 @@ describe('governance documents agree with the current authorization model', () =
     expect(undocumented).toEqual([]);
   });
 
+  it('declares the same gates the evidence generator will run', () => {
+    // The register explains that gates live beside the scripts they name so the
+    // two cannot drift. That is only true if something checks.
+    const manifest: unknown = JSON.parse(readFileSync('package.json', 'utf8'));
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    const declared = (manifest as { sweai: { gates: string[] } }).sweai.gates;
+    const quoted = /"gates": \[([^\]]*)\]/.exec(gates)?.[1] ?? '';
+
+    const missing = declared.filter((gate) => !quoted.includes(`"${gate}"`));
+
+    expect(declared.length).toBeGreaterThan(0);
+    expect(missing).toEqual([]);
+  });
+
+  it('never points a deferred gate at a slice that has already shipped', () => {
+    // Twice now a "lands in S6" cell survived S6 shipping, leaving a commitment
+    // with no landing point and nothing to surface it again.
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+    const plan = readFileSync('PLAN.md', 'utf8');
+
+    // A slice is shipped once PLAN.md stops describing it as upcoming; S0-S6
+    // are all merged at the time of writing, so any reference to them as a
+    // future landing point is stale by construction.
+    const shipped = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+    const rows = gates
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && line.includes('deferred'));
+
+    const stale = rows.filter((row) =>
+      shipped.some((slice) => new RegExp(`\\| ${slice} +\\|`).test(row)),
+    );
+
+    expect(plan).toContain('S7');
+    expect(stale).toEqual([]);
+  });
+
   it('states gate counts that match the gate table they summarise', () => {
     // These counts drifted in three consecutive review rounds because they were
     // written by hand next to a table that already held the answer. Deriving
