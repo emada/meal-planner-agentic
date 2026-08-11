@@ -76,7 +76,7 @@ Deliberately not in force. The adoption order in `.ai-engineering/.bootstrap/06-
 
 | Gate                       | Status                           | Lands in    | Rationale                                                                                                                                                           |
 | -------------------------- | -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mutation testing (Stryker) | deferred, warn-only when adopted | unscheduled | Step 5. The domain logic it was waiting for now exists, so the sequencing reason is gone; what remains is a cost decision                                           |
+| Mutation testing (Stryker) | deferred, warn-only when adopted | unscheduled | Step 5. Measured once on 2026-08-11 rather than argued about — see below. What remains is a cost decision                                                           |
 | Coverage thresholds        | deferred                         | unscheduled | Coverage is reported from S0. A threshold measured against a suite this size mostly reports the number it was set to; worth setting when someone will act on a drop |
 
 ## Substitutions from `PLAN.md`
@@ -201,6 +201,24 @@ It was deliberately not required before, on the argument that the agent under re
 What remains unprotected, stated plainly: the reviewer is a subagent of the agent that wrote the change, so a `PASS` it reaches in error still merges. The context is a floor, not a substitute for independent judgement.
 
 **Owner recovery.** Requiring a context only an agent publishes reintroduces, by a different route, the lockout that zero required approvals was chosen to avoid: if the agent or `publish-claude-review.sh` is unavailable, nothing can merge — including a fix to the ruleset. `bypass_actors` is empty by design. The recovery is for the owner to edit ruleset 20604945, remove the context, merge, and restore it. Publishing the status by hand with `gh api` is not the recovery; `EXECUTION.md` prohibits it precisely because it would defeat the head binding.
+
+### Mutation testing, measured once
+
+Run on 2026-08-11 against a scratch copy, not adopted. `@stryker-mutator/core` + the vitest runner, 987 mutants across 14 files, 3 minutes 5 seconds at concurrency 4 on a developer machine.
+
+| Module     | Score  |
+| ---------- | ------ |
+| `domain/`  | 93.55% |
+| `api/`     | 90.20% |
+| `storage/` | 86.49% |
+| `ui/`      | 55.04% |
+| **All**    | 62.88% |
+
+**The headline number is misleading and should not be published as a quality figure.** Stryker runs the Vitest suite only, so `App.tsx` scores 2.94% with 87 uncovered mutants — that component is exercised almost entirely by Playwright, which the mutation runner does not invoke. The number measures the unit suite, not the test suite.
+
+**It found a real hole, which is the argument for the cost.** A surviving mutant showed that nothing asserted where `sourceUrl` came from: the mapping test asserted `null`, and the component and browser tests checked the source link's presence without its `href`. `toRecipe` could stop reading `strSource` — or read the wrong field — with 143 unit and 118 browser tests green. AC4 requires "working YouTube and source links"; the YouTube half was verified at both levels and the source half was not. Fixed on 2026-08-11 with assertions at all three levels, each probed.
+
+Whether to adopt it as a gate is unresolved. The costs are ~9 MB of dev dependency, roughly three minutes locally and more on a two-core CI runner, and triage of 258 surviving mutants of which an unknown share are equivalent — mutants that change the code without changing behaviour, which no test can or should kill.
 
 ### Production smoke check
 

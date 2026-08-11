@@ -54,7 +54,10 @@ test('AC4 — the modal shows ingredients, instructions and both links, with no 
   const youtube = dialog.getByRole('link', { name: /watch on youtube/i });
   await expect(youtube).toHaveAttribute('href', 'https://www.youtube.com/watch?v=abc');
   await expect(youtube).toHaveAttribute('rel', 'noopener noreferrer');
-  await expect(dialog.getByRole('link', { name: /original source/i })).toBeVisible();
+  const source = dialog.getByRole('link', { name: /original source/i });
+  await expect(source).toBeVisible();
+  await expect(source).toHaveAttribute('href', 'https://example.test/source');
+  await expect(source).toHaveAttribute('rel', 'noopener noreferrer');
 });
 
 test('AC5 — the modal is operable by keyboard alone and restores focus on close', async ({

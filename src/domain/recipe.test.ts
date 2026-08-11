@@ -132,6 +132,23 @@ describe('toRecipe', () => {
     });
   });
 
+  it('reads each link from its own field (AC4)', () => {
+    // Mutation testing found that nothing asserted where `sourceUrl` came
+    // from: the only mapping test asserted `null`, and both the component and
+    // browser tests checked the source link's presence without its href. So
+    // `toRecipe` could stop reading `strSource` entirely, or read the wrong
+    // field, with 143 unit and 118 browser tests green.
+    const recipe = toRecipe({
+      idMeal: '1',
+      strMeal: 'Beef Pie',
+      strYoutube: 'https://youtu.be/abc',
+      strSource: 'https://example.test/recipe',
+    });
+
+    expect(recipe.youtubeUrl).toBe('https://youtu.be/abc');
+    expect(recipe.sourceUrl).toBe('https://example.test/recipe');
+  });
+
   it('coerces non-string fields to empty rather than rendering them', () => {
     // The API schema uses catchall(unknown), so a number or boolean can arrive
     // in a field we expect to be text.
