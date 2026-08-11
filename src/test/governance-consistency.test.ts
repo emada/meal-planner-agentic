@@ -91,6 +91,8 @@ describe('governance documents agree with the current authorization model', () =
     // Twice now a "lands in S6" cell survived S6 shipping, leaving a commitment
     // with no landing point and nothing to surface it again.
     const gates = readFileSync('docs/quality/gates.md', 'utf8');
+    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+    const threats = readFileSync('docs/security/threat-model.md', 'utf8');
     const plan = readFileSync('PLAN.md', 'utf8');
 
     // A slice is shipped once PLAN.md stops describing it as upcoming; S0-S6
@@ -124,7 +126,22 @@ describe('governance documents agree with the current authorization model', () =
     expect(isStale('Coverage is reported from S0 and enforced later.')).toBe(false);
 
     expect(plan).toContain('S7');
-    expect(gates.split('\n').filter(isStale)).toEqual([]);
+
+    // Three documents, not one: the step-5 cell and three "Planned" threat rows
+    // survived a full slice because only gates.md was being read.
+    for (const [name, text] of [
+      ['gates.md', gates],
+      ['bootstrap-adoption.md', adoption],
+    ] as const) {
+      expect([name, ...text.split('\n').filter(isStale)]).toEqual([name]);
+    }
+
+    // A control cannot still be "planned" for a slice that has shipped.
+    const planned = threats
+      .split('\n')
+      .filter((line) => new RegExp(`Planned\\s*—\\s*(${shipped.join('|')})\\b`).test(line));
+
+    expect(planned).toEqual([]);
   });
 
   it('states gate counts that match the gate table they summarise', () => {

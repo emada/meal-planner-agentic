@@ -2,7 +2,9 @@
 
 Search recipes from [TheMealDB](https://www.themealdb.com) and build a shopping list that lives in your browser. No account, no backend, no tracking.
 
-Status: **S0 — engineering harness complete.** The application shell builds, deploys, and is gated; feature slices S1 onward add search, the recipe modal, and the shopping list.
+Status: **complete.** Every acceptance criterion in [`SPEC.md`](SPEC.md) is implemented and live at <https://meal-planner-agentic.vercel.app>.
+
+Search recipes, open one for its ingredients and instructions, add them to a shopping list that survives a browser restart, edit that list, or let "surprise me" pick for you.
 
 ## Requirements
 
@@ -17,21 +19,23 @@ npm run dev   # http://localhost:5173
 
 ## Commands
 
-| Command                 | What it does                                                         |
-| ----------------------- | -------------------------------------------------------------------- |
-| `npm run dev`           | Dev server with hot reload                                           |
-| `npm run build`         | Type-check, then produce the static bundle in `dist/`                |
-| `npm run preview`       | Serve the built bundle locally                                       |
-| `npm run typecheck`     | TypeScript, no emit                                                  |
-| `npm run lint`          | ESLint, type-aware                                                   |
-| `npm run format`        | Apply Prettier                                                       |
-| `npm run test`          | Unit and integration tests                                           |
-| `npm run test:coverage` | Tests with a coverage report                                         |
-| `npm run test:e2e`      | Playwright journeys at mobile and desktop viewports                  |
-| `npm run scan:secrets`  | secretlint over the repository                                       |
-| `npm run verify`        | The local gate sequence, in one command — stops at the first failure |
+| Command                     | What it does                                                         |
+| --------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`               | Dev server with hot reload                                           |
+| `npm run build`             | Type-check, then produce the static bundle in `dist/`                |
+| `npm run preview`           | Serve the built bundle locally                                       |
+| `npm run typecheck`         | TypeScript, no emit                                                  |
+| `npm run lint`              | ESLint, type-aware                                                   |
+| `npm run format`            | Apply Prettier                                                       |
+| `npm run test`              | Unit and integration tests                                           |
+| `npm run test:coverage`     | Tests with a coverage report                                         |
+| `npm run test:e2e`          | Playwright journeys at mobile and desktop viewports                  |
+| `npm run scan:secrets`      | secretlint over the repository                                       |
+| `npm run check:bundle`      | gzipped bundle size against its budget                               |
+| `npm run check:duplication` | jscpd over non-test `src/`                                           |
+| `npm run verify`            | The local gate sequence, in one command — stops at the first failure |
 
-`verify` chains types, lint, format, unit tests with coverage, secret scan, build, and browser journeys. It is a convenience, not evidence: it short-circuits, so it reports one failure and hides the rest, and it cannot reach the gates that live on the remote. To produce evidence, run the generator described in [docs/quality/gates.md](docs/quality/gates.md) — it runs every declared gate and stamps the result with the commit it describes.
+`verify` chains types, lint, format, unit tests with coverage, secret scan, build, bundle budget, duplication, and browser journeys — every gate the project declares. It is a convenience, not evidence: it short-circuits, so it reports one failure and hides the rest, and it cannot reach the gates that live on the remote. To produce evidence, run the generator described in [docs/quality/gates.md](docs/quality/gates.md) — it runs every declared gate and stamps the result with the commit it describes.
 
 First Playwright run needs browsers: `npx playwright install chromium`.
 

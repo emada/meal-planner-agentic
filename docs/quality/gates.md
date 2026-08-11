@@ -179,7 +179,7 @@ This list is bound to `.github/rulesets/protect-main.json` by `src/test/governan
 
 `Vercel Preview Comments` is deliberately **not** required. It reports that a bot posted a comment, not that anything built or passed; requiring it would let a cosmetic integration change block merges.
 
-**AC13 is not yet exercised.** The horizontal-overflow assertion in `e2e/smoke.spec.ts` cannot currently fail: the shell renders a heading and an empty `<main>`, so overflow is impossible. It is a valid S0 smoke test and a valid regression guard once there is layout, but AC13 evidence begins at S1, when a real results grid renders. Recorded so the green tick is not mistaken for responsive-layout proof.
+**AC13 is exercised.** Three browser tests assert it against rendered content at 375px: the results grid with unbreakable titles (`e2e/search.spec.ts`), the open modal (`e2e/recipe-modal.spec.ts`), and the shopping list (`e2e/shopping-list.spec.ts`). Each checks both document overflow and intra-card clipping, because `overflow: hidden` hides the second from the first.
 
 `SWEAI Review / Claude` **is** a required context, added on 2026-08-10 when autonomous merge was authorized.
 
@@ -188,6 +188,25 @@ It was deliberately not required before, on the argument that the agent under re
 What remains unprotected, stated plainly: the reviewer is a subagent of the agent that wrote the change, so a `PASS` it reaches in error still merges. The context is a floor, not a substitute for independent judgement.
 
 **Owner recovery.** Requiring a context only an agent publishes reintroduces, by a different route, the lockout that zero required approvals was chosen to avoid: if the agent or `publish-claude-review.sh` is unavailable, nothing can merge — including a fix to the ruleset. `bypass_actors` is empty by design. The recovery is for the owner to edit ruleset 20604945, remove the context, merge, and restore it. Publishing the status by hand with `gh api` is not the recovery; `EXECUTION.md` prohibits it precisely because it would defeat the head binding.
+
+### Production smoke check
+
+Run against the live site rather than a preview, with the real TheMealDB, on 2026-08-11:
+
+| Journey                                                          | Result |
+| ---------------------------------------------------------------- | ------ |
+| The app loads with its stylesheet applied and no page error      | pass   |
+| Search → a grid of live results                                  | pass   |
+| Open a recipe → add its ingredients → read them back in the list | pass   |
+| Surprise me → a random recipe with its ingredients               | pass   |
+
+Eight runs, four journeys across a 375px and a desktop viewport. This is the one check that exercises the real dependency: every other browser test stubs TheMealDB, because AC2 and AC3 need responses a live service will not produce on demand.
+
+**This is a dated manual observation, not derived evidence.** It was run from a throwaway Playwright project outside this repository — the committed config points `baseURL` at a local preview server — so nothing here re-runs it, and no artifact is retained. Read it as someone having checked, not as something a machine will check again. That is the opposite of how the gate evidence above works, and the distinction matters more than the result.
+
+Removing an item and clearing the list were **not** smoke-checked. They are device-local, they touch no external service, and they are covered at both the unit and browser level, so the live run would only re-test what a stub already proves.
+
+It is deliberately not a gate. It runs against production, so it cannot block a merge that has not happened yet, and making it a required context would tie every pull request to a third party's uptime — the same dependency spec O1 already records as unsupported.
 
 ### Vercel deployment
 
