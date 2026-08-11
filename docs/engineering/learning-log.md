@@ -21,7 +21,8 @@ dependency-update pull request rather than by editing a pinned submodule.
 
 ## Pending promotion
 
-Entries below marked `propose` and not yet in a contract pull request: **20**.
+Entries below marked `propose` and not yet in a contract pull request:
+**<!-- derived:pending-promotion -->20<!-- /derived -->**.
 
 ---
 

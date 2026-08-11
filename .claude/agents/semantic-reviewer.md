@@ -45,6 +45,9 @@ Do not trust the implementer's summary as the evidence source.
 8. accidental scope expansion;
 9. non-English committed or provider-published engineering artifacts, except localized product copy required by `SPEC.md`;
 10. `.ai-engineering` submodule integrity when it changes: Git mode `160000`, a reachable pinned commit, readable `.ai-engineering/AGENTS.md` and `.ai-engineering/.bootstrap/AGENTS.md`, and no symlink, vendored copy, or product-owned `.bootstrap/`.
+11. **a claim without a check** — any sentence in the diff, including commit messages and documents, asserting what the code does where nothing verifies it;
+12. **a guard that cannot fail** — a test, gate, assertion, or regular expression that passes because it matches nothing; ask what would have to change for it to report a failure, and prefer to try it;
+13. **a result that lands after the user moved on** — asynchronous work whose result writes to shared state without an answer to "what if the user did something else while this was in flight?"; a cancel function that nothing calls is not a guard.
 
 ## Report
 
@@ -77,6 +80,9 @@ Verdict: PASS
 No findings.
 ```
 
-Never drop the header. `publish-claude-review.sh` refuses a report with no `Reviewed head:` line, so a headerless verdict cannot be published at all.
+The header is required in every report, including this one:
+`06-tools/github/publish-claude-review.sh` refuses a report without
+`Reviewed head:`, because a verdict that does not name the commit it judged
+cannot be bound to one.
 
 Do not report style issues already enforced by formatters or linters. Do not include secrets or raw internal reasoning; the report may be published verbatim to the pull request. Return findings to the lead agent; do not implement them in this review.

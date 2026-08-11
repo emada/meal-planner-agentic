@@ -37,7 +37,7 @@ describe('the engineering learning log counts what it contains', () => {
 
   it('states the pending-promotion count its own table produces', () => {
     const pending = rows.filter((row) => scopeOf(row) === 'propose').length;
-    const stated = /pull request: \*\*(\d+)\*\*/.exec(log)?.[1];
+    const stated = /derived:pending-promotion -->(\d+)<!-- \/derived/.exec(log)?.[1];
 
     expect(stated, 'the log must state a pending-promotion count').toBeDefined();
     expect(Number(stated), 'the stated count disagrees with the table').toBe(pending);
