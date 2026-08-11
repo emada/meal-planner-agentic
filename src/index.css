@@ -417,11 +417,6 @@ img {
   margin: 0;
 }
 
-.button:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -433,7 +428,17 @@ img {
   white-space: nowrap;
 }
 
+.button:disabled,
 .button[aria-disabled='true'] {
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.app__nav-status {
+  margin: calc(var(--space-4) * -1) 0 var(--space-6);
+  color: var(--color-text-muted);
+}
+
+.app__nav-status:empty {
+  display: none;
 }

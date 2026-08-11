@@ -205,3 +205,81 @@ test('a failed nav retry keeps focus in the error region', async ({ page }) => {
   // The retry unmounts its own button; focus must not fall to <body>.
   await expect(page.locator('.app__nav-error p')).toBeFocused();
 });
+
+test('a failure does not steal focus from a user who moved on', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('13', 'Beef Pie')] }),
+    }),
+  );
+  await page.route(RANDOM_ROUTE, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.abort('failed');
+  });
+  await page.goto('/');
+
+  await surprise(page).click();
+
+  // While the slow request is in flight the user starts typing a search.
+  const box = page.getByRole('searchbox', { name: /search recipes/i });
+  await box.click();
+  await box.pressSequentially('chick');
+
+  await expect(page.getByRole('alert')).toBeVisible();
+  await box.pressSequentially('en');
+
+  // Pulling focus mid-word would discard the characters typed after the alert.
+  await expect(box).toBeFocused();
+  await expect(box).toHaveValue('chicken');
+});
+
+test('dismissing the failure returns focus to the trigger', async ({ page }) => {
+  await page.route(RANDOM_ROUTE, (route) => route.abort('failed'));
+  await page.goto('/');
+
+  const trigger = surprise(page);
+  await trigger.click();
+  await expect(page.getByRole('alert')).toBeVisible();
+
+  await page.getByRole('button', { name: /dismiss/i }).click();
+
+  // The dismiss button unmounts with the region it sits in.
+  await expect(trigger).toBeFocused();
+});
+
+test('the busy state is visible and, inside the modal, announced there', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('14', 'Beef Pie')] }),
+    }),
+  );
+  await page.route(RANDOM_ROUTE, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('15', 'Tarte Tatin')] }),
+    });
+  });
+  await page.goto('/');
+
+  // Sighted feedback: visible text, not only a dimmed button.
+  await surprise(page).click();
+  await expect(page.locator('.app__nav-status')).toHaveText(/finding a random recipe/i);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByRole('button', { name: /close recipe/i }).click();
+
+  // aria-modal hides the header from assistive technology, so the in-modal
+  // trigger has to announce inside the dialog.
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: /surprise me/i }).click();
+  await expect(dialog.locator('.modal__status')).toHaveText(/finding a random recipe/i);
+});

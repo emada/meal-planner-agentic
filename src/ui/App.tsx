@@ -15,15 +15,27 @@ type View = 'search' | 'shopping-list';
  * aimed at "Try again" closes the modal instead and the focus trap makes it
  * unreachable by keyboard.
  */
-function SurpriseError({ surprise }: { readonly surprise: ReturnType<typeof useSurpriseMe> }) {
+function SurpriseError({
+  surprise,
+  onDismissed,
+}: {
+  readonly surprise: ReturnType<typeof useSurpriseMe>;
+  readonly onDismissed: () => void;
+}) {
   const messageRef = useRef<HTMLParagraphElement>(null);
 
   // The retry unmounts this whole region and a failed retry mounts a fresh one,
-  // so restoring focus after the click cannot work. Taking focus when the alert
-  // appears is what keeps the user with the thing they must act on -- and they
-  // just activated "surprise me", so it is not a surprise hijack.
+  // so restoring focus after the click cannot work. Taking focus is right only
+  // when the user has not moved on: a slow request that fails while they are
+  // typing in the search box would otherwise pull focus mid-word and discard
+  // the keystrokes. role="alert" announces the message either way.
   useEffect(() => {
-    messageRef.current?.focus();
+    const active = document.activeElement;
+    const abandoned =
+      active === null || active === document.body || active instanceof HTMLBodyElement;
+    const onTrigger = active instanceof HTMLElement && active.textContent === 'surprise me';
+
+    if (abandoned || onTrigger) messageRef.current?.focus();
   }, []);
 
   return (
@@ -41,7 +53,15 @@ function SurpriseError({ surprise }: { readonly surprise: ReturnType<typeof useS
       >
         Try again
       </button>
-      <button className="button button--secondary" type="button" onClick={surprise.dismiss}>
+      <button
+        className="button button--secondary"
+        type="button"
+        onClick={() => {
+          surprise.dismiss();
+          // This button unmounts with the region, so name where focus goes.
+          requestAnimationFrame(onDismissed);
+        }}
+      >
         Dismiss
       </button>
     </div>
@@ -65,6 +85,8 @@ export function App() {
   }, []);
 
   const surprise = useSurpriseMe(openFromSurprise);
+  const navSurpriseRef = useRef<HTMLButtonElement>(null);
+  const modalSurpriseRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="app">
@@ -104,6 +126,7 @@ export function App() {
             // so the modal would capture <body> as its restore target and the
             // user would lose their place on close.
             aria-disabled={surprise.state.status === 'loading'}
+            ref={navSurpriseRef}
             onClick={() => {
               if (surprise.state.status === 'loading') return;
               void surprise.surpriseMe();
@@ -113,12 +136,19 @@ export function App() {
           </button>
         </nav>
 
-        <p className="visually-hidden" role="status">
-          {surprise.state.status === 'loading' ? 'Finding a random recipe…' : ''}
+        <p className="app__nav-status" role="status">
+          {surprise.state.status === 'loading' && openRecipe === null
+            ? 'Finding a random recipe…'
+            : ''}
         </p>
 
         {surprise.state.status === 'failed' && openRecipe === null && (
-          <SurpriseError surprise={surprise} />
+          <SurpriseError
+            surprise={surprise}
+            onDismissed={() => {
+              navSurpriseRef.current?.focus();
+            }}
+          />
         )}
       </header>
 
@@ -168,6 +198,7 @@ export function App() {
                 className="button button--secondary"
                 type="button"
                 aria-disabled={surprise.state.status === 'loading'}
+                ref={modalSurpriseRef}
                 onClick={() => {
                   if (surprise.state.status === 'loading') return;
                   // Replaces the open recipe in place: the modal is already the
@@ -177,13 +208,22 @@ export function App() {
               >
                 surprise me
               </button>
-              {surprise.state.status === 'failed' && <SurpriseError surprise={surprise} />}
+              {surprise.state.status === 'failed' && (
+                <SurpriseError
+                  surprise={surprise}
+                  onDismissed={() => {
+                    modalSurpriseRef.current?.focus();
+                  }}
+                />
+              )}
               <p className="modal__status" role="status">
-                {addedRecipeId === openRecipe.id
-                  ? `Added ${String(openRecipe.ingredients.length)} ingredient${
-                      openRecipe.ingredients.length === 1 ? '' : 's'
-                    } to your shopping list.`
-                  : ''}
+                {surprise.state.status === 'loading'
+                  ? 'Finding a random recipe…'
+                  : addedRecipeId === openRecipe.id
+                    ? `Added ${String(openRecipe.ingredients.length)} ingredient${
+                        openRecipe.ingredients.length === 1 ? '' : 's'
+                      } to your shopping list.`
+                    : ''}
               </p>
             </div>
           }
