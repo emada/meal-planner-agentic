@@ -110,6 +110,7 @@ function derive() {
         buildMinutes: round((rounds > 0 ? secondCommit : merged) - group[0].time),
         reviewMinutes: rounds > 0 ? round(merged - secondCommit) : 0,
         rounds: Math.max(rounds, 0),
+        mergedAt: merged,
         buildSeconds: (rounds > 0 ? secondCommit : merged) - group[0].time,
         reviewSeconds: rounds > 0 ? merged - secondCommit : 0,
       };
@@ -148,7 +149,10 @@ function derive() {
       reviewMinutes: row.reviewMinutes,
       rounds: row.rounds,
     })),
-    sliceCount: rows.length,
+    // Bound to the stretch it describes, not to the whole table: the AC4 row
+    // merged after S9 and is outside it, so `rows.length` satisfied the prose
+    // by coincidence.
+    autonomousStretchPullRequests: rows.filter((r) => r.mergedAt <= log[s9].time).length,
     totalBuildMinutes: round(buildSeconds),
     totalReviewMinutes: round(reviewSeconds),
     totalRounds: rows.reduce((sum, r) => sum + r.rounds, 0),

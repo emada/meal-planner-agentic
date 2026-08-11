@@ -19,10 +19,12 @@ duration come from the GitHub API, which an offline test cannot reach; they are
 carried in the JSON as `apiDerived` and are **not** re-checked. Ratios and
 characterisations stated in words — "about ten minutes per slice", "twice as
 long", "two thirds to more than four times" — are read off the table rather than
-derived, so they can drift without failing. And the reviewer-pass counts, the "at least six" dead
-guards, and the three probe-hygiene failures are session observations git
-cannot record at all — the only figures here that are hand-counted rather than
-derived.
+derived, so they can drift without failing. And a handful are session observations git cannot record at
+all: reviewer-pass counts, the "at least six" dead guards, the three
+probe-hygiene failures, how many times a reviewer caught a retracted commit
+message, and how many figures this document's own first version got wrong. A
+test enumerates every number in this file and fails on any that is neither
+guarded nor listed as one of these, so the list cannot quietly grow.
 
 The question that prompted it: **is this slow because only one agent is
 building?** The data says no, and points somewhere else.
@@ -174,8 +176,8 @@ down, not just its verdict.
 33 of 47 hours were spent waiting. Most of that is unavoidable and correct —
 the human sleeps, and the approvals were real decisions. But the run stopped for
 approval at S0, then again for the autonomy envelope, then again mid-build. The
-one long autonomous stretch, S1 through S9, covered 9 slices in 4.9 hours of
-active time.
+one long autonomous stretch, S1 through S9, covered 8 pull requests in
+4.9 hours of active time.
 
 Fewer, larger checkpoints with a clear envelope beat many small ones.
 

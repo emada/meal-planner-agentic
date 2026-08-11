@@ -64,7 +64,7 @@
       "rounds": 2
     }
   ],
-  "sliceCount": 9,
+  "autonomousStretchPullRequests": 8,
   "totalBuildMinutes": 83,
   "totalReviewMinutes": 165,
   "totalRounds": 23,

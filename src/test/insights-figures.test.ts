@@ -43,7 +43,7 @@ interface InsightsData {
   readonly exactBuildMinutes: number;
   readonly gapsOverAnHour: number;
   readonly gapsOverTwelveHours: number;
-  readonly sliceCount: number;
+  readonly autonomousStretchPullRequests: number;
   readonly longestGapHours: number;
   readonly autonomousStretchActiveHours: number;
   readonly pairTotalMinutes: number;
@@ -65,7 +65,11 @@ const insights = readFileSync('INSIGHTS.md', 'utf8');
  */
 const unwrapped = insights.replace(/\s+/g, ' ');
 
+const guarded: RegExp[] = [];
+
 const statesNumber = (value: number, context: RegExp) => {
+  guarded.push(context);
+
   const match = context.exec(unwrapped);
 
   expect(match, `nothing in INSIGHTS.md matches ${String(context)}`).not.toBeNull();
@@ -78,13 +82,16 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
   });
 
   it('states the header figures the derivation produced', () => {
-    expect(insights).toContain(`**${String(data.wallClockHours)} h**`);
-    expect(insights).toContain(`**${String(data.activeHours)} h**`);
-    expect(insights).toContain(`**${String(data.waitingHours)} h**`);
-    expect(insights).toContain(`| ${String(data.commits)} `);
-    expect(insights).toContain(`**${String(data.fixCommits)} (${String(data.fixSharePercent)}%)**`);
-    expect(insights).toContain(`**${String(data.apiDerived.medianCiSeconds)} s**`);
-    expect(insights).toContain(`| ${String(data.apiDerived.mergedPullRequests)} `);
+    statesNumber(data.wallClockHours, /first commit to last \| \*\*([\d.]+) h/);
+    statesNumber(data.activeHours, /truncated to 30 min\) \| \*\*([\d.]+) h/);
+    statesNumber(data.waitingHours, /Waiting for a human \| \*\*([\d.]+) h/);
+    statesNumber(data.commits, /\| Commits \| (\d+) \|/);
+    statesNumber(data.fixCommits, /`fix` commits \| \*\*(\d+) \(/);
+    statesNumber(data.fixSharePercent, /`fix` commits \| \*\*\d+ \((\d+)%\)/);
+    statesNumber(data.apiDerived.medianCiSeconds, /Median CI run \| \*\*(\d+) s/);
+    statesNumber(data.apiDerived.mergedPullRequests, /Pull requests merged \| (\d+) \|/);
+    statesNumber(data.reviewSharePercent, /\*\*(\d+)% of slice time/);
+    statesNumber(data.printedBuildColumnSum, /sums to (\d+) as printed/);
   });
 
   it('states each slice row with the derived numbers, under its own name', () => {
@@ -147,9 +154,10 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     statesNumber(s6?.rounds ?? -1, /S6 took (\d+) remediation/);
     statesNumber(data.totalRounds, /9 rounds instead of (\d+)/);
     statesNumber(data.nineRoundEquivalentMinutes, /to roughly (\d+) minutes/);
+    statesNumber(data.totalReviewMinutes, /review time drops from (\d+) to/);
     statesNumber(Math.round(data.waitingHours), /(\d+) of \d+ hours were spent waiting/);
     statesNumber(Math.round(data.wallClockHours), /\d+ of (\d+) hours were spent waiting/);
-    statesNumber(data.autonomousStretchActiveHours, /slices in ([\d.]+) hours/);
+    statesNumber(data.autonomousStretchActiveHours, /pull requests in ([\d.]+) hours/);
     statesNumber(data.medianCommitToFixMinutes, /is \*\*([\d.]+) minutes\*\*/);
     statesNumber(data.gapsOverAnHour, /The (\d+) gaps over an hour/);
     statesNumber(data.longestGapHours, /of about (\d+) hours/);
@@ -157,7 +165,7 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     // repeat left behind by a table correction, and this one was still loose.
     statesNumber(data.totalRounds, /fraction of the (\d+) remediation/);
     statesNumber(data.gapsOverTwelveHours, /including (\d+) of about \d+ hours/);
-    statesNumber(data.sliceCount, /covered (\d+) slices/);
+    statesNumber(data.autonomousStretchPullRequests, /covered (\d+) pull requests/);
 
     // The definition paragraph quotes AC4's round count back. It was the last
     // derived figure the prose repeated without a check.
@@ -173,6 +181,59 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     if (data.printedBuildColumnSum !== data.totalBuildMinutes) {
       expect(insights).toContain(`sums to ${String(data.printedBuildColumnSum)} as printed`);
     }
+  });
+
+  /**
+   * Seven review rounds went "add a guard, find another unguarded figure". The
+   * pattern only stops when the burden inverts: every number in the document
+   * must be claimed by a guard or listed here with a reason.
+   */
+  it('leaves no number unaccounted for', () => {
+    const exempt: [RegExp, string][] = [
+      [/2026-08-11/, 'the date the snapshot was taken'],
+      [/5a366e4/, 'the snapshot commit, asserted separately'],
+      [/S\d/, 'slice labels, not measurements'],
+      [/1\.4\.10|WCAG/, 'a standard reference'],
+      [/30 min/, 'the truncation threshold, a parameter of the method'],
+      [/\b9 rounds\b/, 'the hypothetical in the extrapolation, not a measurement'],
+      [
+        /about ten minutes per slice|twice as long|two thirds|four times/,
+        'ratios read off the table',
+      ],
+      [/three reviewer passes/, 'reviewer passes, which git cannot record'],
+      [/at least six/, 'dead guards counted by hand'],
+      [/Three negative probes/, 'probe-hygiene failures counted by hand'],
+      [/Twice a reviewer caught/, 'retractions counted by hand'],
+      [
+        /seven figures|including two that/,
+        "this document's own first-version errors, counted by hand",
+      ],
+      [/^\s*\d+\.\s|^#+ \d+\./m, 'ordered-list and heading markers'],
+    ];
+
+    // Numbers as they appear to a reader: digits with their surrounding words.
+    const unaccounted: string[] = [];
+
+    for (const line of insights.split('\n')) {
+      for (const match of line.matchAll(/\d[\d.,]*/g)) {
+        const index = match.index;
+        const context = line.slice(Math.max(0, index - 45), index + 45);
+        const inUnwrapped = unwrapped.includes(context.trim().replace(/\s+/g, ' '));
+        const isGuarded = guarded.some((pattern) => {
+          const found = new RegExp(pattern.source, pattern.flags).exec(unwrapped);
+
+          return found?.[0].includes(match[0]) ?? false;
+        });
+
+        if (isGuarded) continue;
+        if (exempt.some(([pattern]) => pattern.test(line))) continue;
+        if (!inUnwrapped) continue;
+
+        unaccounted.push(`${match[0]} — ${context.trim()}`);
+      }
+    }
+
+    expect(unaccounted, 'every number must be guarded or listed as exempt').toEqual([]);
   });
 
   it('does not carry a figure the derivation no longer supports', () => {
