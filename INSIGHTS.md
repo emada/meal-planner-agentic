@@ -11,12 +11,12 @@ building?** The data says no, and points somewhere else.
 |                                        |              |
 | -------------------------------------- | ------------ |
 | Wall clock, first commit to last       | **47.3 h**   |
-| Active work (gaps over 30 min removed) | **14.2 h**   |
+| Active work (gaps truncated to 30 min) | **14.2 h**   |
 | Waiting for a human                    | **33.1 h**   |
 | Commits                                | 78           |
 | Of those, `fix` commits                | **38 (49%)** |
-| Pull requests merged                   | 14           |
-| Median CI run                          | **90 s**     |
+| Pull requests merged                   | 13           |
+| Median CI run                          | **74 s**     |
 
 Two thirds of the calendar time was the agent waiting. The seven gaps over an
 hour — including two of about 13 hours — are overnight, not work. Comparing
@@ -26,6 +26,17 @@ hour — including two of about 13 hours — are overnight, not work. Comparing
 
 S0 and the governance PR are excluded: their spans are dominated by waiting for
 approvals, not by building. What is left is the product.
+
+Two definitions, because the first version of this table left them implicit and
+one row then disagreed with the prose:
+
+- **Building** — the pull request's first commit to its second.
+- **After the first review** — its second commit to the merge.
+- **Review rounds** — remediation commits after the initial submission. Note
+  this counts commits, not reviewer passes: a round that returns findings and a
+  round that returns `PASS` both cost a reviewer pass, but only the first
+  produces a commit. AC4 shows the gap — two remediation commits, three
+  reviewer passes.
 
 | Slice                       | Building | After the first review | Review rounds |
 | --------------------------- | -------: | ---------------------: | ------------: |
@@ -37,22 +48,27 @@ approvals, not by building. What is left is the product.
 | S7 production verification  |      7 m |                    5 m |             1 |
 | S8 browse by category       |     12 m |                   25 m |             3 |
 | S9 close the disclosed gaps |     10 m |                   14 m |             2 |
-| AC4 source-link fix         |      0 m |                   16 m |             4 |
-| **Total**                   | **76 m** |              **172 m** |        **25** |
+| AC4 source-link fix         |      7 m |                    9 m |             2 |
+| **Total**                   | **83 m** |              **165 m** |        **23** |
 
-**69% of slice time is spent after the first review.** Writing the feature took
-about ten minutes per slice. Getting it past review took two to four times that.
+**66% of slice time is spent after the first review.** Writing the feature took
+about ten minutes per slice. Getting it past review took one and a half to four
+times that.
 
-Median gap between consecutive `fix` commits — one review round-trip — is
-**9 minutes**.
+Median time from a commit to the `fix` that follows it — one review round-trip —
+is **8.8 minutes** across all 38 `fix` commits in the history.
 
 ## So: would more agents have helped?
 
-**No, and the plan already predicted it.** `PLAN.md` records that S4 and S5 were
-the only genuinely independent pair, and that by the time S3 landed they were
-small enough that running them sequentially cost less than coordinating two
-workspaces. That was a judgement call at the time; the timings confirm it — S4
-and S5 together took 67 minutes, of which 49 were review.
+**No.** The plan predicted the _independence_ — `PLAN.md` declares S4 and S5
+mutually independent in their own slice sections, written before either shipped.
+The _cost_ judgement, that running them sequentially beat coordinating two
+workspaces, was recorded retrospectively at S7, after both had already merged.
+Worth separating, because only the first is a prediction.
+
+The timings support the retrospective call. S3+S4 and S5 together took 67
+minutes, 49 of them review. S4 alone is not separable: it shipped in the same
+pull request as S3.
 
 Three reasons parallelism would not have moved the number:
 
@@ -82,8 +98,8 @@ fail, product correctness, accessibility — and folding their findings into one
 commit would collapse most of those rounds. **This is where parallel agents pay,
 and it is not where the question assumed.**
 
-Rough size of the prize: if the 25 fix commits had arrived in 9 rounds instead
-of 25, review time drops from 172 to roughly 70 minutes.
+Rough size of the prize: if the 23 remediation commits had arrived in 9 rounds
+instead of 23, review time drops from 165 to roughly 65 minutes.
 
 ### 2. Self-check the recurring classes before submitting
 
@@ -102,10 +118,15 @@ does not pay the round-trip.
 
 ### 3. Verify every scripted edit
 
-Three times in this project a scripted find-and-replace silently matched
-nothing, and the commit message claimed work that did not exist. Twice it took a
-reviewer to notice. Asserting that a replacement applied — and reading back the
-file — costs seconds and removes a whole class of false claims.
+A scripted find-and-replace that matches nothing exits successfully, and a
+commit message written before checking then claims work that does not exist.
+Twice a reviewer caught it — `e68b7ba` and `21e47d7` both open by retracting the
+previous commit's message. It recurred while this very file was being written.
+
+Unlike every other figure here, the count is not derivable from git: the failure
+happens in the tool, and only its consequence reaches a commit. Asserting that a
+replacement applied, and reading the file back, costs seconds and removes the
+class.
 
 ### 4. Probe hygiene
 
@@ -134,9 +155,13 @@ Fewer, larger checkpoints with a clear envelope beat many small ones.
 
 Every review in this project was performed by a subagent of the agent that wrote
 the code. Isolated context, but not independent judgement. Some fraction of the
-25 fix commits exists because that reviewer is good; some other fraction of
-defects is still in the repository because it is not independent. Nothing here
-measures the second fraction.
+23 remediation commits exists because that reviewer is good; some other fraction
+of defects is still in the repository because it is not independent. Nothing
+here measures the second fraction.
+
+This file is itself an example. Its first version was published as "measured and
+reproducible" and the reviewer found seven figures that did not reproduce,
+including two that contradicted other sentences in the same document.
 
 The one review that changed the product's direction did not come from any of
 them — it came from the human looking at the deployed page and asking why it was
