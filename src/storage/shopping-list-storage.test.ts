@@ -94,6 +94,35 @@ describe('writeShoppingList', () => {
 });
 
 describe('clearShoppingList', () => {
+  it('removes the legacy key too, so a cleared list cannot reappear', () => {
+    localStorage.setItem(
+      'meal-planner.shopping-list.v1',
+      JSON.stringify([{ name: 'Beef', measures: ['1 kg'] }]),
+    );
+
+    clearShoppingList();
+
+    expect(readShoppingList()).toEqual([]);
+    expect(localStorage.getItem('meal-planner.shopping-list.v1')).toBeNull();
+  });
+
+  it('merges stored entries that share a normalized name on read', () => {
+    localStorage.setItem(
+      'meal-planner.shopping-list.v2',
+      JSON.stringify([
+        { name: 'Salt', contributions: [{ recipeId: 'a', measure: '1 tsp' }] },
+        { name: 'salt ', contributions: [{ recipeId: 'b', measure: '2 tsp' }] },
+      ]),
+    );
+
+    // R3.6 is one entry per ingredient. Merging only on the next add would show
+    // the user two "Salt" rows until they happened to add a recipe.
+    const list = readShoppingList();
+
+    expect(list).toHaveLength(1);
+    expect(list[0]?.contributions).toHaveLength(2);
+  });
+
   it('empties the stored list', () => {
     writeShoppingList([{ name: 'Beef', contributions: [{ recipeId: 'a', measure: '1 kg' }] }]);
 

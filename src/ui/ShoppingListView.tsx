@@ -32,6 +32,7 @@ export function ShoppingListView({
   const [confirmingClear, setConfirmingClear] = useState(false);
   const confirmRef = useRef<HTMLDivElement>(null);
   const clearTriggerRef = useRef<HTMLButtonElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   // role="alertdialog" promises the dialog contract, so it has to keep it:
   // focus moves in, Escape cancels, and focus returns to the trigger. The
@@ -46,7 +47,9 @@ export function ShoppingListView({
 
       event.preventDefault();
       setConfirmingClear(false);
-      requestAnimationFrame(() => clearTriggerRef.current?.focus());
+      requestAnimationFrame(() => {
+        (clearTriggerRef.current ?? sectionRef.current)?.focus();
+      });
     };
 
     document.addEventListener('keydown', onKeyDown);
@@ -57,12 +60,22 @@ export function ShoppingListView({
 
   const dismissConfirm = () => {
     setConfirmingClear(false);
-    // The trigger remounts on the next render; focus it once it exists.
-    requestAnimationFrame(() => clearTriggerRef.current?.focus());
+    // The trigger remounts after Escape or "Keep my list", but a successful
+    // clear empties the list and the trigger is never rendered again. Falling
+    // back to the section keeps focus in the region the user was working in
+    // rather than dropping it to <body>.
+    requestAnimationFrame(() => {
+      (clearTriggerRef.current ?? sectionRef.current)?.focus();
+    });
   };
 
   return (
-    <section className="shopping-list" aria-labelledby="shopping-list-heading">
+    <section
+      className="shopping-list"
+      aria-labelledby="shopping-list-heading"
+      tabIndex={-1}
+      ref={sectionRef}
+    >
       <div className="shopping-list__header">
         <h2 id="shopping-list-heading">My shopping list</h2>
         {entries.length > 0 && !confirmingClear && (

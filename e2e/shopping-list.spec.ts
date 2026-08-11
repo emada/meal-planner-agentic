@@ -211,6 +211,10 @@ test('AC12 — remove one ingredient and clear the list, both surviving a reload
   await page.getByRole('button', { name: /yes, clear it/i }).click();
   await expect(page.getByText(/your shopping list is empty/i)).toBeVisible();
 
+  // Confirming removes the trigger for good, so focus has to land somewhere
+  // deliberate rather than on <body>.
+  await expect(page.locator('.shopping-list')).toBeFocused();
+
   await page.reload();
   await page
     .getByRole('navigation')

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { sortEntries, type ShoppingListEntry } from '../domain/shopping-list';
+import { addIngredients, type ShoppingListEntry } from '../domain/shopping-list';
 
 const STORAGE_KEY = 'meal-planner.shopping-list.v2';
 // v1 stored bare measure strings with no source recipe. It is read once and
@@ -50,7 +50,9 @@ function readKey(key: string): unknown {
 export function readShoppingList(): ShoppingListEntry[] {
   const current = listSchema.safeParse(readKey(STORAGE_KEY));
 
-  if (current.success) return sortEntries(current.data);
+  // Two stored entries can share a normalized name if something else wrote
+  // them. Merging here means the view never shows one ingredient twice.
+  if (current.success) return addIngredients(current.data, [], '');
 
   const legacy = legacyListSchema.safeParse(readKey(LEGACY_KEY));
 
@@ -58,11 +60,13 @@ export function readShoppingList(): ShoppingListEntry[] {
 
   // Measures written before sources existed are attributed to a sentinel, so a
   // later add from a real recipe cannot mistake them for its own and drop them.
-  return sortEntries(
+  return addIngredients(
     legacy.data.map((entry) => ({
       name: entry.name,
       contributions: entry.measures.map((measure) => ({ recipeId: 'legacy', measure })),
     })),
+    [],
+    '',
   );
 }
 
