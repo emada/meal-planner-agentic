@@ -97,7 +97,7 @@ Runs on every pull request and on `main`, from a clean checkout.
 | Mutation testing — Stryker, changed files       | warn only              | 5             |
 | Bundle-size budget                              | warn first, then block | 5             |
 
-Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. The rest of step 4 and step 5 land in S6.
+Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6. Step 5 — mutation testing and a coverage threshold — is unscheduled: the precondition is met, and adopting it is now a cost decision rather than a sequencing one.
 
 ### Post-deploy
 
@@ -173,7 +173,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 - **Outcome**: the full gate profile is in force and the app is verified across the required matrix.
 - **Mapped AC**: AC13, AC14.
-- **Scope**: remaining adoption steps 4–5 — madge, jscpd, automated a11y, Stryker on changed files, bundle-size budget; negative probes for the nine gates that still have none; (SCA and SAST already landed on 2026-08-10); complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
+- **Scope**: adoption step 4 — jscpd, automated a11y, bundle-size budget. madge is recorded as `not-applicable`: `import/no-cycle` already blocks cycles at commit and in CI, and a second full-graph checker adds a dependency without adding a control. Step 5 (Stryker, coverage thresholds) is unscheduled — see the gate register. SCA and SAST landed on 2026-08-10; complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
 - **Dependencies**: S4, S5.
 - **Stop condition**: a new blocking gate produces noise rather than actionable findings — report before making it mandatory.
 

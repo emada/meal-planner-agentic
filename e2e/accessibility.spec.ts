@@ -23,8 +23,13 @@ const meal = {
  * Automated checks catch a subset of accessibility defects — roughly a third by
  * most measures — so they supplement the per-slice keyboard and focus
  * assertions rather than replacing them. What they do catch reliably is
- * contrast, names, roles and landmark structure, which are exactly the classes
- * a reviewer reading a diff will miss.
+ * contrast, names and roles, which are exactly the classes a reviewer reading a
+ * diff will miss.
+ *
+ * Landmark rules are deliberately *not* covered: axe tags them `best-practice`,
+ * which this tag set excludes. The main landmark is asserted directly in
+ * `src/ui/App.test.tsx` instead. Every focus defect this project's reviews
+ * found would have passed this scan cleanly.
  */
 const scan = (page: Page) =>
   new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
