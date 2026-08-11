@@ -8,8 +8,8 @@ specification through explicit review — and had nothing for _engineering_
 learning: how the work itself failed and how the method should change. That gap
 closed on 2026-08-11: the loop itself is now
 `contract:01-operating-model/07-engineering-learning-loop.md`, and this log's
-twenty general entries landed in the contract files each row's **Promoted to**
-cell names — mostly `02-quality/06-claim-accuracy.md` and
+general entries landed in the contract files each row's **Promoted to** cell
+names, or were found already covered there — mostly `02-quality/06-claim-accuracy.md` and
 `02-quality/04-control-effectiveness.md`, neither of which is the loop file. This file is now
 that loop's product-side record; entries marked `propose` are candidates for the
 contract, promoted through a reviewed pull request there and reaching this

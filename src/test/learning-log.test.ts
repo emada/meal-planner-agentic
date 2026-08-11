@@ -135,7 +135,7 @@ describe('the engineering learning log counts what it contains', () => {
   it('gives every entry a guard column, even when the guard is none', () => {
     // "none" is a legitimate answer and the useful one: it says this can recur.
     // A blank cell says nobody decided.
-    const classified = rows.filter((row) => row.length >= 7);
+    const classified = rows.filter((row) => row.length >= 9);
     const blank = classified.filter((row) => (row[5] ?? '') === '').map((row) => row[1] ?? '');
 
     expect(blank, 'an entry with no guard must say "none" rather than nothing').toEqual([]);
