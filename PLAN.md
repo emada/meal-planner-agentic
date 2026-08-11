@@ -206,6 +206,17 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Stop condition**: `filter.php` turning out to carry full meals after all, which would make the lookup dead weight — report rather than keep it.
 - **Parallelization**: none. Single agent.
 
+### S9 — Close the disclosed gaps
+
+- **Status**: complete, 2026-08-11 (PR #12).
+- **Outcome**: the limits this project disclosed are closed or, where closing them costs more than it is worth, recorded with the reason.
+- **Mapped AC**: none new; strengthens AC14.
+- **Scope**: the production smoke check becomes a committed suite (`npm run smoke:prod`) covering browsing and list editing, which the manual version did not; negative probes for the seven gates that could be proven without touching this repository's history; the threat model records that the accepted key-`1` risk is now spent per page view rather than per search.
+- **Dependencies**: S8.
+- **Evidence**: seven dated probes in the gate register, each with its input and diagnostic; fourteen smoke runs against the live deployment; the count of unproven gates derived from the table by an existing test.
+- **Stop condition**: a probe that requires putting a broken artifact into a shared system — a failed deployment, a secret in remote history. Record the reason instead. Preview deployment is left unproven on exactly this ground.
+- **Parallelization**: none. Single agent.
+
 ## First vertical slice
 
 **S1 — Search and results grid**, immediately after S0. It exercises every architectural layer, both external boundaries relevant at that point, all three UI states, the responsive requirement, and the full deploy path — while remaining small enough to review in one sitting.

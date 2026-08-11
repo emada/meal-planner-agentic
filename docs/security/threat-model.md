@@ -54,12 +54,15 @@ No `unsafe-inline` and no `unsafe-eval` in either script or style. A Playwright 
 ## Residual risk accepted
 
 - **TheMealDB test key (spec O1). Accepted by the human on 2026-08-10.** Key `1` is rate-limited, carries no availability commitment, and is documented for development rather than production. The application now serves real users on it. Consequences accepted: the recipe search can throttle or fail for reasons outside our control, and there is no supported channel to appeal to when it does. Mitigation is limited to degrading visibly — the AC3 error state with retry — which is a gate, not a fix. Revisit by obtaining a supported key; adding caching or a proxy would contradict the no-backend non-goal and requires a spec revision.
+
+  **The exposure grew at S8 (2026-08-11) and the acceptance predates it.** Until then no request reached TheMealDB until the user acted, so a visitor who arrived and left cost nothing. The category browser loads on arrival, so every page view now spends at least one request against a rate-limited key — before AC15 the floor was zero. Nothing new is sent and no new party is involved, which is why `docs/privacy/assessment.md` records this as a timing change rather than a data change; but a rate limit is consumed per visit now, not per search. Whether that changes the acceptance is the human's call, not the agent's, and it is written here so the call can be made rather than assumed.
+
 - **Production is released by an agent, with no human checkpoint (2026-08-10).** Merge to `main` is authorized for agents and deploys to production automatically. What stands between a change and real users is the required status contexts — now including `SWEAI Review / Claude` — plus thread resolution, all refused by the ruleset when absent.
 
   What that does not cover, stated because this entry exists to be read after an incident:
 
   - The semantic reviewer is a subagent of the agent that writes the change. The context is isolated, but no independent party evaluates the work. A `PASS` reached in error merges and ships; requiring the context stops a merge with no review, not a merge with a wrong one.
-  - **Detection depends on a human happening to look.** ADR-0003 declines client-side error reporting and no alerting exists, so a bad release produces no signal. Vercel's own metrics and a manual smoke check are the only channels.
+  - **Detection depends on a human happening to look.** ADR-0003 declines client-side error reporting and no alerting exists, so a bad release produces no signal. Vercel's own metrics and a manual smoke check are the only channels. Since S9 that smoke check is a committed suite (`npm run smoke:prod`) rather than an ad-hoc run, so the channel is reproducible — but it still fires only when someone chooses to run it.
   - **Blast radius is every user of the single production deployment**, immediately, because there is one static site and no progressive rollout or feature flag.
   - **Recovery is bounded by human attention, not tooling.** Rollback is a human promoting a previous Vercel deployment; an agent does not roll back.
 
