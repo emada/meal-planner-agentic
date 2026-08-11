@@ -84,14 +84,26 @@ describe('the engineering learning log counts what it contains', () => {
     // A guard cell naming a file that is not there is the log's own class B.
     // It does not prove the guard fires — A2 named a real file that did not
     // guard it — but it catches the cheaper mistake.
+    const roots = ['src/test', 'src/ui', 'src/domain', 'src/storage', 'src/api', 'e2e'];
     const missing = rows.flatMap((row) =>
-      [...(row[5] ?? '').matchAll(/`([\w.-]+\.test\.ts)`/g)]
+      [...(row[5] ?? '').matchAll(/`([\w.-]+\.(?:test|spec)\.tsx?)`/g)]
         .map((match) => match[1] ?? '')
-        .filter((file) => !existsSync(`src/test/${file}`))
+        .filter((file) => !roots.some((root) => existsSync(`${root}/${file}`)))
         .map((file) => `${row[1] ?? ''}: ${file}`),
     );
 
     expect(missing, 'a guard cell names a test file that does not exist').toEqual([]);
+  });
+
+  it('makes every guard name itself, rather than pointing at the row above', () => {
+    // A2's guard became "none" and A3's "the same guard" silently resolved to
+    // it, understating coverage that exists. An indirect reference is also
+    // invisible to the existence check above.
+    const indirect = rows
+      .filter((row) => /\bthe same (guard|test|check)\b/i.test(row[5] ?? ''))
+      .map((row) => `${row[1] ?? ''}: ${row[5] ?? ''}`);
+
+    expect(indirect, 'a guard cell must name its guard, not refer to another row').toEqual([]);
   });
 
   it('gives every entry a guard column, even when the guard is none', () => {
