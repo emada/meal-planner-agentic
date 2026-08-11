@@ -40,7 +40,7 @@ Failure action for every row: fix the cause. Never weaken, disable, or delete th
 | Static analysis                     | CodeQL `security-extended`, required as both the job and the `CodeQL` result check                                          | CI                                                                                                                                                 | **none recorded** — pulled forward 2026-08-10; lands S6                                    | —           |
 | Preview deployment                  | Vercel git integration, `Vercel` status context                                                                             | CI (required context on `main`)                                                                                                                    | **none recorded** — lands S6                                                               | —           |
 
-**Eight of seventeen mandatory gates are proven; nine are not.** The unproven seven are configured and green but have never demonstrated rejection, which is stated here rather than presented as verified. They land in S6. The pre-push layer additionally has no probe showing it rejects a failing build or test — that is a layer, not a table row, and lands with them.
+**Eight of seventeen mandatory gates are proven; nine are not.** The unproven nine are configured and green but have never demonstrated rejection, which is stated here rather than presented as verified. They land in S6. The pre-push layer additionally has no probe showing it rejects a failing build or test — that is a layer, not a table row, and lands with them.
 
 ## Architectural rules enforced mechanically
 

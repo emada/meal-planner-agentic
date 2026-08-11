@@ -66,4 +66,75 @@ describe('governance documents agree with the current authorization model', () =
 
     expect(undocumented).toEqual([]);
   });
+
+  it('states gate counts that match the gate table they summarise', () => {
+    // These counts drifted in three consecutive review rounds because they were
+    // written by hand next to a table that already held the answer. Deriving
+    // them from the table is what stops a fourth.
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+
+    const rows = gates
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && line.includes(' | '))
+      // The mandatory-gate table is the only one carrying a probe column.
+      .filter((line) => line.includes('none recorded') || / \| \d{4}-\d{2}-\d{2} +\|/.test(line));
+
+    const unproven = rows.filter((line) => line.includes('none recorded')).length;
+    const proven = rows.length - unproven;
+
+    expect(rows.length).toBeGreaterThan(0);
+
+    const spell = (n: number) =>
+      [
+        'zero',
+        'one',
+        'two',
+        'three',
+        'four',
+        'five',
+        'six',
+        'seven',
+        'eight',
+        'nine',
+        'ten',
+        'eleven',
+        'twelve',
+        'thirteen',
+        'fourteen',
+        'fifteen',
+        'sixteen',
+        'seventeen',
+        'eighteen',
+        'nineteen',
+        'twenty',
+      ][n];
+
+    // Every "N of M ... gates" claim must use the table's own numbers: the
+    // numerator is either the proven or the unproven count, the denominator is
+    // always the total.
+    const wrong: string[] = [];
+
+    for (const [name, text] of [
+      ['gates.md', gates],
+      ['bootstrap-adoption.md', adoption],
+    ] as const) {
+      for (const match of text.matchAll(/(\w+) of (\w+) (?:mandatory )?gates/gi)) {
+        const [claim, left, right] = match;
+        const numerator = (left ?? '').toLowerCase();
+        const denominator = (right ?? '').toLowerCase();
+
+        const numeratorValid = numerator === spell(proven) || numerator === spell(unproven);
+
+        if (!numeratorValid || denominator !== spell(rows.length)) {
+          wrong.push(`${name}: "${claim}"`);
+        }
+      }
+    }
+
+    expect(
+      wrong,
+      `table holds ${String(rows.length)} gates: ${String(proven)} proven, ${String(unproven)} unproven`,
+    ).toEqual([]);
+  });
 });
