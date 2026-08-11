@@ -44,13 +44,13 @@ First Playwright run needs browsers: `npx playwright install chromium`.
 
 This repository follows a goal-first operating contract. The documents are the contract, in this order:
 
-| Document                       | Role                                                                                                          |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| [`GOAL.md`](GOAL.md)           | The original brief, preserved verbatim                                                                        |
-| [`SPEC.md`](SPEC.md)           | The product contract — approved                                                                               |
-| [`PLAN.md`](PLAN.md)           | The implementation plan, slices S0–S9. S0–S7 approved; S8 added by `SPEC.md` amendment A1, not counter-signed |
-| [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved                                                              |
-| `.ai-engineering/`             | SWEAI Builder, pinned as a Git submodule                                                                      |
+| Document                       | Role                                                                                                                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`GOAL.md`](GOAL.md)           | The original brief, preserved verbatim                                                                                                                                  |
+| [`SPEC.md`](SPEC.md)           | The product contract — approved                                                                                                                                         |
+| [`PLAN.md`](PLAN.md)           | The implementation plan, slices S0–S9. S0–S7 approved 2026-08-09; S8 and S9 appended afterwards by the agent — S8 under `SPEC.md` amendment A1 — neither counter-signed |
+| [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved                                                                                                                        |
+| `.ai-engineering/`             | SWEAI Builder, pinned as a Git submodule                                                                                                                                |
 
 `.ai-engineering/` is a pinned submodule of the private `emada/sweai-builder` repository. A plain `git clone` gives a complete, buildable application checkout. Initializing the submodule with `git submodule update --init --recursive` additionally requires read access to that private dependency; without access the application still builds, tests, and runs.
 

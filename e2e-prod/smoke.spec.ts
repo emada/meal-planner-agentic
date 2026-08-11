@@ -111,9 +111,14 @@ test('list editing survives a reload on the real deployment', async ({ page }) =
     .getByRole('button', { name: /view my shopping list/i })
     .click();
 
+  await expect(page.getByRole('heading', { name: /my shopping list/i })).toBeVisible();
+
   const entries = page.locator('.shopping-list__item');
   const before = await entries.count();
-  expect(before).toBeGreaterThan(0);
+  // Greater than one, not zero: with a single entry the post-removal assertion
+  // becomes `toHaveCount(0)`, which a completely broken storage layer also
+  // satisfies, and the clear-list control would not be rendered to click.
+  expect(before).toBeGreaterThan(1);
 
   // Editing was previously excluded from the smoke record as device-local. It
   // is device-local, but "the built bundle persists to this browser's storage
@@ -166,4 +171,6 @@ test('the deployment serves the security headers the threat model documents', as
   expect(headers['x-content-type-options']).toBe('nosniff');
   expect(headers['x-frame-options']).toBe('DENY');
   expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+  // Shipped by vercel.json and previously unasserted anywhere.
+  expect(headers['permissions-policy']).toContain('geolocation=()');
 });
