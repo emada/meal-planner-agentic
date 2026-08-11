@@ -132,6 +132,23 @@ describe('toRecipe', () => {
     });
   });
 
+  it('reads each link from its own field (AC4)', () => {
+    // Mutation testing found that no test asserted either link's destination
+    // from a populated field. `sourceUrl` was only ever asserted as `null`,
+    // and the component and browser tests checked the source link's presence
+    // without its href — so a read of a field that happens to be empty in the
+    // fixture, or no read at all, survived the unit suite.
+    const recipe = toRecipe({
+      idMeal: '1',
+      strMeal: 'Beef Pie',
+      strYoutube: 'https://youtu.be/abc',
+      strSource: 'https://example.test/recipe',
+    });
+
+    expect(recipe.youtubeUrl).toBe('https://youtu.be/abc');
+    expect(recipe.sourceUrl).toBe('https://example.test/recipe');
+  });
+
   it('coerces non-string fields to empty rather than rendering them', () => {
     // The API schema uses catchall(unknown), so a number or boolean can arrive
     // in a field we expect to be text.

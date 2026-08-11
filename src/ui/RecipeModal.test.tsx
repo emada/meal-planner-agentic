@@ -35,7 +35,11 @@ describe('RecipeModal', () => {
     const youtube = screen.getByRole('link', { name: /watch on youtube/i });
     expect(youtube).toHaveAttribute('href', 'https://youtu.be/abc');
     expect(youtube).toHaveAttribute('rel', 'noopener noreferrer');
-    expect(screen.getByRole('link', { name: /original source/i })).toBeInTheDocument();
+    const source = screen.getByRole('link', { name: /original source/i });
+    // Presence alone let the href go unchecked; a link to the wrong place is
+    // not a working link (AC4).
+    expect(source).toHaveAttribute('href', 'https://example.test/source');
+    expect(source).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('omits the measure span when a recipe supplies no measure', () => {
@@ -88,7 +92,11 @@ describe('RecipeModal', () => {
     render(<RecipeModal recipe={recipe({ youtubeUrl: null })} onClose={vi.fn()} />);
 
     expect(screen.queryByRole('link', { name: /youtube/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /original source/i })).toBeInTheDocument();
+    const source = screen.getByRole('link', { name: /original source/i });
+    // Presence alone let the href go unchecked; a link to the wrong place is
+    // not a working link (AC4).
+    expect(source).toHaveAttribute('href', 'https://example.test/source');
+    expect(source).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('says so when a recipe carries no ingredients or instructions', () => {
