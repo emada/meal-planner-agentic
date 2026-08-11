@@ -162,6 +162,7 @@ export function App() {
       <main className="app__main">
         {view === 'search' ? (
           <SearchView
+            recipeOpen={openRecipe !== null}
             onOpenRecipe={(recipe) => {
               // The user picked this one; a pending random result must not
               // replace it a moment later.

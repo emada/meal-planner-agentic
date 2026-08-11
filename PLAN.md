@@ -109,10 +109,15 @@ Constrained by the spec's no-analytics, no-third-party position.
 
 ## Vertical slices
 
+Every slice carries an explicit `**Status**:` line. The governance guard reads
+it to decide which slices have shipped, so a slice without one is treated as not
+shipped rather than silently assumed complete.
+
 Cross-cutting definition of done for every slice below: acceptance criteria demonstrated with evidence, mandatory gates green, responsive at 375px and desktop, keyboard operable, diff reviewed, docs updated, `main` deployable.
 
 ### S0 — Engineering harness
 
+- **Status**: complete, 2026-08-10 (PR #1).
 - **Outcome**: repository, toolchain, and gates operational; `main` protected and deployable; control docs exist.
 - **Mapped AC**: none directly; enables AC14.
 - **Scope**: `git init` and initial commit; Vite + React + TS strict scaffold; ESLint, Prettier, Vitest, Playwright, Gitleaks; pre-commit and pre-push hooks; GitHub Actions CI covering adoption steps 1–2; Vercel static-build configuration; `docs/quality/gates.md`, `docs/security/threat-model.md`, `docs/privacy/assessment.md`; ADRs for stack and boundaries; bootstrap rule statuses recorded as adopted / deferred / not-applicable.
@@ -123,6 +128,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S1 — Search and results grid (first vertical slice)
 
+- **Status**: complete, 2026-08-11 (PR #5).
 - **Outcome**: a user searches and sees results, with all failure states handled, end to end through api → domain → ui, deployed to a preview.
 - **Mapped AC**: AC1, AC2, AC3.
 - **Scope**: `api/` client for `search.php` with Zod schema; loading, empty (`{"meals": null}`), and error states with working retry; responsive results grid showing thumbnail, title, category, area.
@@ -133,6 +139,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S2 — Recipe detail modal
 
+- **Status**: complete, 2026-08-11 (PR #6).
 - **Outcome**: clicking a result opens an accessible modal with full recipe detail.
 - **Mapped AC**: AC4, AC5.
 - **Scope**: ingredient/measure extraction in `domain/` discarding empty pairs; modal with focus trap, Escape to close, focus restoration; conditional YouTube and source links with `rel="noopener noreferrer"`; instructions rendered as text.
@@ -143,6 +150,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S3 — Shopping list: add, persist, view
 
+- **Status**: complete, 2026-08-11 (PR #7).
 - **Outcome**: ingredients from a recipe reach a persistent, grouped, alphabetically ordered list reachable from anywhere.
 - **Mapped AC**: AC6, AC7, AC8, AC9, AC10.
 - **Scope**: "add to my shopping list" button; `storage/` adapter with Zod validation and safe recovery from malformed or foreign data; write-failure handling for private-browsing modes; grouping by normalized ingredient name with measures listed verbatim; "view my shopping list" control present in every view including while the modal is open.
@@ -153,6 +161,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S4 — Shopping list editing
 
+- **Status**: complete, 2026-08-11 (PR #7).
 - **Outcome**: the list is editable, not append-only.
 - **Mapped AC**: AC12.
 - **Scope**: remove a single ingredient entry; clear the whole list behind a confirmation; both persist.
@@ -162,6 +171,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S5 — Surprise me
 
+- **Status**: complete, 2026-08-11 (PR #8).
 - **Outcome**: a random recipe opens in the same modal from any view.
 - **Mapped AC**: AC11.
 - **Scope**: `random.php` client method and schema; "surprise me" navigation control; reuses the S2 modal unchanged.
@@ -171,6 +181,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S6 — Hardening and advanced gates
 
+- **Status**: complete, 2026-08-11 (PR #9).
 - **Outcome**: the full gate profile is in force and the app is verified across the required matrix.
 - **Mapped AC**: AC13, AC14.
 - **Scope**: adoption step 4 — jscpd, automated a11y, bundle-size budget. madge is recorded as `not-applicable`: `import/no-cycle` already blocks cycles at commit and in CI, and a second full-graph checker adds a dependency without adding a control. Step 5 (Stryker, coverage thresholds) is unscheduled — see the gate register. SCA and SAST landed on 2026-08-10; complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
@@ -179,14 +190,14 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S7 — Production readiness
 
-- **Status**: complete, 2026-08-11.
+- **Status**: complete, 2026-08-11 (PR #10).
 - **Outcome**: the app is fit to serve real users.
 - **Scope**: production deployment to Vercel; rollback via Vercel's previous-deployment promotion; post-deploy smoke check of the three journeys. Obtaining a supported TheMealDB key is **no longer in scope** — the human accepted the test-key risk on 2026-08-10 (spec O1).
 - **Dependencies**: none remaining. Production now releases automatically on merge, so S7 is a verification and hardening slice rather than a gate to pass through.
 
 ### S8 — Browse by category
 
-- **Status**: complete, 2026-08-11.
+- **Status**: complete, 2026-08-11 (PR #11).
 - **Outcome**: a user who has not searched has somewhere to start, and can reach a full recipe without typing.
 - **Mapped AC**: AC15, added by spec amendment A1.
 - **Scope**: `categories.php` and `filter.php` clients with their own schemas; a category browser occupying the idle search view; a `lookup.php` follow-up because filter results are partial; a return path from a search back to the categories; the shared `RecipeCard` extracted so the two grids cannot drift.

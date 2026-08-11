@@ -99,13 +99,26 @@ describe('governance documents agree with the current authorization model', () =
     // growing the moment someone forgets it, and this one had already fallen a
     // slice behind: S7 shipped while the list still ended at S6, so nothing
     // would have caught a "lands in S7".
-    // Bounded to each slice's own section. A non-greedy match from one
-    // heading ran to the next `Status: planned` anywhere below it, which marked
-    // every slice planned as soon as one was.
-    const shipped = [...plan.matchAll(/^### (S\d+) — [^\n]*\n([\s\S]*?)(?=^#{2,3} )/gm)]
-      .filter((match) => !(match[2] ?? '').includes('**Status**: planned'))
+    //
+    // Shipped is opt-in, not opt-out. Reading "no planned marker" as shipped
+    // meant a new slice written in the old format — none of S0-S6 carried a
+    // status line — would be classified shipped on the day it was drafted, and
+    // its own landing points would fail the suite as stale.
+    //
+    // The section bound matters: a non-greedy match from one heading ran on to
+    // the next slice's status line, so one slice's state described them all.
+    const sections = [...plan.matchAll(/^### (S\d+) — [^\n]*\n([\s\S]*?)(?=^#{2,3} )/gm)];
+    const shipped = sections
+      .filter((match) => (match[2] ?? '').includes('**Status**: complete'))
       .map((match) => match[1] ?? '');
 
+    // Every slice must declare where it stands, or the derivation above is
+    // guessing. PLAN.md states this convention next to the slices.
+    const undeclared = sections
+      .filter((match) => !/\*\*Status\*\*: (complete|planned|in progress)/.test(match[2] ?? ''))
+      .map((match) => match[1] ?? '');
+
+    expect(undeclared).toEqual([]);
     expect(shipped).toContain('S8');
     // Selected by content, not by table syntax: the bullet this guard was
     // written for was prose, and a `startsWith('| ')` filter excluded it
@@ -186,30 +199,47 @@ describe('governance documents agree with the current authorization model', () =
 
     expect(rows.length).toBeGreaterThan(0);
 
-    const spell = (n: number) =>
-      [
-        'zero',
-        'one',
-        'two',
-        'three',
-        'four',
-        'five',
-        'six',
-        'seven',
-        'eight',
-        'nine',
-        'ten',
-        'eleven',
-        'twelve',
-        'thirteen',
-        'fourteen',
-        'fifteen',
-        'sixteen',
-        'seventeen',
-        'eighteen',
-        'nineteen',
-        'twenty',
-      ][n];
+    // Composed rather than listed. The list stopped at twenty, so the table
+    // growing to twenty-one made every denominator `undefined` — a comparison
+    // that can never hold, which is worse than a wrong number because the
+    // suite reports it as a failure of the document instead of the guard.
+    const ONES = [
+      'zero',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+      'ten',
+      'eleven',
+      'twelve',
+      'thirteen',
+      'fourteen',
+      'fifteen',
+      'sixteen',
+      'seventeen',
+      'eighteen',
+      'nineteen',
+    ];
+    const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy'];
+    const spell = (n: number): string => {
+      if (n < 20) return ONES[n] ?? String(n);
+
+      const tens = TENS[Math.floor(n / 10)] ?? String(n);
+      const unit = n % 10;
+
+      return unit === 0 ? tens : `${tens}-${ONES[unit] ?? String(unit)}`;
+    };
+
+    // Pinned, because the bug this replaces was invisible: a hyphenated
+    // denominator simply stopped matching and the guard fell silent.
+    expect(spell(8)).toBe('eight');
+    expect(spell(20)).toBe('twenty');
+    expect(spell(21)).toBe('twenty-one');
 
     // Every "N of M ... gates" claim must use the table's own numbers: the
     // numerator is either the proven or the unproven count, the denominator is
@@ -220,7 +250,7 @@ describe('governance documents agree with the current authorization model', () =
       ['gates.md', gates],
       ['bootstrap-adoption.md', adoption],
     ] as const) {
-      for (const match of text.matchAll(/(\w+) of (\w+) (?:mandatory )?gates/gi)) {
+      for (const match of text.matchAll(/([\w-]+) of ([\w-]+) (?:mandatory )?gates/gi)) {
         const [claim, left, right] = match;
         const numerator = (left ?? '').toLowerCase();
         const denominator = (right ?? '').toLowerCase();
@@ -235,7 +265,9 @@ describe('governance documents agree with the current authorization model', () =
       // "…; the other nine remain unproven" is the same hand-written count
       // wearing different words, and it survived the sweep above when the
       // table grew by one because it names no denominator.
-      for (const match of text.matchAll(/the other (\w+) (?:remain|are)\b[^.]*/gi)) {
+      for (const match of text.matchAll(
+        /(?:the other|The unproven) ([\w-]+) (?:remain|are)\b[^.]*/gi,
+      )) {
         const [claim, left] = match;
         const remainder = (left ?? '').toLowerCase();
 

@@ -32,11 +32,16 @@ const messageFrom = (error: unknown, fallback: string) =>
  * leaves the grid on screen with an error beside it, rather than throwing the
  * user back to the categories.
  */
-export function useCategoryBrowse(onOpenRecipe?: (recipe: Recipe) => void) {
+export function useCategoryBrowse(onOpenRecipe?: (recipe: Recipe) => void, recipeOpen = false) {
   const [list, setList] = useState<CategoryListState>({ status: 'loading' });
   const [meals, setMeals] = useState<CategoryMealsState>({ status: 'closed' });
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [openError, setOpenError] = useState<string | null>(null);
+
+  // Read inside an async callback, so it must be a ref: the closure captured
+  // at click time would see whatever was open then, forever.
+  const recipeOpenRef = useRef(recipeOpen);
+  recipeOpenRef.current = recipeOpen;
 
   const mealsRequest = useRef<AbortController | null>(null);
   const openRequest = useRef<AbortController | null>(null);
@@ -121,12 +126,21 @@ export function useCategoryBrowse(onOpenRecipe?: (recipe: Recipe) => void) {
       setOpenError(null);
       setOpeningId(summary.id);
 
+      // Nothing aborts this request when the user opens a recipe by another
+      // route — "surprise me" while the lookup is in flight, say. Without this
+      // the response lands afterwards and replaces the recipe they are reading,
+      // which is the same late-response defect App guards in the other
+      // direction for surprise-me.
+      const openedBefore = recipeOpenRef.current;
+
       try {
         const meal = await lookupMeal(summary.id, controller.signal);
 
         if (controller.signal.aborted) return;
 
         setOpeningId(null);
+
+        if (!openedBefore && recipeOpenRef.current) return;
 
         if (meal === null) {
           // A card the user can see, backed by an id the API will not resolve.
@@ -148,12 +162,6 @@ export function useCategoryBrowse(onOpenRecipe?: (recipe: Recipe) => void) {
     [onOpenRecipe],
   );
 
-  /** Abandons an in-flight lookup when the user moves on, as `useSurpriseMe` does. */
-  const cancel = useCallback(() => {
-    openRequest.current?.abort();
-    setOpeningId(null);
-  }, []);
-
   return {
     list,
     meals,
@@ -163,6 +171,5 @@ export function useCategoryBrowse(onOpenRecipe?: (recipe: Recipe) => void) {
     openCategory,
     closeCategory,
     openRecipe,
-    cancel,
   };
 }

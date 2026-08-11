@@ -223,6 +223,54 @@ describe('CategoryBrowser', () => {
     release?.(json(FULL));
   });
 
+  it('discards a lookup that lands after a recipe was opened another way', async () => {
+    let release: ((value: unknown) => void) | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (url.includes('lookup.php')) {
+          return new Promise((resolve) => {
+            release = resolve;
+          });
+        }
+
+        return Promise.resolve(json(url.includes('categories.php') ? CATEGORIES : FILTERED));
+      }),
+    );
+    const onOpenRecipe = vi.fn();
+    const user = userEvent.setup();
+
+    const { rerender } = render(<CategoryBrowser onOpenRecipe={onOpenRecipe} recipeOpen={false} />);
+    await user.click(await screen.findByRole('button', { name: 'Beef' }));
+    await user.click(await screen.findByRole('button', { name: /beef pie/i }));
+
+    // "Surprise me" opens something while the lookup is still in flight.
+    rerender(<CategoryBrowser onOpenRecipe={onOpenRecipe} recipeOpen={true} />);
+    release?.(json(FULL));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Opening…')).not.toBeInTheDocument();
+    });
+    // Replacing the recipe the user is reading is the defect this prevents.
+    expect(onOpenRecipe).not.toHaveBeenCalled();
+  });
+
+  it('still opens when the lookup is the thing that opens the modal', async () => {
+    route();
+    const onOpenRecipe = vi.fn();
+    const user = userEvent.setup();
+
+    // recipeOpen is already true — a second browse open from inside the modal
+    // must not be mistaken for a race and dropped.
+    render(<CategoryBrowser onOpenRecipe={onOpenRecipe} recipeOpen={true} />);
+    await user.click(await screen.findByRole('button', { name: 'Beef' }));
+    await user.click(await screen.findByRole('button', { name: /beef pie/i }));
+
+    await waitFor(() => {
+      expect(onOpenRecipe).toHaveBeenCalledWith(expect.objectContaining({ title: 'Beef Pie' }));
+    });
+  });
+
   it('does not render a category grid that has no categories in it', async () => {
     route({ categories: { categories: null } });
 

@@ -7,9 +7,10 @@ import { useRecipeSearch } from './useRecipeSearch';
 
 interface SearchViewProps {
   readonly onOpenRecipe?: (recipe: Recipe) => void;
+  readonly recipeOpen?: boolean;
 }
 
-export function SearchView({ onOpenRecipe }: SearchViewProps) {
+export function SearchView({ onOpenRecipe, recipeOpen = false }: SearchViewProps) {
   const { state, search, retry } = useRecipeSearch();
   const [term, setTerm] = useState('');
   const inputId = useId();
@@ -54,6 +55,7 @@ export function SearchView({ onOpenRecipe }: SearchViewProps) {
 
       <SearchResults
         state={state}
+        recipeOpen={recipeOpen}
         onRetry={retry}
         onBrowse={() => {
           setTerm('');
@@ -67,12 +69,13 @@ export function SearchView({ onOpenRecipe }: SearchViewProps) {
 
 interface SearchResultsProps {
   readonly state: ReturnType<typeof useRecipeSearch>['state'];
+  readonly recipeOpen: boolean;
   readonly onRetry: () => void;
   readonly onBrowse: () => void;
   readonly onOpenRecipe?: (recipe: Recipe) => void;
 }
 
-function SearchResults({ state, onRetry, onBrowse, onOpenRecipe }: SearchResultsProps) {
+function SearchResults({ state, recipeOpen, onRetry, onBrowse, onOpenRecipe }: SearchResultsProps) {
   const summaryRef = useRef<HTMLParagraphElement>(null);
   const wasFailed = useRef(false);
 
@@ -129,7 +132,9 @@ function SearchResults({ state, onRetry, onBrowse, onOpenRecipe }: SearchResults
 
       {/* Browsing replaces the empty region a first-time visitor used to land
           on, and returns when they clear the box (AC15). */}
-      {state.status === 'idle' && <CategoryBrowser {...(onOpenRecipe ? { onOpenRecipe } : {})} />}
+      {state.status === 'idle' && (
+        <CategoryBrowser recipeOpen={recipeOpen} {...(onOpenRecipe ? { onOpenRecipe } : {})} />
+      )}
     </section>
   );
 }

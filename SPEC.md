@@ -144,16 +144,16 @@ as unfinished. This closes the unserved half of the goal clause rather than
 adding new scope: O4 had already recorded category browsing as candidate scope,
 so this promotes it rather than inventing it.
 
-**What it costs.** Two further TheMealDB endpoints enter the trust boundary —
-`categories.php` and `filter.php` — and both are validated at the same boundary
-as the existing two. `filter.php` returns partial meals with no category, area,
-ingredients, or instructions, so opening one requires a second `lookup.php`
-request; that latency is visible to the user and is given its own loading state
-rather than hidden.
+**What it costs.** Three further TheMealDB endpoints enter the trust boundary —
+`categories.php`, `filter.php`, and `lookup.php` — each validated at the same
+boundary as the existing two. `lookup.php` is needed because `filter.php`
+returns partial meals with no category, area, ingredients, or instructions, so
+opening one requires a second request; that latency is visible to the user and
+is given its own loading state rather than hidden.
 
 **Authority.** Made by the agent under the autonomy envelope in `EXECUTION.md`
 and the standing instruction of 2026-08-11 ("continua aprovando tudo. termina o
-app"), which followed a report naming this view as the product's weakest point.
+app" — "keep approving everything; finish the app"), which followed a report naming this view as the product's weakest point.
 Recorded here for explicit review rather than left as implementation drift, per
 the operating contract. The human has not counter-signed this amendment; it is
 theirs to reverse.

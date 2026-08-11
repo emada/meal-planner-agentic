@@ -95,6 +95,28 @@ export default defineConfig([
     languageOptions: { globals: { ...globals.node } },
   },
 
+  // A spec that takes `test` from Playwright directly skips the fixture in
+  // `e2e/themealdb.ts`, and with it the guarantee that no browser test reaches
+  // the live API. Type-only imports stay allowed: they carry no runtime.
+  {
+    files: ['e2e/**/*.spec.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@playwright/test',
+              importNames: ['test', 'expect'],
+              message:
+                "Import { test, expect } from './themealdb' so the API stub fixture applies.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // Tests may lean on non-null assertions for fixture setup.
   {
     files: ['**/*.test.{ts,tsx}', 'src/test/**', 'e2e/**'],
