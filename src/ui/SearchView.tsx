@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import type { Recipe } from '../domain/recipe';
 import { useRecipeSearch } from './useRecipeSearch';
@@ -56,12 +56,22 @@ interface SearchResultsProps {
 }
 
 function SearchResults({ state, onRetry, onOpenRecipe }: SearchResultsProps) {
+  const summaryRef = useRef<HTMLParagraphElement>(null);
+  const wasFailed = useRef(false);
+
+  useEffect(() => {
+    // Retry unmounts the button that was focused, which would drop focus to
+    // <body> and make the user tab from the top of the document again.
+    if (wasFailed.current && state.status === 'loading') summaryRef.current?.focus();
+    wasFailed.current = state.status === 'failed';
+  }, [state.status]);
+
   return (
     <section className="results" aria-busy={state.status === 'loading'}>
       {/* Only the summary is announced. A live region wrapping the grid would
           read all thirty card names aloud on every search, and the nested
           role="alert" below would be announced twice. */}
-      <p className="results__message" role="status">
+      <p className="results__message" role="status" ref={summaryRef} tabIndex={-1}>
         {state.status === 'idle' && 'Search for a recipe to get started.'}
         {state.status === 'loading' && 'Searching…'}
         {state.status === 'empty' && `No recipes found for ${state.term}. Try another search.`}

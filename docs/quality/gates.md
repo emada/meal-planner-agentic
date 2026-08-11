@@ -58,13 +58,13 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 Deliberately not yet in force. Each has a named landing slice, per the adoption order in `.ai-engineering/.bootstrap/06-tools`.
 
-| Gate                               | Status                           | Lands in | Rationale                                                                                                              |
-| ---------------------------------- | -------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Duplication (jscpd)                | deferred                         | S6       | Step 4. Meaningless before there is code to duplicate                                                                  |
-| Automated accessibility assertions | deferred                         | S6       | Step 4. Keyboard and landmark behaviour is asserted per slice in the meantime                                          |
-| Mutation testing (Stryker)         | deferred, warn-only when adopted | S6       | Step 5. Expensive; only useful once the domain logic exists                                                            |
-| Bundle-size budget                 | deferred                         | S6       | Step 5. No meaningful baseline yet                                                                                     |
-| Coverage thresholds                | deferred                         | S6       | A threshold set against an app shell measures nothing. Coverage is reported from S0 and enforced once `domain/` exists |
+| Gate                               | Status                           | Lands in | Rationale                                                                                                                                         |
+| ---------------------------------- | -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Duplication (jscpd)                | deferred                         | S6       | Step 4. Meaningless before there is code to duplicate                                                                                             |
+| Automated accessibility assertions | deferred                         | S6       | Step 4. Keyboard and landmark behaviour is asserted per slice in the meantime                                                                     |
+| Mutation testing (Stryker)         | deferred, warn-only when adopted | S6       | Step 5. Expensive; only useful once the domain logic exists                                                                                       |
+| Bundle-size budget                 | deferred                         | S6       | Step 5. No meaningful baseline yet                                                                                                                |
+| Coverage thresholds                | deferred                         | S6       | Coverage is reported from S0. A threshold lands in S6 with the other deferred gates, once the domain logic has stopped changing shape every slice |
 
 ## Substitutions from `PLAN.md`
 

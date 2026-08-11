@@ -185,6 +185,9 @@ img {
 .card__title {
   font-weight: 600;
   line-height: 1.3;
+  /* .card clips its overflow, so without this a title with no break
+     opportunity is silently truncated mid-word instead of wrapping. */
+  overflow-wrap: anywhere;
 }
 
 .card__meta {

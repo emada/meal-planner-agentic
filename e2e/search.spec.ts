@@ -78,11 +78,17 @@ test('AC13 — the results grid does not overflow horizontally', async ({ page }
   await search(page, 'beef');
   await expect(page.getByRole('listitem').first()).toBeVisible();
 
-  const overflows = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
+  const layout = await page.evaluate(() => ({
+    documentOverflows: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    // .card sets overflow: hidden, so content can exceed its box and be
+    // truncated without the document ever gaining scroll width. Checking the
+    // document alone would pass while every title was cut mid-word.
+    clippedTitles: [...document.querySelectorAll('.card__title')].filter(
+      (title) => title.scrollWidth > title.clientWidth,
+    ).length,
+  }));
 
-  expect(overflows).toBe(false);
+  expect(layout).toEqual({ documentOverflows: false, clippedTitles: 0 });
 });
 
 test('the search is operable by keyboard alone', async ({ page }) => {
