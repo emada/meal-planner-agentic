@@ -67,6 +67,66 @@ describe('governance documents agree with the current authorization model', () =
     expect(undocumented).toEqual([]);
   });
 
+  it('declares the same gates the evidence generator will run', () => {
+    // The register explains that gates live beside the scripts they name so the
+    // two cannot drift. That is only true if something checks.
+    const manifest: unknown = JSON.parse(readFileSync('package.json', 'utf8'));
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    const declared = (manifest as { sweai: { gates: string[] } }).sweai.gates;
+    const quoted = /"gates": \[([^\]]*)\]/.exec(gates)?.[1] ?? '';
+
+    const scripts = (manifest as { scripts: Record<string, string> }).scripts;
+    const quotedGates = [...quoted.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+
+    expect(declared.length).toBeGreaterThan(0);
+    // Set equality both ways, and every declared gate must name a real script:
+    // a one-directional check would let the register quote a gate that no
+    // longer exists.
+    expect([...quotedGates].sort()).toEqual([...declared].sort());
+    expect(declared.filter((gate) => !(gate in scripts))).toEqual([]);
+  });
+
+  it('never points a deferred gate at a slice that has already shipped', () => {
+    // Twice now a "lands in S6" cell survived S6 shipping, leaving a commitment
+    // with no landing point and nothing to surface it again.
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+    const plan = readFileSync('PLAN.md', 'utf8');
+
+    // A slice is shipped once PLAN.md stops describing it as upcoming; S0-S6
+    // are all merged at the time of writing, so any reference to them as a
+    // future landing point is stale by construction.
+    const shipped = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+    // Selected by content, not by table syntax: the bullet this guard was
+    // written for was prose, and a `startsWith('| ')` filter excluded it
+    // before the slice regex was ever evaluated.
+    // A slice is stale only when it is named as the *landing point* — a cell
+    // of its own in the table, or the object of "lands in" / "available in"
+    // in prose. A rationale that mentions S0 historically is not a promise.
+    const shippedPattern = shipped.join('|');
+    const isStale = (line: string) => {
+      const cells = line.startsWith('| ') ? line.split('|').map((cell) => cell.trim()) : [];
+
+      if (cells.some((cell) => shipped.includes(cell))) return true;
+
+      return new RegExp(`(lands? in|available in|deferred to)\\s+(${shippedPattern})\\b`, 'i').test(
+        line,
+      );
+    };
+
+    // Pins the selector itself. Narrowing it to table rows once let the prose
+    // bullet this guard exists for slip through with the suite green, so the
+    // shapes it must catch — and must not — are asserted here rather than in a
+    // commit message.
+    expect(isStale('- **madge deferred.** madge remains available in S6 if wanted.')).toBe(true);
+    expect(isStale('| Coverage thresholds | deferred | S6 | ... |')).toBe(true);
+    expect(isStale('| Coverage thresholds | deferred | unscheduled | ... |')).toBe(false);
+    expect(isStale('Coverage is reported from S0 and enforced later.')).toBe(false);
+
+    expect(plan).toContain('S7');
+    expect(gates.split('\n').filter(isStale)).toEqual([]);
+  });
+
   it('states gate counts that match the gate table they summarise', () => {
     // These counts drifted in three consecutive review rounds because they were
     // written by hand next to a table that already held the answer. Deriving
