@@ -32,7 +32,12 @@ const messageFrom = (error: unknown, fallback: string) =>
  * leaves the grid on screen with an error beside it, rather than throwing the
  * user back to the categories.
  */
-export function useCategoryBrowse(onOpenRecipe?: (recipe: Recipe) => void, recipeOpen = false) {
+export function useCategoryBrowse(
+  onOpenRecipe: ((recipe: Recipe) => void) | undefined,
+  // Required, not defaulted: a default would let the caller drop the argument
+  // and disable the late-response guard below without a compile error.
+  recipeOpen: boolean,
+) {
   const [list, setList] = useState<CategoryListState>({ status: 'loading' });
   const [meals, setMeals] = useState<CategoryMealsState>({ status: 'closed' });
   const [openingId, setOpeningId] = useState<string | null>(null);

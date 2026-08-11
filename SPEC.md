@@ -105,7 +105,7 @@ Each is observable and testable.
 ## Decisions resolved
 
 - **D1 — Duplicate ingredients across recipes.** Resolved: group by ingredient name, list each contributing measure separately, never do unit arithmetic. Encoded as R3.6 / AC9.
-- **D2 — Scope beyond the literal brief.** Resolved: literal brief plus remove-item and clear-list. Browse/filter by category and area, and check-off-while-shopping, are deferred — not rejected. Encoded as R3.8 / AC12.
+- **D2 — Scope beyond the literal brief.** Resolved: literal brief plus remove-item and clear-list. Browse/filter by category and area, and check-off-while-shopping, were deferred — not rejected. Encoded as R3.8 / AC12. **Superseded in part 2026-08-11 by amendment A1:** browsing by category is now R6 / AC15. Filtering by area and check-off-while-shopping remain deferred.
 - **D3 — Delivery context and gate depth.** Resolved: intended for real users. Full tooling profile in adoption order, plus threat model and privacy assessment. Encoded as R5.3 / R5.4. Raises O1 below.
 - **D4 — Target devices.** Resolved: responsive, mobile and desktop. Encoded as R5.2 / AC13.
 

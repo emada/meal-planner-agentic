@@ -202,7 +202,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Mapped AC**: AC15, added by spec amendment A1.
 - **Scope**: `categories.php` and `filter.php` clients with their own schemas; a category browser occupying the idle search view; a `lookup.php` follow-up because filter results are partial; a return path from a search back to the categories; the shared `RecipeCard` extracted so the two grids cannot drift.
 - **Dependencies**: S1 for the grid, S2 for the modal.
-- **Evidence**: unit tests for the three new endpoints and both new domain mappings; component tests for every browse state including a failed lookup; ten browser tests at both viewports; a Playwright fixture that fails any spec reaching the live API, probed both ways.
+- **Evidence**: unit tests for the three new endpoints and both new domain mappings; component tests for every browse state including a failed lookup; eleven browser tests at both viewports, and two further axe scans; a Playwright fixture that fails any spec reaching the live API, probed both ways.
 - **Stop condition**: `filter.php` turning out to carry full meals after all, which would make the lookup dead weight — report rather than keep it.
 - **Parallelization**: none. Single agent.
 

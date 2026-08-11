@@ -198,7 +198,13 @@ describe('governance documents agree with the current authorization model', () =
         .map((match) => `${path}: "${match[0]}"`),
     );
 
-    expect(wrong).toEqual([]);
+    // The pattern is deliberately narrow — any `slices SX-SY` must be the full
+    // range — so the message has to say that, or a maintainer writing about a
+    // legitimate subrange gets a bare array diff and no idea why.
+    expect(
+      wrong,
+      `prose must quote the full range ${first}-${last}; name individual slices instead of a subrange`,
+    ).toEqual([]);
   });
 
   it('states gate counts that match the gate table they summarise', () => {
