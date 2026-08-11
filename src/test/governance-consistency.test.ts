@@ -97,9 +97,12 @@ describe('governance documents agree with the current authorization model', () =
     // are all merged at the time of writing, so any reference to them as a
     // future landing point is stale by construction.
     const shipped = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+    // Selected by content, not by table syntax: the bullet this guard was
+    // written for was prose, and a `startsWith('| ')` filter excluded it
+    // before the slice regex was ever evaluated.
     const rows = gates
       .split('\n')
-      .filter((line) => line.startsWith('| ') && line.includes('deferred'));
+      .filter((line) => /deferred|lands in|remains available/i.test(line));
 
     const stale = rows.filter((row) =>
       shipped.some((slice) =>

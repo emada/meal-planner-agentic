@@ -56,6 +56,7 @@ for (const entry of entries) {
 }
 
 let failed = false;
+let overBudget = false;
 
 // A build that emits nothing must not pass: an empty directory would otherwise
 // satisfy every budget and report success.
@@ -73,13 +74,19 @@ for (const [extension, budget] of Object.entries(BUDGETS)) {
       `${String(total)} B gzipped (budget ${String(budget)} B)\n`,
   );
 
-  if (!within) failed = true;
+  if (!within) {
+    failed = true;
+    overBudget = true;
+  }
 }
 
-if (failed) {
+if (overBudget) {
+  // Only when something genuinely exceeded a budget: printing this after "the
+  // build did not run" points the reader at the wrong decision.
   process.stdout.write(
     '\nA bundle exceeded its budget. Either the addition is worth the bytes and the\n' +
       'budget moves in the same commit with a reason, or it is not and it comes out.\n',
   );
-  process.exit(1);
 }
+
+if (failed) process.exit(1);
