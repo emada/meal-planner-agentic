@@ -119,3 +119,89 @@ test('surprise me is reachable by keyboard alone', async ({ page }) => {
   await expect(dialog).toBeVisible();
   await expect(dialog).toBeFocused();
 });
+
+test('closing a surprise returns focus to the trigger, from any view', async ({ page }) => {
+  await stubRandom(page, { meals: [meal('8', 'Tarte Tatin')] });
+  await page.goto('/');
+
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: /view my shopping list/i })
+    .click();
+
+  const trigger = surprise(page);
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  // A `disabled` busy state would have moved focus to <body> before the modal
+  // mounted, leaving it nowhere to return to.
+  await expect(trigger).toBeFocused();
+});
+
+test('replacing the open recipe moves focus to the new dialog', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('9', 'Beef Pie')] }),
+    }),
+  );
+  await stubRandom(page, { meals: [meal('10', 'Tarte Tatin')] });
+  await page.goto('/');
+
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /surprise me/i })
+    .click();
+
+  // The dialog stays mounted while its recipe swaps, so nothing would move
+  // focus or re-announce the new title without an explicit effect.
+  await expect(page.getByRole('dialog', { name: /tarte tatin/i })).toBeFocused();
+});
+
+test('a failure inside the modal is reachable and actionable there', async ({ page }) => {
+  await page.route(SEARCH_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal('11', 'Beef Pie')] }),
+    }),
+  );
+  await page.route(RANDOM_ROUTE, (route) => route.abort('failed'));
+  await page.goto('/');
+
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: /surprise me/i }).click();
+
+  // Rendered in the header it would sit behind the backdrop: a click aimed at
+  // "Try again" would close the modal, and the focus trap would hide it.
+  await expect(dialog.getByRole('alert')).toContainText(/could not find a random recipe/i);
+
+  await stubRandom(page, { meals: [meal('12', 'Tarte Tatin')] });
+  await dialog.getByRole('button', { name: /try again/i }).click();
+
+  await expect(page.getByRole('dialog', { name: /tarte tatin/i })).toBeVisible();
+});
+
+test('a failed nav retry keeps focus in the error region', async ({ page }) => {
+  await page.route(RANDOM_ROUTE, (route) => route.abort('failed'));
+  await page.goto('/');
+
+  await surprise(page).click();
+  await expect(page.getByRole('alert')).toBeVisible();
+
+  await page.getByRole('button', { name: /try again/i }).click();
+
+  // The retry unmounts its own button; focus must not fall to <body>.
+  await expect(page.locator('.app__nav-error p')).toBeFocused();
+});

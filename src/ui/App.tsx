@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Recipe } from '../domain/recipe';
 import { RecipeModal } from './RecipeModal';
@@ -8,6 +8,45 @@ import { useShoppingList } from './useShoppingList';
 import { useSurpriseMe } from './useSurpriseMe';
 
 type View = 'search' | 'shopping-list';
+
+/**
+ * Rendered in the header normally, and inside the modal footer while a recipe
+ * is open — outside the dialog it would sit behind the backdrop, where a click
+ * aimed at "Try again" closes the modal instead and the focus trap makes it
+ * unreachable by keyboard.
+ */
+function SurpriseError({ surprise }: { readonly surprise: ReturnType<typeof useSurpriseMe> }) {
+  const messageRef = useRef<HTMLParagraphElement>(null);
+
+  // The retry unmounts this whole region and a failed retry mounts a fresh one,
+  // so restoring focus after the click cannot work. Taking focus when the alert
+  // appears is what keeps the user with the thing they must act on -- and they
+  // just activated "surprise me", so it is not a surprise hijack.
+  useEffect(() => {
+    messageRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="app__nav-error" role="alert">
+      <p ref={messageRef} tabIndex={-1}>
+        Could not find a random recipe.{' '}
+        {surprise.state.status === 'failed' ? surprise.state.message : ''}
+      </p>
+      <button
+        className="button"
+        type="button"
+        onClick={() => {
+          void surprise.surpriseMe();
+        }}
+      >
+        Try again
+      </button>
+      <button className="button button--secondary" type="button" onClick={surprise.dismiss}>
+        Dismiss
+      </button>
+    </div>
+  );
+}
 
 export function App() {
   const [view, setView] = useState<View>('search');
@@ -61,31 +100,25 @@ export function App() {
           <button
             className="button button--secondary"
             type="button"
-            disabled={surprise.state.status === 'loading'}
+            // Not `disabled`: the browser moves focus off a disabled element,
+            // so the modal would capture <body> as its restore target and the
+            // user would lose their place on close.
+            aria-disabled={surprise.state.status === 'loading'}
             onClick={() => {
+              if (surprise.state.status === 'loading') return;
               void surprise.surpriseMe();
             }}
           >
-            {surprise.state.status === 'loading' ? 'Finding a recipe…' : 'surprise me'}
+            surprise me
           </button>
         </nav>
 
-        {surprise.state.status === 'failed' && (
-          <div className="app__nav-error" role="alert">
-            <p>Could not find a random recipe. {surprise.state.message}</p>
-            <button
-              className="button"
-              type="button"
-              onClick={() => {
-                void surprise.surpriseMe();
-              }}
-            >
-              Try again
-            </button>
-            <button className="button button--secondary" type="button" onClick={surprise.dismiss}>
-              Dismiss
-            </button>
-          </div>
+        <p className="visually-hidden" role="status">
+          {surprise.state.status === 'loading' ? 'Finding a random recipe…' : ''}
+        </p>
+
+        {surprise.state.status === 'failed' && openRecipe === null && (
+          <SurpriseError surprise={surprise} />
         )}
       </header>
 
@@ -134,8 +167,9 @@ export function App() {
               <button
                 className="button button--secondary"
                 type="button"
-                disabled={surprise.state.status === 'loading'}
+                aria-disabled={surprise.state.status === 'loading'}
                 onClick={() => {
+                  if (surprise.state.status === 'loading') return;
                   // Replaces the open recipe in place: the modal is already the
                   // right surface, so closing and reopening would only flicker.
                   void surprise.surpriseMe();
@@ -143,6 +177,7 @@ export function App() {
               >
                 surprise me
               </button>
+              {surprise.state.status === 'failed' && <SurpriseError surprise={surprise} />}
               <p className="modal__status" role="status">
                 {addedRecipeId === openRecipe.id
                   ? `Added ${String(openRecipe.ingredients.length)} ingredient${
