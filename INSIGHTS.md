@@ -22,9 +22,12 @@ long", "two thirds to more than four times" — are read off the table rather th
 derived, so they can drift without failing. And a handful are session observations git cannot record at
 all: reviewer-pass counts, the "at least six" dead guards, the three
 probe-hygiene failures, how many times a reviewer caught a retracted commit
-message, and how many figures this document's own first version got wrong. A
-test enumerates every number in this file and fails on any that is neither
-guarded nor listed as one of these, so the list cannot quietly grow.
+message, and how many figures this document's own first version got wrong. A test walks every
+digit in this file and fails on any that is not either the captured value of a
+guard or inside a span an exemption names — positionally, not by proximity —
+and it also fails on an exemption that no longer excuses anything. Figures
+written as words, like the ones just listed, are outside that scan by
+construction; they are declared here because nothing mechanical can reach them.
 
 The question that prompted it: **is this slow because only one agent is
 building?** The data says no, and points somewhere else.
