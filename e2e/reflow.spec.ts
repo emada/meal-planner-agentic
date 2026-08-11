@@ -49,7 +49,10 @@ const clipped = (page: Page) =>
   page.evaluate(() =>
     [
       ...document.querySelectorAll(
-        '.card__title, .card__meta, .button, h1, h2, h3, .browse__message, .results__message',
+        // Text that can carry an unbreakable token from the API. The first
+        // draft omitted the ingredient rows, so the fixture's deliberately
+        // long ingredient name was measured by nothing.
+        '.card__title, .card__meta, .button, h1, h2, h3, .browse__message, .results__message, .modal__title, .ingredients__name, .ingredients__measure, .shopping-list__name',
       ),
     ]
       .filter((node) => node.scrollWidth > node.clientWidth + 1)
@@ -57,9 +60,22 @@ const clipped = (page: Page) =>
       .map((node) => node.textContent.trim().slice(0, 40)),
   );
 
+/**
+ * A container that scrolls vertically computes `overflow-x: auto` too, so it
+ * can scroll sideways without the document ever gaining width — invisible to
+ * both checks above. The modal backdrop is exactly that container.
+ */
+const scrollsSideways = (page: Page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('.modal__backdrop, .modal__body, .app__main')]
+      .filter((node) => node.scrollWidth > node.clientWidth + 1)
+      .map((node) => node.className),
+  );
+
 const fitsAt320 = async (page: Page) => {
   expect(await overflow(page)).toBeLessThanOrEqual(0);
   expect(await clipped(page)).toEqual([]);
+  expect(await scrollsSideways(page)).toEqual([]);
 };
 
 test('1.4.10 — the landing view reflows at 320px', async ({ page }) => {

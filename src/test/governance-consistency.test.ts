@@ -276,7 +276,7 @@ describe('governance documents agree with the current authorization model', () =
       ['gates.md', gates],
       ['bootstrap-adoption.md', adoption],
     ] as const) {
-      for (const match of text.matchAll(/([\w-]+) of ([\w-]+) (?:mandatory )?gates/gi)) {
+      for (const match of text.matchAll(/([\w-]+) of (?:the )?([\w-]+) (?:mandatory )?gates/gi)) {
         const [claim, left, right] = match;
         const numerator = (left ?? '').toLowerCase();
         const denominator = (right ?? '').toLowerCase();
