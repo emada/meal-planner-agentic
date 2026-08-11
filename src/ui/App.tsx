@@ -75,7 +75,7 @@ export function App() {
                 className="button"
                 type="button"
                 onClick={() => {
-                  shoppingList.add(openRecipe.ingredients);
+                  shoppingList.add(openRecipe.ingredients, openRecipe.id);
                   // Confirm in place rather than closing: the user may want to
                   // read the instructions next, and a silent click reads as
                   // nothing having happened.

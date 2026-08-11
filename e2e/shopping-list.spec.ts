@@ -88,17 +88,72 @@ test('AC9 — two recipes sharing an ingredient group into one entry, measures v
   await expect(salt.locator('.shopping-list__measures li')).toHaveText(['1 tsp', 'to taste']);
 });
 
-test('AC8 — the list survives a reload', async ({ page }) => {
+test('AC8 — the list survives a browser restart, not merely a reload', async ({
+  page,
+  browser,
+}) => {
+  await stub(page, [PIE]);
+  await page.goto('/');
+  await addRecipe(page, 'Beef Pie');
+
+  // A reload alone would pass with sessionStorage, so it does not discriminate
+  // the storage class AC8 is about. A fresh context does.
+  const state = await page.context().storageState();
+  const restarted = await browser.newContext({ storageState: state });
+  const restartedPage = await restarted.newPage();
+
+  await stub(restartedPage, [PIE]);
+  await restartedPage.goto('/');
+  await restartedPage
+    .getByRole('navigation')
+    .getByRole('button', { name: /view my shopping list/i })
+    .click();
+
+  await expect(restartedPage.locator('.shopping-list__name')).toHaveText(['Beef', 'Salt']);
+  await restarted.close();
+});
+
+test('adding the same recipe twice does not double the list', async ({ page }) => {
   await stub(page, [PIE]);
   await page.goto('/');
 
-  await addRecipe(page, 'Beef Pie');
-  await page.reload();
+  await page.getByRole('searchbox', { name: /search recipes/i }).fill('beef');
+  await page.getByRole('searchbox', { name: /search recipes/i }).press('Enter');
+  await page.getByRole('button', { name: /beef pie/i }).click();
+
+  const add = page.getByRole('button', { name: /add to my shopping list/i });
+  await add.click();
+  await add.click();
+  await page.getByRole('button', { name: /close recipe/i }).click();
+
   await page
     .getByRole('navigation')
     .getByRole('button', { name: /view my shopping list/i })
     .click();
 
+  const beef = page.locator('.shopping-list__item').filter({ hasText: 'Beef' });
+  await expect(beef.locator('.shopping-list__measures li')).toHaveText(['1 kg']);
+});
+
+test('the clear confirmation is operable by keyboard alone', async ({ page }) => {
+  await stub(page, [PIE]);
+  await page.goto('/');
+
+  await addRecipe(page, 'Beef Pie');
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: /view my shopping list/i })
+    .click();
+
+  const trigger = page.getByRole('button', { name: /clear list/i });
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(page.getByRole('alertdialog')).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await expect(trigger).toBeFocused();
   await expect(page.locator('.shopping-list__name')).toHaveText(['Beef', 'Salt']);
 });
 

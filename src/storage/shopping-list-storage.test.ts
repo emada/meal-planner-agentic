@@ -23,13 +23,28 @@ describe('readShoppingList', () => {
 
   it('round-trips what was written, sorted', () => {
     writeShoppingList([
-      { name: 'Onion', measures: ['2'] },
-      { name: 'Beef', measures: ['1 kg'] },
+      { name: 'Onion', contributions: [{ recipeId: 'a', measure: '2' }] },
+      { name: 'Beef', contributions: [{ recipeId: 'a', measure: '1 kg' }] },
     ]);
 
+    expect(readShoppingList().map((entry) => entry.name)).toEqual(['Beef', 'Onion']);
+  });
+
+  it('migrates a list written before measures carried a source', () => {
+    localStorage.setItem(
+      'meal-planner.shopping-list.v1',
+      JSON.stringify([{ name: 'Beef', measures: ['1 kg', '2 kg'] }]),
+    );
+
+    // A stored list must not be silently discarded by a schema change.
     expect(readShoppingList()).toEqual([
-      { name: 'Beef', measures: ['1 kg'] },
-      { name: 'Onion', measures: ['2'] },
+      {
+        name: 'Beef',
+        contributions: [
+          { recipeId: 'legacy', measure: '1 kg' },
+          { recipeId: 'legacy', measure: '2 kg' },
+        ],
+      },
     ]);
   });
 
@@ -43,9 +58,10 @@ describe('readShoppingList', () => {
   it.each([
     ['a bare string', '"hello"'],
     ['an object instead of an array', '{"name":"Beef"}'],
-    ['entries missing measures', '[{"name":"Beef"}]'],
-    ['an entry with an empty name', '[{"name":"","measures":[]}]'],
-    ['measures that are not strings', '[{"name":"Beef","measures":[1,2]}]'],
+    ['entries missing contributions', '[{"name":"Beef"}]'],
+    ['an entry with an empty name', '[{"name":"","contributions":[]}]'],
+    ['contributions that are not objects', '[{"name":"Beef","contributions":[1,2]}]'],
+    ['a contribution with no recipe', '[{"name":"Beef","contributions":[{"measure":"1 kg"}]}]'],
   ])('rejects %s', (_label, stored) => {
     localStorage.setItem(SHOPPING_LIST_STORAGE_KEY, stored);
 
@@ -69,17 +85,17 @@ describe('writeShoppingList', () => {
       throw new DOMException('QuotaExceededError');
     });
 
-    expect(writeShoppingList([{ name: 'Beef', measures: [] }])).toBe(false);
+    expect(writeShoppingList([{ name: 'Beef', contributions: [] }])).toBe(false);
   });
 
   it('reports success on a normal write', () => {
-    expect(writeShoppingList([{ name: 'Beef', measures: [] }])).toBe(true);
+    expect(writeShoppingList([{ name: 'Beef', contributions: [] }])).toBe(true);
   });
 });
 
 describe('clearShoppingList', () => {
   it('empties the stored list', () => {
-    writeShoppingList([{ name: 'Beef', measures: ['1 kg'] }]);
+    writeShoppingList([{ name: 'Beef', contributions: [{ recipeId: 'a', measure: '1 kg' }] }]);
 
     expect(clearShoppingList()).toBe(true);
     expect(readShoppingList()).toEqual([]);

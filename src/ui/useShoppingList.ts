@@ -12,39 +12,40 @@ export function useShoppingList() {
   const [entries, setEntries] = useState<ShoppingListEntry[]>([]);
   const [persistenceFailed, setPersistenceFailed] = useState(false);
 
-  // Read once on mount rather than in the initializer: the initializer also
-  // runs during server rendering or a test without localStorage.
+  // Read once on mount rather than in the initializer, which also runs in
+  // environments without localStorage.
   useEffect(() => {
     setEntries(readShoppingList());
   }, []);
 
+  /**
+   * The single write path. React may call a state updater more than once, or
+   * during a render it later throws away, so the write happens here in the
+   * event callback rather than inside an updater.
+   */
   const persist = useCallback((next: ShoppingListEntry[]) => {
     setEntries(next);
-    // The list stays correct in memory even when the write fails; it simply
-    // will not survive a reload, and the UI says so rather than pretending.
     setPersistenceFailed(!writeShoppingList(next));
   }, []);
 
-  const add = useCallback((ingredients: readonly Ingredient[]) => {
-    setEntries((current) => {
-      const next = addIngredients(current, ingredients);
-      setPersistenceFailed(!writeShoppingList(next));
-      return next;
-    });
-  }, []);
+  const add = useCallback(
+    (ingredients: readonly Ingredient[], recipeId: string) => {
+      persist(addIngredients(entries, ingredients, recipeId));
+    },
+    [entries, persist],
+  );
 
-  const remove = useCallback((name: string) => {
-    setEntries((current) => {
-      const next = removeEntry(current, name);
-      setPersistenceFailed(!writeShoppingList(next));
-      return next;
-    });
-  }, []);
+  const remove = useCallback(
+    (name: string) => {
+      persist(removeEntry(entries, name));
+    },
+    [entries, persist],
+  );
 
   const clear = useCallback(() => {
     setEntries([]);
     setPersistenceFailed(!clearShoppingList());
   }, []);
 
-  return { entries, add, remove, clear, persist, persistenceFailed };
+  return { entries, add, remove, clear, persistenceFailed };
 }

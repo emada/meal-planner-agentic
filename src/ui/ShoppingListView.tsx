@@ -1,12 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import type { ShoppingListEntry } from '../domain/shopping-list';
+import { measuresOf, type ShoppingListEntry } from '../domain/shopping-list';
 
 interface ShoppingListViewProps {
   readonly entries: readonly ShoppingListEntry[];
   readonly onRemove: (name: string) => void;
   readonly onClear: () => void;
   readonly persistenceFailed: boolean;
+}
+
+function Measures({ entry }: { readonly entry: ShoppingListEntry }) {
+  const measures = measuresOf(entry);
+
+  if (measures.length === 0) return null;
+
+  return (
+    <ul className="shopping-list__measures">
+      {measures.map((measure, index) => (
+        <li key={`${measure}-${String(index)}`}>{measure}</li>
+      ))}
+    </ul>
+  );
 }
 
 export function ShoppingListView({
@@ -16,6 +30,36 @@ export function ShoppingListView({
   persistenceFailed,
 }: ShoppingListViewProps) {
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const confirmRef = useRef<HTMLDivElement>(null);
+  const clearTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // role="alertdialog" promises the dialog contract, so it has to keep it:
+  // focus moves in, Escape cancels, and focus returns to the trigger. The
+  // trigger unmounts while confirming, so without this focus falls to <body>.
+  useEffect(() => {
+    if (!confirmingClear) return;
+
+    confirmRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+
+      event.preventDefault();
+      setConfirmingClear(false);
+      requestAnimationFrame(() => clearTriggerRef.current?.focus());
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [confirmingClear]);
+
+  const dismissConfirm = () => {
+    setConfirmingClear(false);
+    // The trigger remounts on the next render; focus it once it exists.
+    requestAnimationFrame(() => clearTriggerRef.current?.focus());
+  };
 
   return (
     <section className="shopping-list" aria-labelledby="shopping-list-heading">
@@ -25,6 +69,7 @@ export function ShoppingListView({
           <button
             className="button button--secondary"
             type="button"
+            ref={clearTriggerRef}
             onClick={() => {
               setConfirmingClear(true);
             }}
@@ -42,7 +87,14 @@ export function ShoppingListView({
       )}
 
       {confirmingClear && (
-        <div className="shopping-list__confirm" role="alertdialog" aria-labelledby="clear-confirm">
+        <div
+          className="shopping-list__confirm"
+          role="alertdialog"
+          aria-modal="false"
+          aria-labelledby="clear-confirm"
+          tabIndex={-1}
+          ref={confirmRef}
+        >
           <p id="clear-confirm">Remove every ingredient from your shopping list?</p>
           <div className="shopping-list__confirm-actions">
             <button
@@ -50,18 +102,12 @@ export function ShoppingListView({
               type="button"
               onClick={() => {
                 onClear();
-                setConfirmingClear(false);
+                dismissConfirm();
               }}
             >
               Yes, clear it
             </button>
-            <button
-              className="button button--secondary"
-              type="button"
-              onClick={() => {
-                setConfirmingClear(false);
-              }}
-            >
+            <button className="button button--secondary" type="button" onClick={dismissConfirm}>
               Keep my list
             </button>
           </div>
@@ -78,13 +124,7 @@ export function ShoppingListView({
             <li key={entry.name} className="shopping-list__item">
               <div className="shopping-list__entry">
                 <span className="shopping-list__name">{entry.name}</span>
-                {entry.measures.length > 0 && (
-                  <ul className="shopping-list__measures">
-                    {entry.measures.map((measure, index) => (
-                      <li key={`${measure}-${String(index)}`}>{measure}</li>
-                    ))}
-                  </ul>
-                )}
+                <Measures entry={entry} />
               </div>
               <button
                 className="button button--secondary"

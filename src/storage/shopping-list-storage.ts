@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 import { sortEntries, type ShoppingListEntry } from '../domain/shopping-list';
 
-const STORAGE_KEY = 'meal-planner.shopping-list.v1';
+const STORAGE_KEY = 'meal-planner.shopping-list.v2';
+// v1 stored bare measure strings with no source recipe. It is read once and
+// migrated so an existing list is not silently discarded.
+const LEGACY_KEY = 'meal-planner.shopping-list.v1';
 
 /**
  * localStorage holds whatever anyone put there — a previous version of this
@@ -11,39 +14,56 @@ const STORAGE_KEY = 'meal-planner.shopping-list.v1';
  */
 const entrySchema = z.object({
   name: z.string().min(1),
-  measures: z.array(z.string()),
+  contributions: z.array(z.object({ recipeId: z.string(), measure: z.string() })),
 });
 
 const listSchema = z.array(entrySchema);
+
+const legacyListSchema = z.array(
+  z.object({ name: z.string().min(1), measures: z.array(z.string()) }),
+);
 
 /**
  * Never throws. A shopping list that cannot be read is an empty list, not a
  * blank page: AC10 requires the app to load and stay usable when the stored
  * value is malformed.
  */
-export function readShoppingList(): ShoppingListEntry[] {
+function readKey(key: string): unknown {
   let raw: string | null;
 
   try {
-    raw = localStorage.getItem(STORAGE_KEY);
+    raw = localStorage.getItem(key);
   } catch {
     // Private-browsing modes and blocked-storage settings throw on access.
-    return [];
+    return undefined;
   }
 
-  if (raw === null) return [];
-
-  let parsed: unknown;
+  if (raw === null) return undefined;
 
   try {
-    parsed = JSON.parse(raw);
+    return JSON.parse(raw);
   } catch {
-    return [];
+    return undefined;
   }
+}
 
-  const result = listSchema.safeParse(parsed);
+export function readShoppingList(): ShoppingListEntry[] {
+  const current = listSchema.safeParse(readKey(STORAGE_KEY));
 
-  return result.success ? sortEntries(result.data) : [];
+  if (current.success) return sortEntries(current.data);
+
+  const legacy = legacyListSchema.safeParse(readKey(LEGACY_KEY));
+
+  if (!legacy.success) return [];
+
+  // Measures written before sources existed are attributed to a sentinel, so a
+  // later add from a real recipe cannot mistake them for its own and drop them.
+  return sortEntries(
+    legacy.data.map((entry) => ({
+      name: entry.name,
+      contributions: entry.measures.map((measure) => ({ recipeId: 'legacy', measure })),
+    })),
+  );
 }
 
 /** Returns false when the write failed, so the caller can tell the user (R3.7). */
@@ -61,6 +81,7 @@ export function writeShoppingList(list: readonly ShoppingListEntry[]): boolean {
 export function clearShoppingList(): boolean {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(LEGACY_KEY);
     return true;
   } catch {
     return false;
