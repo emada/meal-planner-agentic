@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -113,6 +114,36 @@ describe('ShoppingListView', () => {
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(onClear).not.toHaveBeenCalled();
+  });
+
+  it('keeps focus in the region after the list is cleared away', async () => {
+    const user = userEvent.setup();
+
+    // Confirming empties the list, so the trigger is never rendered again and
+    // the usual restore target does not exist.
+    function Harness() {
+      const [current, setCurrent] = useState(entries);
+
+      return (
+        <ShoppingListView
+          entries={current}
+          onRemove={vi.fn()}
+          onClear={() => {
+            setCurrent([]);
+          }}
+          persistenceFailed={false}
+        />
+      );
+    }
+
+    render(<Harness />);
+    await user.click(screen.getByRole('button', { name: /clear list/i }));
+    await user.click(screen.getByRole('button', { name: /yes, clear it/i }));
+
+    await waitFor(() => {
+      expect(document.activeElement).toHaveClass('shopping-list');
+    });
+    expect(document.activeElement).not.toBe(document.body);
   });
 
   it('removes the entry the user asked for', async () => {

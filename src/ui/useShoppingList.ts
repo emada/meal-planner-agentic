@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Ingredient } from '../domain/recipe';
 import { addIngredients, removeEntry, type ShoppingListEntry } from '../domain/shopping-list';
@@ -11,11 +11,16 @@ import {
 export function useShoppingList() {
   const [entries, setEntries] = useState<ShoppingListEntry[]>([]);
   const [persistenceFailed, setPersistenceFailed] = useState(false);
+  // Mirrors `entries` so two actions dispatched before React commits the first
+  // cannot both compute from the same stale render.
+  const latest = useRef<ShoppingListEntry[]>([]);
 
   // Read once on mount rather than in the initializer, which also runs in
   // environments without localStorage.
   useEffect(() => {
-    setEntries(readShoppingList());
+    const stored = readShoppingList();
+    latest.current = stored;
+    setEntries(stored);
   }, []);
 
   /**
@@ -24,25 +29,27 @@ export function useShoppingList() {
    * event callback rather than inside an updater.
    */
   const persist = useCallback((next: ShoppingListEntry[]) => {
+    latest.current = next;
     setEntries(next);
     setPersistenceFailed(!writeShoppingList(next));
   }, []);
 
   const add = useCallback(
     (ingredients: readonly Ingredient[], recipeId: string) => {
-      persist(addIngredients(entries, ingredients, recipeId));
+      persist(addIngredients(latest.current, ingredients, recipeId));
     },
-    [entries, persist],
+    [persist],
   );
 
   const remove = useCallback(
     (name: string) => {
-      persist(removeEntry(entries, name));
+      persist(removeEntry(latest.current, name));
     },
-    [entries, persist],
+    [persist],
   );
 
   const clear = useCallback(() => {
+    latest.current = [];
     setEntries([]);
     setPersistenceFailed(!clearShoppingList());
   }, []);

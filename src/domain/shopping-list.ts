@@ -48,21 +48,8 @@ export function addIngredients(
   ingredients: readonly Ingredient[],
   recipeId: string,
 ): ShoppingListEntry[] {
-  const byKey = new Map<string, { name: string; contributions: Contribution[] }>();
-
-  for (const entry of list) {
-    const key = normalizeName(entry.name);
-    const existing = byKey.get(key);
-    // Two stored entries can share a normalized name if something outside this
-    // app wrote them. Merge rather than overwrite, so no measure is lost.
-    const contributions = [
-      ...(existing?.contributions ?? []),
-      // This recipe is about to re-contribute; drop what it said last time.
-      ...entry.contributions.filter((contribution) => contribution.recipeId !== recipeId),
-    ];
-
-    byKey.set(key, { name: existing?.name ?? entry.name, contributions });
-  }
+  // This recipe is about to re-contribute, so drop what it said last time.
+  const byKey = groupByName(list, (contribution) => contribution.recipeId !== recipeId);
 
   for (const ingredient of ingredients) {
     const key = normalizeName(ingredient.name);
@@ -76,6 +63,39 @@ export function addIngredients(
   }
 
   return sortEntries([...byKey.values()]);
+}
+
+/**
+ * Collapses entries that share a normalized name, keeping every contribution.
+ *
+ * Separate from `addIngredients` because merging must never drop anything: a
+ * stored contribution can legitimately carry any `recipeId`, including the
+ * empty string, and filtering by one here would delete the measures this
+ * function exists to preserve.
+ */
+export function mergeEntries(list: readonly ShoppingListEntry[]): ShoppingListEntry[] {
+  return sortEntries([...groupByName(list, () => true).values()]);
+}
+
+function groupByName(
+  list: readonly ShoppingListEntry[],
+  keep: (contribution: Contribution) => boolean,
+): Map<string, { name: string; contributions: Contribution[] }> {
+  const byKey = new Map<string, { name: string; contributions: Contribution[] }>();
+
+  for (const entry of list) {
+    const key = normalizeName(entry.name);
+    const existing = byKey.get(key);
+
+    byKey.set(key, {
+      name: existing?.name ?? entry.name,
+      // Two stored entries can share a normalized name if something outside
+      // this app wrote them. Merge rather than overwrite, so no measure is lost.
+      contributions: [...(existing?.contributions ?? []), ...entry.contributions.filter(keep)],
+    });
+  }
+
+  return byKey;
 }
 
 export function removeEntry(list: readonly ShoppingListEntry[], name: string): ShoppingListEntry[] {
