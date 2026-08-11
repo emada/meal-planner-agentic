@@ -198,3 +198,109 @@ img {
 .card__button--static {
   cursor: default;
 }
+
+/* Recipe modal */
+
+.modal__backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-4);
+  overflow-y: auto;
+  background: rgb(0 0 0 / 55%);
+}
+
+.modal {
+  width: min(100%, 42rem);
+  margin: auto;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.modal__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.modal__close {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: inherit;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.modal__body {
+  padding: var(--space-4);
+}
+
+.modal__body h3 {
+  margin-bottom: var(--space-2);
+}
+
+.modal__image {
+  width: 100%;
+  height: auto;
+  max-height: 18rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.modal__meta,
+.modal__empty {
+  color: var(--color-text-muted);
+}
+
+.ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.ingredients__item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ingredients__name {
+  overflow-wrap: anywhere;
+}
+
+.ingredients__measure {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.modal__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.modal__footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
