@@ -86,9 +86,13 @@ describe('the engineering learning log counts what it contains', () => {
     // guard it — but it catches the cheaper mistake.
     const roots = ['src/test', 'src/ui', 'src/domain', 'src/storage', 'src/api', 'e2e'];
     const missing = rows.flatMap((row) =>
-      [...(row[5] ?? '').matchAll(/`([\w.-]+\.(?:test|spec)\.tsx?)`/g)]
+      [...(row[5] ?? '').matchAll(/`([\w./-]+\.(?:test|spec)\.tsx?)`/g)]
         .map((match) => match[1] ?? '')
-        .filter((file) => !roots.some((root) => existsSync(`${root}/${file}`)))
+        .filter((file) =>
+          file.includes('/')
+            ? !existsSync(file)
+            : !roots.some((root) => existsSync(`${root}/${file}`)),
+        )
         .map((file) => `${row[1] ?? ''}: ${file}`),
     );
 
