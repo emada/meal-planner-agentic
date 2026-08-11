@@ -2,7 +2,9 @@
 
 Search recipes from [TheMealDB](https://www.themealdb.com) and build a shopping list that lives in your browser. No account, no backend, no tracking.
 
-Status: **S0 — engineering harness complete.** The application shell builds, deploys, and is gated; feature slices S1 onward add search, the recipe modal, and the shopping list.
+Status: **complete.** Every acceptance criterion in [`SPEC.md`](SPEC.md) is implemented and live at <https://meal-planner-agentic.vercel.app>.
+
+Search recipes, open one for its ingredients and instructions, add them to a shopping list that survives a browser restart, edit that list, or let "surprise me" pick for you.
 
 ## Requirements
 

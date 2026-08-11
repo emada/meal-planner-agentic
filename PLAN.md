@@ -179,6 +179,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ### S7 — Production readiness
 
+- **Status**: complete, 2026-08-11.
 - **Outcome**: the app is fit to serve real users.
 - **Scope**: production deployment to Vercel; rollback via Vercel's previous-deployment promotion; post-deploy smoke check of the three journeys. Obtaining a supported TheMealDB key is **no longer in scope** — the human accepted the test-key risk on 2026-08-10 (spec O1).
 - **Dependencies**: none remaining. Production now releases automatically on merge, so S7 is a verification and hardening slice rather than a gate to pass through.
