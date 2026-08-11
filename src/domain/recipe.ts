@@ -127,3 +127,7 @@ export function toRecipe(meal: Readonly<Record<string, unknown>>): Recipe {
     sourceUrl: optionalUrl(text('strSource')),
   };
 }
+
+// PROBE ONLY — deliberate build break to prove the Vercel required context
+// rejects. This branch is never merged and is deleted after the observation.
+export const probeBreak: number = 'not a number';
