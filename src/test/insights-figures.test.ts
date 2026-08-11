@@ -20,6 +20,12 @@ import { describe, expect, it } from 'vitest';
  * guarded phrase — a check that could not fail, in the test whose subject is
  * checks that cannot fail.
  *
+ * It is also a single implementation: `account` runs over an arbitrary
+ * document, the probes below call it with synthetic inputs, and the live check
+ * calls it with this one. When the live path re-implemented the loop, widening
+ * a marker pattern there left the probes green because they still held the
+ * correct copy.
+ *
  * The JSON is not re-derived here. The slices it measures live on branches
  * deleted after merge, so a CI checkout cannot reproduce them and the check
  * would fail for reasons that are not defects. `npm run check:insights` does
@@ -96,22 +102,6 @@ function collapse(text: string) {
 
 const collapsed = collapse(insights);
 const unwrapped = collapsed.text;
-
-/**
- * Spans in `unwrapped` for structural markers, located in the raw text where
- * line anchors still exist. Matching `\d+\. \*\*` on the collapsed string
- * could not tell a list marker from a figure ending a sentence before a bold
- * one — a shape this document already uses — so it excused real figures.
- */
-const markerSpans = (): [number, number][] =>
-  [/^#{1,6} \d+\. /gm, /^\d+\. \*\*/gm].flatMap((pattern) =>
-    [...insights.matchAll(pattern)].map((m) => {
-      const from = collapsed.map[m.index] ?? 0;
-      const to = (collapsed.map[m.index + m[0].length - 1] ?? 0) + 1;
-
-      return [from, to] as [number, number];
-    }),
-  );
 
 /** Character spans in `unwrapped` that a guard has claimed as its value. */
 const claimed: [number, number][] = [];
@@ -239,18 +229,6 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     [/arrived in 9 rounds instead/g, 'the hypothetical in the extrapolation'],
   ];
 
-  /** Spans an exemption covers, paired with the reason that excuses them. */
-  const excused: [number, number, string][] = [
-    ...EXEMPT.flatMap(([pattern, reason]) =>
-      [...unwrapped.matchAll(pattern)].map(
-        (m) => [m.index, m.index + m[0].length, reason] as [number, number, string],
-      ),
-    ),
-    ...markerSpans().map(
-      ([from, to]) => [from, to, 'ordered-list and heading markers'] as [number, number, string],
-    ),
-  ];
-
   /**
    * The accounting itself, over an arbitrary document, so it can be tested
    * against inputs rather than only used. Ten review rounds went into this
@@ -328,33 +306,30 @@ describe('INSIGHTS.md agrees with the history it reports', () => {
     expect(account('It saved 1. **A bold sentence follows.**', []).found).toEqual(['1']);
   });
 
+  it('accepts a number only when a claim covers its exact span', () => {
+    const document = 'It took 165 minutes.';
+    const start = document.indexOf('165');
+
+    expect(account(document, [[start, start + 3]]).found).toEqual([]);
+    // Off by one at either end, or a claim over the whole phrase, is not a
+    // claim on that number — the property the first, substring-based version
+    // of this check did not have.
+    expect(account(document, [[start, start + 2]]).found).toEqual(['165']);
+    expect(account(document, [[start + 1, start + 3]]).found).toEqual(['165']);
+    expect(account(document, [[0, document.length]]).found).toEqual(['165']);
+  });
+
   it('leaves no number unaccounted for', () => {
-    const unaccounted: string[] = [];
-    const usedExemptions = new Set<string>();
+    // Calls the same function the probes above call. It used to re-implement
+    // the loop, so a widened marker pattern here was invisible to a probe list
+    // that kept the correct one — the probes tested a copy, not the mechanism.
+    const { found, used } = account(insights, claimed);
 
-    for (const match of unwrapped.matchAll(/\d[\d.]*\d|\d/g)) {
-      const start = match.index;
-      const end = start + match[0].length;
-
-      if (claimed.some(([from, to]) => from === start && to === end)) continue;
-
-      const excuse = excused.find(([from, to]) => from <= start && to >= end);
-
-      if (excuse) {
-        usedExemptions.add(excuse[2]);
-        continue;
-      }
-
-      const around = unwrapped.slice(Math.max(0, start - 60), end + 60);
-
-      unaccounted.push(`${match[0]} — …${around.trim()}…`);
-    }
-
-    expect(unaccounted, 'every number must be a guarded value or listed as exempt').toEqual([]);
+    expect(found, 'every number must be a guarded value or listed as exempt').toEqual([]);
 
     // An exemption nothing uses is a rule that cannot fire, and would silently
     // excuse a whole context the day someone wrote into it.
-    const unused = EXEMPT.filter(([, reason]) => !usedExemptions.has(reason)).map(([, r]) => r);
+    const unused = EXEMPT.filter(([, reason]) => !used.has(reason)).map(([, reason]) => reason);
 
     expect(unused, 'an exemption that excuses nothing must be removed').toEqual([]);
   });
