@@ -23,7 +23,11 @@ export default defineConfig({
 
   projects: [
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
+    // AC13 names 375px explicitly; the Pixel 7 descriptor is 412px.
+    {
+      name: 'mobile-chromium',
+      use: { ...devices['Pixel 7'], viewport: { width: 375, height: 667 } },
+    },
   ],
 
   // Tests run against the production build, not the dev server, so what CI
