@@ -49,6 +49,39 @@ describe('RecipeModal', () => {
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(1);
     expect(items[0]).toHaveTextContent('Beef');
+    expect(items[0]?.querySelector('.ingredients__measure')).toBeNull();
+  });
+
+  it('does not treat a control inside a hidden wrapper as a trap boundary', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <>
+        <button type="button">Behind the dialog</button>
+        <RecipeModal
+          recipe={recipe()}
+          onClose={vi.fn()}
+          footer={
+            <div style={{ display: 'none' }}>
+              <button type="button">Hidden action</button>
+            </div>
+          }
+        />
+      </>,
+    );
+
+    const close = screen.getByRole('button', { name: /close recipe/i });
+    const source = screen.getByRole('link', { name: /original source/i });
+
+    // If the hidden button counted as `last`, the real last control would never
+    // match the wrap condition and Tab would leave the dialog.
+    source.focus();
+    await user.tab();
+    expect(document.activeElement).toBe(close);
+
+    close.focus();
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(source);
   });
 
   it('omits a link the recipe does not have', () => {

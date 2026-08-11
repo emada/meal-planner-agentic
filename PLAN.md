@@ -137,7 +137,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Mapped AC**: AC4, AC5.
 - **Scope**: ingredient/measure extraction in `domain/` discarding empty pairs; modal with focus trap, Escape to close, focus restoration; conditional YouTube and source links with `rel="noopener noreferrer"`; instructions rendered as text.
 - **Dependencies**: S1.
-- **Evidence**: unit tests for extraction across recipes with 3, 9, and 20 filled slots plus whitespace-only measures; keyboard-only Playwright test; automated a11y check on the open modal.
+- **Evidence**: unit tests for extraction across recipes with 3, 9, and 20 filled slots plus whitespace-only measures; keyboard-only Playwright test. The automated a11y check is deferred to S6 with the other accessibility assertions (`docs/quality/gates.md`); keyboard, focus-trap, and landmark behaviour are asserted directly instead.
 - **Stop condition**: focus management cannot satisfy AC5 with the chosen approach.
 - **Parallelization**: none.
 

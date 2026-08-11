@@ -17,13 +17,29 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(', ');
 
-/** A hidden control cannot take focus, so it cannot bound the trap. */
+/**
+ * A hidden control cannot take focus, so it cannot bound the trap — and a
+ * phantom boundary is worse than none, because the real last control then never
+ * matches the wrap condition and Tab leaves the dialog.
+ *
+ * `checkVisibility` is the only check that sees a hidden *ancestor*; `hidden`
+ * and computed `display` are direct-only, and `visibility` is the sole
+ * inherited one. jsdom does not implement it, hence the fallback.
+ */
 const isFocusable = (element: HTMLElement) => {
   if (element.hidden) return false;
 
-  const style = getComputedStyle(element);
+  if (typeof element.checkVisibility === 'function') {
+    return element.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true });
+  }
 
-  return style.display !== 'none' && style.visibility !== 'hidden';
+  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+    const style = getComputedStyle(node);
+
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+  }
+
+  return true;
 };
 
 /**
@@ -63,8 +79,11 @@ export function RecipeModal({ recipe, onClose, footer }: RecipeModalProps) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      // A dialog stacked on top of this one handles the key first and marks it
-      // handled; without this, one Escape would dismiss both.
+      // Stand down when something already consumed this key — a capture-phase
+      // or nested handler. Note this does not by itself order two dialogs
+      // built from this component: both listen on document in the bubble
+      // phase, so the earlier-mounted one runs first. True stacking needs a
+      // topmost-dialog check, and gets one when a second dialog lands.
       if (event.defaultPrevented) return;
 
       if (event.key === 'Escape') {
