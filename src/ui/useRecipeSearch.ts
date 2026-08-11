@@ -22,13 +22,17 @@ export function useRecipeSearch() {
   const search = useCallback(async (term: string) => {
     const trimmed = term.trim();
 
+    // Clearing the box resets the view, so an in-flight search must be
+    // abandoned too. Without this its result lands on top of the idle state and
+    // the user sees a grid for a term that is no longer in the search box.
+    inFlight.current?.abort();
+
     if (trimmed === '') {
+      inFlight.current = null;
       setState({ status: 'idle' });
       return;
     }
 
-    // A slower earlier search must not overwrite a faster later one.
-    inFlight.current?.abort();
     const controller = new AbortController();
     inFlight.current = controller;
 

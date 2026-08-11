@@ -56,21 +56,18 @@ interface SearchResultsProps {
 }
 
 function SearchResults({ state, onRetry, onOpenRecipe }: SearchResultsProps) {
-  // Every state change is announced: a sighted user sees the grid change, and
-  // this is the equivalent for a screen reader.
   return (
-    <section className="results" aria-live="polite" aria-busy={state.status === 'loading'}>
-      {state.status === 'idle' && (
-        <p className="results__message">Search for a recipe to get started.</p>
-      )}
-
-      {state.status === 'loading' && <p className="results__message">Searching…</p>}
-
-      {state.status === 'empty' && (
-        <p className="results__message">
-          No recipes found for <strong>{state.term}</strong>. Try another search.
-        </p>
-      )}
+    <section className="results" aria-busy={state.status === 'loading'}>
+      {/* Only the summary is announced. A live region wrapping the grid would
+          read all thirty card names aloud on every search, and the nested
+          role="alert" below would be announced twice. */}
+      <p className="results__message" role="status">
+        {state.status === 'idle' && 'Search for a recipe to get started.'}
+        {state.status === 'loading' && 'Searching…'}
+        {state.status === 'empty' && `No recipes found for ${state.term}. Try another search.`}
+        {state.status === 'loaded' &&
+          `${String(state.recipes.length)} recipe${state.recipes.length === 1 ? '' : 's'} for ${state.term}.`}
+      </p>
 
       {state.status === 'failed' && (
         <div className="results__error" role="alert">
@@ -85,10 +82,6 @@ function SearchResults({ state, onRetry, onOpenRecipe }: SearchResultsProps) {
 
       {state.status === 'loaded' && (
         <>
-          <p className="results__message">
-            {state.recipes.length} recipe{state.recipes.length === 1 ? '' : 's'} for{' '}
-            <strong>{state.term}</strong>.
-          </p>
           <ul className="grid">
             {state.recipes.map((recipe) => (
               <li key={recipe.id} className="grid__item">
@@ -108,34 +101,47 @@ interface RecipeCardProps {
 }
 
 function RecipeCard({ recipe, onOpen }: RecipeCardProps) {
+  const body = (
+    <>
+      {recipe.thumbnailUrl !== '' && (
+        <img
+          className="card__image"
+          src={recipe.thumbnailUrl}
+          // The title is the accessible name of the button already; repeating
+          // it here would have a screen reader announce the recipe twice.
+          alt=""
+          loading="lazy"
+          width={300}
+          height={300}
+        />
+      )}
+      <span className="card__body">
+        <span className="card__title">{recipe.title}</span>
+        <span className="card__meta">
+          {[recipe.category, recipe.area].filter(Boolean).join(' · ')}
+        </span>
+      </span>
+    </>
+  );
+
+  // Until a slice supplies an open handler, the card is not interactive. A
+  // focusable button that does nothing wastes a keyboard user's time and
+  // promises an action the app cannot perform.
   return (
     <article className="card">
-      <button
-        className="card__button"
-        type="button"
-        onClick={() => {
-          onOpen?.(recipe);
-        }}
-      >
-        {recipe.thumbnailUrl !== '' && (
-          <img
-            className="card__image"
-            src={recipe.thumbnailUrl}
-            // The title is the accessible name of the button already; repeating
-            // it here would have a screen reader announce the recipe twice.
-            alt=""
-            loading="lazy"
-            width={300}
-            height={300}
-          />
-        )}
-        <span className="card__body">
-          <span className="card__title">{recipe.title}</span>
-          <span className="card__meta">
-            {[recipe.category, recipe.area].filter(Boolean).join(' · ')}
-          </span>
-        </span>
-      </button>
+      {onOpen ? (
+        <button
+          className="card__button"
+          type="button"
+          onClick={() => {
+            onOpen(recipe);
+          }}
+        >
+          {body}
+        </button>
+      ) : (
+        <div className="card__button card__button--static">{body}</div>
+      )}
     </article>
   );
 }

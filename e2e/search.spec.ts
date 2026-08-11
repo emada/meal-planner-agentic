@@ -36,7 +36,7 @@ test('AC1 — pressing Enter shows a grid of matching recipes', async ({ page })
 
   await search(page, 'beef');
 
-  await expect(page.getByRole('button', { name: /beef pie/i })).toBeVisible();
+  await expect(page.getByText('Beef Pie')).toBeVisible();
   await expect(page.getByRole('listitem')).toHaveCount(2);
   await expect(page.getByText('Beef · British').first()).toBeVisible();
 });
@@ -63,14 +63,14 @@ test('AC3 — a failed search shows an error and a retry that works', async ({ p
   await stubSearch(page, { meals: [meal('1', 'Beef Pie')] });
   await page.getByRole('button', { name: /try again/i }).click();
 
-  await expect(page.getByRole('button', { name: /beef pie/i })).toBeVisible();
+  await expect(page.getByText('Beef Pie')).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
 test('AC13 — the results grid does not overflow horizontally', async ({ page }) => {
   await stubSearch(page, {
     meals: Array.from({ length: 8 }, (_, index) =>
-      meal(String(index), `A recipe with a deliberately long title ${String(index)}`),
+      meal(String(index), `Pannenkoekenhuisjesbouwvakkersvereniging${String(index)}`),
     ),
   });
   await page.goto('/');
@@ -93,5 +93,5 @@ test('the search is operable by keyboard alone', async ({ page }) => {
   await page.keyboard.type('beef');
   await page.keyboard.press('Enter');
 
-  await expect(page.getByRole('button', { name: /beef pie/i })).toBeVisible();
+  await expect(page.getByText('Beef Pie')).toBeVisible();
 });

@@ -41,6 +41,10 @@ describe('SearchView', () => {
     expect(await screen.findByText('Beef Pie')).toBeInTheDocument();
     expect(screen.getByText('Beef Stew')).toBeInTheDocument();
     expect(screen.getAllByText('Beef · British')).toHaveLength(2);
+
+    // No open handler in this render, so the cards must not be announced as
+    // buttons that do nothing.
+    expect(screen.queryByRole('button', { name: /beef pie/i })).not.toBeInTheDocument();
   });
 
   it('says so explicitly when nothing matches, rather than showing an empty grid (AC2)', async () => {
@@ -105,6 +109,79 @@ describe('SearchView', () => {
     await waitFor(() => {
       expect(screen.queryByText(/searching…/i)).not.toBeInTheDocument();
     });
+  });
+
+  it('discards a slow earlier search when a later one has already answered', async () => {
+    // Without the abort, the first response lands last and the user sees results
+    // for a term they have already replaced.
+    const deferred: ((value: unknown) => void)[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            deferred.push(resolve);
+          }),
+      ),
+    );
+    const user = userEvent.setup();
+
+    render(<SearchView />);
+    const box = screen.getByRole('searchbox');
+
+    await user.type(box, 'beef{Enter}');
+    await user.clear(box);
+    await user.type(box, 'pudding{Enter}');
+
+    // Answer the later request first, then the abandoned earlier one.
+    deferred[1]?.({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ meals: [meal('2', 'Sticky Pudding')] }),
+    });
+    expect(await screen.findByText('Sticky Pudding')).toBeInTheDocument();
+
+    deferred[0]?.({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ meals: [meal('1', 'Beef Pie')] }),
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('Beef Pie')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Sticky Pudding')).toBeInTheDocument();
+  });
+
+  it('abandons an in-flight search when the box is cleared', async () => {
+    let release: ((value: unknown) => void) | undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+
+    render(<SearchView />);
+    const box = screen.getByRole('searchbox');
+
+    await user.type(box, 'beef{Enter}');
+    await user.clear(box);
+    await user.type(box, '{Enter}');
+
+    release?.({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ meals: [meal('1', 'Beef Pie')] }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/search for a recipe to get started/i)).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Beef Pie')).not.toBeInTheDocument();
   });
 
   it('opens a recipe when its card is activated', async () => {

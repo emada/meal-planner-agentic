@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractIngredients, optionalUrl } from './recipe';
+import { extractIngredients, optionalUrl, toRecipe } from './recipe';
 
 const slots = (pairs: [string, string][]): Record<string, string | null> => {
   const fields: Record<string, string | null> = {};
@@ -96,5 +96,47 @@ describe('optionalUrl', () => {
     // An anchor whose href is "" links to the current page, which reads as a
     // working link and is not one.
     expect(optionalUrl(value)).toBeNull();
+  });
+});
+
+describe('toRecipe', () => {
+  it('maps a validated meal onto the domain shape', () => {
+    expect(
+      toRecipe({
+        idMeal: '52874',
+        strMeal: '  Beef Pie  ',
+        strMealThumb: 'https://example.test/pie.jpg',
+        strCategory: 'Beef',
+        strArea: 'British',
+        strInstructions: '  Cook it.  ',
+        strYoutube: 'https://youtu.be/abc',
+        strSource: '   ',
+        strIngredient1: 'Beef',
+        strMeasure1: '1 kg',
+        strIngredient2: 'Onion',
+        strMeasure2: '2',
+      }),
+    ).toEqual({
+      id: '52874',
+      title: 'Beef Pie',
+      thumbnailUrl: 'https://example.test/pie.jpg',
+      category: 'Beef',
+      area: 'British',
+      instructions: 'Cook it.',
+      ingredients: [
+        { name: 'Beef', measure: '1 kg' },
+        { name: 'Onion', measure: '2' },
+      ],
+      youtubeUrl: 'https://youtu.be/abc',
+      sourceUrl: null,
+    });
+  });
+
+  it('coerces non-string fields to empty rather than rendering them', () => {
+    // The API schema uses catchall(unknown), so a number or boolean can arrive
+    // in a field we expect to be text.
+    const recipe = toRecipe({ idMeal: 1, strMeal: true, strCategory: null });
+
+    expect(recipe).toMatchObject({ id: '', title: '', category: '', ingredients: [] });
   });
 });
