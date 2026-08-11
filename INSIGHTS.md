@@ -1,7 +1,17 @@
 # Where the time went
 
-Measured from git and the GitHub API on 2026-08-11, not estimated. Every number
-here is reproducible from `git log --all` and `gh pr list`.
+Measured on 2026-08-11, not estimated.
+
+Everything except the two rows marked below is derived from `git log --all` by
+`scripts/derive-insights.mjs`, which writes `docs/quality/insights-data.json`.
+`src/test/insights-figures.test.ts` asserts that every figure printed here
+matches that file — including the prose that quotes the table, which is where
+this document went wrong the second time. `npm run check:insights` re-derives
+the JSON from history and fails if it has drifted.
+
+The merged-pull-request count and the median CI duration come from the GitHub
+API, which an offline test cannot reach. They are carried in the JSON as
+`apiDerived` and are **not** re-checked.
 
 The question that prompted it: **is this slow because only one agent is
 building?** The data says no, and points somewhere else.
@@ -18,7 +28,7 @@ building?** The data says no, and points somewhere else.
 | Pull requests merged                   | 13           |
 | Median CI run                          | **74 s**     |
 
-Two thirds of the calendar time was the agent waiting. The seven gaps over an
+Seventy percent of the calendar time was the agent waiting. The seven gaps over an
 hour — including two of about 13 hours — are overnight, not work. Comparing
 "two days" against "an app this size" measures the wrong thing.
 
@@ -51,6 +61,9 @@ one row then disagreed with the prose:
 | AC4 source-link fix         |      7 m |                    9 m |             2 |
 | **Total**                   | **83 m** |              **165 m** |        **23** |
 
+Cells are rounded to the minute; totals are computed from the exact timestamps.
+The Building column therefore sums to 82 as printed and 83.4 in fact.
+
 **66% of slice time is spent after the first review.** Writing the feature took
 about ten minutes per slice. Getting it past review took one and a half to four
 times that.
@@ -74,8 +87,8 @@ Three reasons parallelism would not have moved the number:
 
 1. **The slices are a dependency chain.** S2 needs S1's grid, S3 needs S2's
    modal, S5 reuses S2's modal unchanged. Only one pair was parallelizable.
-2. **Building is not the bottleneck.** 76 minutes of building versus 172 of
-   review. Doubling build throughput moves the total by less than 15%.
+2. **Building is not the bottleneck.** 83 minutes of building versus 165 of
+   review. Doubling build throughput saves 42 of 248 minutes — about 17%.
 3. **A second builder adds a third party to the review queue,** which is the
    part that is already saturated.
 
@@ -90,7 +103,8 @@ Ranked by measured impact, not by appeal.
 ### 1. Run review dimensions in parallel instead of in rounds
 
 Today: submit → one reviewer returns N findings → fix → resubmit → repeat.
-S6 took five rounds; the AC4 fix took three rounds for a single paragraph.
+S6 took five remediation commits; the AC4 fix took three reviewer passes for a
+single paragraph.
 
 Each round costs a full reviewer pass over the whole diff. Running several
 reviewers concurrently on distinct lenses — claim accuracy, tests that cannot
@@ -146,8 +160,8 @@ down, not just its verdict.
 33 of 47 hours were spent waiting. Most of that is unavoidable and correct —
 the human sleeps, and the approvals were real decisions. But the run stopped for
 approval at S0, then again for the autonomy envelope, then again mid-build. The
-one long autonomous stretch, S1 through S9, covered nine slices in about four
-hours of active time.
+one long autonomous stretch, S1 through S9, covered nine slices in 4.9 hours of
+active time.
 
 Fewer, larger checkpoints with a clear envelope beat many small ones.
 

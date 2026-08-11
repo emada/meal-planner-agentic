@@ -64,7 +64,8 @@
     "prepare": "husky",
     "check:duplication": "jscpd",
     "check:bundle": "node scripts/check-bundle-size.mjs",
-    "smoke:prod": "playwright test --config playwright.prod.config.ts"
+    "smoke:prod": "playwright test --config playwright.prod.config.ts",
+    "check:insights": "node scripts/derive-insights.mjs --check"
   },
   "sweai": {
     "gates": [
