@@ -4,7 +4,7 @@ Search recipes from [TheMealDB](https://www.themealdb.com) and build a shopping 
 
 Status: **complete.** Every acceptance criterion in [`SPEC.md`](SPEC.md) is implemented and live at <https://meal-planner-agentic.vercel.app>.
 
-Search recipes, open one for its ingredients and instructions, add them to a shopping list that survives a browser restart, edit that list, or let "surprise me" pick for you.
+Browse the categories, or search by name. Open a recipe for its ingredients and instructions, add them to a shopping list that survives a browser restart, edit that list, or let "surprise me" pick for you.
 
 ## Requirements
 
@@ -43,13 +43,13 @@ First Playwright run needs browsers: `npx playwright install chromium`.
 
 This repository follows a goal-first operating contract. The documents are the contract, in this order:
 
-| Document                       | Role                                             |
-| ------------------------------ | ------------------------------------------------ |
-| [`GOAL.md`](GOAL.md)           | The original brief, preserved verbatim           |
-| [`SPEC.md`](SPEC.md)           | The product contract — approved                  |
-| [`PLAN.md`](PLAN.md)           | The implementation plan, slices S0–S7 — approved |
-| [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved |
-| `.ai-engineering/`             | SWEAI Builder, pinned as a Git submodule         |
+| Document                       | Role                                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| [`GOAL.md`](GOAL.md)           | The original brief, preserved verbatim                                                                        |
+| [`SPEC.md`](SPEC.md)           | The product contract — approved                                                                               |
+| [`PLAN.md`](PLAN.md)           | The implementation plan, slices S0–S8. S0–S7 approved; S8 added by `SPEC.md` amendment A1, not counter-signed |
+| [`EXECUTION.md`](EXECUTION.md) | The autonomy envelope and permissions — approved                                                              |
+| `.ai-engineering/`             | SWEAI Builder, pinned as a Git submodule                                                                      |
 
 `.ai-engineering/` is a pinned submodule of the private `emada/sweai-builder` repository. A plain `git clone` gives a complete, buildable application checkout. Initializing the submodule with `git submodule update --init --recursive` additionally requires read access to that private dependency; without access the application still builds, tests, and runs.
 

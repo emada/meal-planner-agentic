@@ -56,6 +56,13 @@ Sourced from `GOAL.md`. Requirements marked _(derived)_ are implied by the brief
 - R5.3 The app targets real users (D3, resolved), so the full tooling profile applies in the adoption order of `.ai-engineering/.bootstrap/06-tools`: types, format, lint, tests, secrets → CI, reproducible build, preview deploy → SCA and SAST → boundaries, duplication, cycles → mutation and performance. Exact mandatory set, layer, and owner per gate are fixed in `PLAN.md` and recorded in `docs/quality/gates.md`.
 - R5.4 Because the app is user-facing, it needs a threat model (`docs/security/threat-model.md`) and a privacy assessment (`docs/privacy/assessment.md`) recording the no-personal-data position, however short.
 
+### R6 — Recipe browsing (added by amendment A1)
+
+- R6.1 A user who has not searched is shown the recipe categories from `https://www.themealdb.com/api/json/v1/1/categories.php`, not an empty view.
+- R6.2 Opening a category lists its recipes from `filter.php?c={category}`. That endpoint returns partial meals, so opening one fetches the full recipe from `lookup.php?i={id}` before the modal opens.
+- R6.3 The user can return to the categories from inside a category and from a search.
+- R6.4 Each of the three requests has its own visible loading and failure state; a failure in one does not blank the others.
+
 ## Non-goals
 
 - User accounts, login, server-side persistence, or syncing a list across devices.
@@ -93,11 +100,12 @@ Each is observable and testable.
 - **AC12** A user can remove one ingredient from the shopping list and can clear the list entirely after confirming; both changes survive a reload.
 - **AC13** Every view is usable at a 375px-wide mobile viewport and at desktop width, with no horizontal scrolling and no clipped or unreachable controls.
 - **AC14** The primary journeys pass as automated browser tests at both viewports, and the mandatory gate set passes on CI from a clean checkout.
+- **AC15** A user who has not searched yet is shown the recipe categories rather than an empty view, can open one to see its recipes, can open any of those recipes in the same modal with full detail and the same add-to-list behaviour, and can return to the categories from a search. Added by amendment A1.
 
 ## Decisions resolved
 
 - **D1 — Duplicate ingredients across recipes.** Resolved: group by ingredient name, list each contributing measure separately, never do unit arithmetic. Encoded as R3.6 / AC9.
-- **D2 — Scope beyond the literal brief.** Resolved: literal brief plus remove-item and clear-list. Browse/filter by category and area, and check-off-while-shopping, are deferred — not rejected. Encoded as R3.8 / AC12.
+- **D2 — Scope beyond the literal brief.** Resolved: literal brief plus remove-item and clear-list. Browse/filter by category and area, and check-off-while-shopping, were deferred — not rejected. Encoded as R3.8 / AC12. **Superseded in part 2026-08-11 by amendment A1:** browsing by category is now R6 / AC15. Filtering by area and check-off-while-shopping remain deferred.
 - **D3 — Delivery context and gate depth.** Resolved: intended for real users. Full tooling profile in adoption order, plus threat model and privacy assessment. Encoded as R5.3 / R5.4. Raises O1 below.
 - **D4 — Target devices.** Resolved: responsive, mobile and desktop. Encoded as R5.2 / AC13.
 
@@ -114,10 +122,45 @@ Resolved — recorded here with the reasoning that produced them.
 Non-blocking — recorded to prevent silent invention.
 
 - **O3** Visual direction is unspecified. Default: clean, neutral, system-font UI with no design-system dependency, unless directed otherwise.
-- **O4** Deferred scope from D2 (browse/filter by category and area; check-off while shopping) is recorded as candidate future slices, not requirements.
+- **O4 — PARTIALLY RESOLVED 2026-08-11 by amendment A1.** Browsing by category is promoted from candidate scope to AC15. Filtering by area and checking items off while shopping remain candidate future slices, not requirements. Original text follows.
+
+  Superseded discussion — Deferred scope from D2 (browse/filter by category and area; check-off while shopping) is recorded as candidate future slices, not requirements.
+
 - **O5** No formal WCAG conformance level has been set. Default: meet the accessibility constraints listed above and keep automated a11y checks in CI; a specific conformance target can be set later.
 
 ## Approval
 
 - Approved by: bmi.machado@gmail.com
 - Approved on: 2026-08-09
+
+## Amendments
+
+Changes made after approval. Each names what prompted it and what it costs, so
+the approved contract and what shipped never quietly diverge.
+
+### A1 — Category browsing becomes a requirement (2026-08-11)
+
+**What changed.** AC15 and requirement R6 added. O4 partially resolved.
+
+**Why.** `GOAL.md` asks for "good user experience to find and **navigate**
+through various recipes". AC1–AC14 delivered finding — search — and never
+delivered navigating. The shipped result was a landing view containing a search
+box above an empty region: a user who does not already know a dish to type has
+nothing to act on. The human reviewed production on 2026-08-11 and rejected it
+as unfinished. This closes the unserved half of the goal clause rather than
+adding new scope: O4 had already recorded category browsing as candidate scope,
+so this promotes it rather than inventing it.
+
+**What it costs.** Three further TheMealDB endpoints enter the trust boundary —
+`categories.php`, `filter.php`, and `lookup.php` — each validated at the same
+boundary as the existing two. `lookup.php` is needed because `filter.php`
+returns partial meals with no category, area, ingredients, or instructions, so
+opening one requires a second request; that latency is visible to the user and
+is given its own loading state rather than hidden.
+
+**Authority.** Made by the agent under the autonomy envelope in `EXECUTION.md`
+and the standing instruction of 2026-08-11 ("continua aprovando tudo. termina o
+app" — "keep approving everything; finish the app"), which followed a report naming this view as the product's weakest point.
+Recorded here for explicit review rather than left as implementation drift, per
+the operating contract. The human has not counter-signed this amendment; it is
+theirs to reverse.

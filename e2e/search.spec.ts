@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { expect, test } from './themealdb';
 
 /**
  * TheMealDB is stubbed. The acceptance criteria are about how the app behaves

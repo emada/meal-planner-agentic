@@ -1,8 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+import { expect, test } from './themealdb';
 
 const SEARCH_ROUTE = 'https://www.themealdb.com/api/json/v1/1/search.php*';
 const RANDOM_ROUTE = 'https://www.themealdb.com/api/json/v1/1/random.php*';
+const CATEGORIES_ROUTE = 'https://www.themealdb.com/api/json/v1/1/categories.php*';
+const FILTER_ROUTE = 'https://www.themealdb.com/api/json/v1/1/filter.php*';
+const LOOKUP_ROUTE = 'https://www.themealdb.com/api/json/v1/1/lookup.php*';
 
 const meal = {
   idMeal: '52874',
@@ -49,6 +53,23 @@ const stub = async (page: Page) => {
       body: JSON.stringify({ meals: [meal] }),
     }),
   );
+  // filter.php sends partial meals; lookup.php answers the follow-up.
+  await page.route(FILTER_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        meals: [{ idMeal: meal.idMeal, strMeal: meal.strMeal, strMealThumb: meal.strMealThumb }],
+      }),
+    }),
+  );
+  await page.route(LOOKUP_ROUTE, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ meals: [meal] }),
+    }),
+  );
 };
 
 const search = async (page: Page) => {
@@ -59,6 +80,26 @@ const search = async (page: Page) => {
 test('the search view has no automatically detectable violations', async ({ page }) => {
   await stub(page);
   await page.goto('/');
+  // The idle view now loads the category browser, so scanning immediately
+  // races the response and may scan an empty region instead.
+  await expect(page.getByRole('button', { name: 'Beef' })).toBeVisible();
+
+  expect((await scan(page)).violations).toEqual([]);
+});
+
+test('the category grid has no automatically detectable violations', async ({ page }) => {
+  await stub(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Beef' }).click();
+  await expect(page.getByText('Beef and Mustard Pie')).toBeVisible();
+
+  expect((await scan(page)).violations).toEqual([]);
+});
+
+test('the browse error state has no automatically detectable violations', async ({ page }) => {
+  await page.route(CATEGORIES_ROUTE, (route) => route.abort('failed'));
+  await page.goto('/');
+  await expect(page.getByRole('alert')).toBeVisible();
 
   expect((await scan(page)).violations).toEqual([]);
 });

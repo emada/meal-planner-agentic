@@ -15,10 +15,24 @@ const meal = (id: string, title: string) => ({
   strMeasure1: '1 kg',
 });
 
+const json = (body: unknown) => ({ ok: true, status: 200, json: () => Promise.resolve(body) });
+
+/**
+ * The idle view now mounts the category browser, which fetches on its own
+ * (AC15). Routing by URL rather than answering every request with the same body
+ * keeps a search assertion from silently passing on a category response.
+ */
+const searchRequests = () =>
+  vi
+    .mocked(fetch)
+    .mock.calls.filter(([url]) => typeof url === 'string' && url.includes('search.php'));
+
 const respondWith = (body: unknown) => {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(body) }),
+    vi.fn((url: string) =>
+      Promise.resolve(url.includes('categories.php') ? json({ categories: [] }) : json(body)),
+    ),
   );
 };
 
@@ -35,7 +49,7 @@ describe('SearchView', () => {
     respondWith({ meals: [meal('1', 'Beef Pie'), meal('2', 'Beef Stew')] });
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox', { name: /search recipes/i }), 'beef{Enter}');
 
     expect(await screen.findByText('Beef Pie')).toBeInTheDocument();
@@ -51,7 +65,7 @@ describe('SearchView', () => {
     respondWith({ meals: null });
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'zzzzz{Enter}');
 
     expect(await screen.findByText(/no recipes found/i)).toBeInTheDocument();
@@ -62,7 +76,7 @@ describe('SearchView', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'beef{Enter}');
 
     const alert = await screen.findByRole('alert');
@@ -80,26 +94,32 @@ describe('SearchView', () => {
     respondWith({ meals: null });
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), '   {Enter}');
 
-    expect(fetch).not.toHaveBeenCalled();
-    expect(screen.getByText(/search for a recipe to get started/i)).toBeInTheDocument();
+    expect(searchRequests()).toHaveLength(0);
+    expect(screen.getByText(/search for a recipe, or browse the categories/i)).toBeInTheDocument();
   });
 
   it('marks the results region busy while the search is in flight', async () => {
     let release: ((value: unknown) => void) | undefined;
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockReturnValue(
-        new Promise((resolve) => {
-          release = resolve;
-        }),
+      vi.fn((url: string) =>
+        url.includes('categories.php')
+          ? Promise.resolve({
+              ok: true,
+              status: 200,
+              json: () => Promise.resolve({ categories: [] }),
+            })
+          : new Promise((resolve) => {
+              release = resolve;
+            }),
       ),
     );
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'beef{Enter}');
 
     const region = await screen.findByText(/searching/i);
@@ -117,16 +137,21 @@ describe('SearchView', () => {
     const deferred: ((value: unknown) => void)[] = [];
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            deferred.push(resolve);
-          }),
+      vi.fn((url: string) =>
+        url.includes('categories.php')
+          ? Promise.resolve({
+              ok: true,
+              status: 200,
+              json: () => Promise.resolve({ categories: [] }),
+            })
+          : new Promise((resolve) => {
+              deferred.push(resolve);
+            }),
       ),
     );
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     const box = screen.getByRole('searchbox');
 
     await user.type(box, 'beef{Enter}');
@@ -157,15 +182,21 @@ describe('SearchView', () => {
     let release: ((value: unknown) => void) | undefined;
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockReturnValue(
-        new Promise((resolve) => {
-          release = resolve;
-        }),
+      vi.fn((url: string) =>
+        url.includes('categories.php')
+          ? Promise.resolve({
+              ok: true,
+              status: 200,
+              json: () => Promise.resolve({ categories: [] }),
+            })
+          : new Promise((resolve) => {
+              release = resolve;
+            }),
       ),
     );
     const user = userEvent.setup();
 
-    render(<SearchView />);
+    render(<SearchView recipeOpen={false} />);
     const box = screen.getByRole('searchbox');
 
     await user.type(box, 'beef{Enter}');
@@ -179,7 +210,9 @@ describe('SearchView', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/search for a recipe to get started/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/search for a recipe, or browse the categories/i),
+      ).toBeInTheDocument();
     });
     expect(screen.queryByText('Beef Pie')).not.toBeInTheDocument();
   });
@@ -189,7 +222,7 @@ describe('SearchView', () => {
     const onOpenRecipe = vi.fn();
     const user = userEvent.setup();
 
-    render(<SearchView onOpenRecipe={onOpenRecipe} />);
+    render(<SearchView onOpenRecipe={onOpenRecipe} recipeOpen={false} />);
     await user.type(screen.getByRole('searchbox'), 'beef{Enter}');
     await user.click(await screen.findByRole('button', { name: /beef pie/i }));
 

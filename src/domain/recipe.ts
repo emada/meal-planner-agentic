@@ -59,8 +59,51 @@ export function optionalUrl(value: string | null | undefined): string | null {
   return trimmed === '' ? null : trimmed;
 }
 
+/** A browsable category, derived from a validated TheMealDB category (AC15). */
+export interface Category {
+  readonly id: string;
+  readonly name: string;
+  readonly thumbnailUrl: string;
+  readonly description: string;
+}
+
+function trimmed(source: Readonly<Record<string, unknown>>, key: string): string {
+  const value = source[key];
+
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+export function toCategory(category: Readonly<Record<string, unknown>>): Category {
+  return {
+    id: trimmed(category, 'idCategory'),
+    name: trimmed(category, 'strCategory'),
+    thumbnailUrl: optionalUrl(trimmed(category, 'strCategoryThumb')) ?? '',
+    description: trimmed(category, 'strCategoryDescription'),
+  };
+}
+
 /**
- * Builds the domain shape from a validated TheMealDB meal.
+ * Builds the card-sized shape from a validated meal.
+ *
+ * `filter.php` answers with id, title and thumbnail only. Mapping those through
+ * `toRecipe` would produce a `Recipe` whose ingredient list is legitimately
+ * empty, and nothing downstream could tell that apart from a recipe that truly
+ * has no ingredients — so the modal would open blank. Returning the narrower
+ * type instead makes the missing detail a compile error at every call site that
+ * needs it (AC15).
+ */
+export function toRecipeSummary(meal: Readonly<Record<string, unknown>>): RecipeSummary {
+  return {
+    id: trimmed(meal, 'idMeal'),
+    title: trimmed(meal, 'strMeal'),
+    thumbnailUrl: optionalUrl(trimmed(meal, 'strMealThumb')) ?? '',
+    category: trimmed(meal, 'strCategory'),
+    area: trimmed(meal, 'strArea'),
+  };
+}
+
+/**
+ * Builds the recipe shape from a validated TheMealDB meal.
  *
  * This lives in `domain/` rather than in `api/` because ADR-0002 forbids `api/`
  * from importing a sibling: the client validates and hands back plain data, and
@@ -68,11 +111,7 @@ export function optionalUrl(value: string | null | undefined): string | null {
  * is typed structurally so the dependency runs one way only.
  */
 export function toRecipe(meal: Readonly<Record<string, unknown>>): Recipe {
-  const text = (key: string): string => {
-    const value = meal[key];
-
-    return typeof value === 'string' ? value.trim() : '';
-  };
+  const text = (key: string): string => trimmed(meal, key);
 
   const stringFields: Record<string, string | null> = {};
 
@@ -81,11 +120,7 @@ export function toRecipe(meal: Readonly<Record<string, unknown>>): Recipe {
   }
 
   return {
-    id: text('idMeal'),
-    title: text('strMeal'),
-    thumbnailUrl: optionalUrl(text('strMealThumb')) ?? '',
-    category: text('strCategory'),
-    area: text('strArea'),
+    ...toRecipeSummary(meal),
     instructions: text('strInstructions'),
     ingredients: extractIngredients(stringFields),
     youtubeUrl: optionalUrl(text('strYoutube')),

@@ -95,10 +95,31 @@ describe('governance documents agree with the current authorization model', () =
     const threats = readFileSync('docs/security/threat-model.md', 'utf8');
     const plan = readFileSync('PLAN.md', 'utf8');
 
-    // A slice is shipped once PLAN.md stops describing it as upcoming; S0-S6
-    // are all merged at the time of writing, so any reference to them as a
-    // future landing point is stale by construction.
-    const shipped = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+    // Derived from PLAN.md rather than listed here. A hand-kept list stops
+    // growing the moment someone forgets it, and this one had already fallen a
+    // slice behind: S7 shipped while the list still ended at S6, so nothing
+    // would have caught a "lands in S7".
+    //
+    // Shipped is opt-in, not opt-out. Reading "no planned marker" as shipped
+    // meant a new slice written in the old format — none of S0-S6 carried a
+    // status line — would be classified shipped on the day it was drafted, and
+    // its own landing points would fail the suite as stale.
+    //
+    // The section bound matters: a non-greedy match from one heading ran on to
+    // the next slice's status line, so one slice's state described them all.
+    const sections = [...plan.matchAll(/^### (S\d+) — [^\n]*\n([\s\S]*?)(?=^#{2,3} )/gm)];
+    const shipped = sections
+      .filter((match) => (match[2] ?? '').includes('**Status**: complete'))
+      .map((match) => match[1] ?? '');
+
+    // Every slice must declare where it stands, or the derivation above is
+    // guessing. PLAN.md states this convention next to the slices.
+    const undeclared = sections
+      .filter((match) => !/\*\*Status\*\*: (complete|planned|in progress)/.test(match[2] ?? ''))
+      .map((match) => match[1] ?? '');
+
+    expect(undeclared).toEqual([]);
+    expect(shipped).toContain('S8');
     // Selected by content, not by table syntax: the bullet this guard was
     // written for was prose, and a `startsWith('| ')` filter excluded it
     // before the slice regex was ever evaluated.
@@ -125,23 +146,65 @@ describe('governance documents agree with the current authorization model', () =
     expect(isStale('| Coverage thresholds | deferred | unscheduled | ... |')).toBe(false);
     expect(isStale('Coverage is reported from S0 and enforced later.')).toBe(false);
 
-    expect(plan).toContain('S7');
-
     // Three documents, not one: the step-5 cell and three "Planned" threat rows
     // survived a full slice because only gates.md was being read.
-    for (const [name, text] of [
+    const guarded = [
       ['gates.md', gates],
       ['bootstrap-adoption.md', adoption],
-    ] as const) {
+      ['PLAN.md', plan],
+    ] as const;
+
+    for (const [name, text] of guarded) {
       expect([name, ...text.split('\n').filter(isStale)]).toEqual([name]);
+    }
+
+    // Step 5 is unscheduled, and three documents have now claimed otherwise in
+    // three different phrasings — "steps 4-5 land in S6", "steps 4-5 in S6",
+    // and a table cell. Asserting the fact catches phrasings not yet invented.
+    for (const [name, text] of guarded) {
+      const scheduled = text
+        .split('\n')
+        .filter((line) => /steps? 4[–—-]5/i.test(line) && /\bS\d\b/.test(line));
+
+      expect([name, ...scheduled]).toEqual([name]);
     }
 
     // A control cannot still be "planned" for a slice that has shipped.
     const planned = threats
       .split('\n')
-      .filter((line) => new RegExp(`Planned\\s*—\\s*(${shipped.join('|')})\\b`).test(line));
+      // Any dash, or a parenthesised slice: the em-dash-only form matched the
+      // one row that existed when this was written and nothing else.
+      .filter((line) =>
+        new RegExp(`Planned\\s*(?:[—–-]|\\()\\s*(${shipped.join('|')})\\b`).test(line),
+      );
 
     expect(planned).toEqual([]);
+  });
+
+  it('quotes a slice range that matches the slices PLAN.md declares', () => {
+    // README said "slices S0-S7" for a full slice after S8 existed. Nothing
+    // bound a range written in prose to the plan it described.
+    const plan = readFileSync('PLAN.md', 'utf8');
+    const slices = [...plan.matchAll(/^### S(\d+) — /gm)].map((match) => Number(match[1]));
+
+    expect(slices.length).toBeGreaterThan(0);
+
+    const first = `S${String(Math.min(...slices))}`;
+    const last = `S${String(Math.max(...slices))}`;
+
+    const wrong = documents.flatMap(({ path, text }) =>
+      [...text.matchAll(/slices (S\d+)[–-](S\d+)/g)]
+        .filter((match) => match[1] !== first || match[2] !== last)
+        .map((match) => `${path}: "${match[0]}"`),
+    );
+
+    // The pattern is deliberately narrow — any `slices SX-SY` must be the full
+    // range — so the message has to say that, or a maintainer writing about a
+    // legitimate subrange gets a bare array diff and no idea why.
+    expect(
+      wrong,
+      `prose must quote the full range ${first}-${last}; name individual slices instead of a subrange`,
+    ).toEqual([]);
   });
 
   it('states gate counts that match the gate table they summarise', () => {
@@ -162,30 +225,47 @@ describe('governance documents agree with the current authorization model', () =
 
     expect(rows.length).toBeGreaterThan(0);
 
-    const spell = (n: number) =>
-      [
-        'zero',
-        'one',
-        'two',
-        'three',
-        'four',
-        'five',
-        'six',
-        'seven',
-        'eight',
-        'nine',
-        'ten',
-        'eleven',
-        'twelve',
-        'thirteen',
-        'fourteen',
-        'fifteen',
-        'sixteen',
-        'seventeen',
-        'eighteen',
-        'nineteen',
-        'twenty',
-      ][n];
+    // Composed rather than listed. The list stopped at twenty, so the table
+    // growing to twenty-one made every denominator `undefined` — a comparison
+    // that can never hold, which is worse than a wrong number because the
+    // suite reports it as a failure of the document instead of the guard.
+    const ONES = [
+      'zero',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+      'ten',
+      'eleven',
+      'twelve',
+      'thirteen',
+      'fourteen',
+      'fifteen',
+      'sixteen',
+      'seventeen',
+      'eighteen',
+      'nineteen',
+    ];
+    const TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy'];
+    const spell = (n: number): string => {
+      if (n < 20) return ONES[n] ?? String(n);
+
+      const tens = TENS[Math.floor(n / 10)] ?? String(n);
+      const unit = n % 10;
+
+      return unit === 0 ? tens : `${tens}-${ONES[unit] ?? String(unit)}`;
+    };
+
+    // Pinned, because the bug this replaces was invisible: a hyphenated
+    // denominator simply stopped matching and the guard fell silent.
+    expect(spell(8)).toBe('eight');
+    expect(spell(20)).toBe('twenty');
+    expect(spell(21)).toBe('twenty-one');
 
     // Every "N of M ... gates" claim must use the table's own numbers: the
     // numerator is either the proven or the unproven count, the denominator is
@@ -196,7 +276,7 @@ describe('governance documents agree with the current authorization model', () =
       ['gates.md', gates],
       ['bootstrap-adoption.md', adoption],
     ] as const) {
-      for (const match of text.matchAll(/(\w+) of (\w+) (?:mandatory )?gates/gi)) {
+      for (const match of text.matchAll(/([\w-]+) of ([\w-]+) (?:mandatory )?gates/gi)) {
         const [claim, left, right] = match;
         const numerator = (left ?? '').toLowerCase();
         const denominator = (right ?? '').toLowerCase();
@@ -204,6 +284,20 @@ describe('governance documents agree with the current authorization model', () =
         const numeratorValid = numerator === spell(proven) || numerator === spell(unproven);
 
         if (!numeratorValid || denominator !== spell(rows.length)) {
+          wrong.push(`${name}: "${claim}"`);
+        }
+      }
+
+      // "…; the other nine remain unproven" is the same hand-written count
+      // wearing different words, and it survived the sweep above when the
+      // table grew by one because it names no denominator.
+      for (const match of text.matchAll(
+        /(?:the other|The unproven) ([\w-]+) (?:remain|are)\b[^.]*/gi,
+      )) {
+        const [claim, left] = match;
+        const remainder = (left ?? '').toLowerCase();
+
+        if (remainder !== spell(proven) && remainder !== spell(unproven)) {
           wrong.push(`${name}: "${claim}"`);
         }
       }

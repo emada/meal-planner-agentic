@@ -1,6 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RecipeApiError, randomMeal, searchRecipes } from './themealdb';
+import {
+  RecipeApiError,
+  listCategories,
+  lookupMeal,
+  mealsInCategory,
+  randomMeal,
+  searchRecipes,
+} from './themealdb';
 
 const meal = (overrides: Record<string, unknown> = {}) => ({
   idMeal: '52874',
@@ -124,5 +131,89 @@ describe('randomMeal', () => {
     respond({ meals: null });
 
     await expect(randomMeal()).resolves.toBeNull();
+  });
+});
+
+describe('listCategories', () => {
+  it('returns the categories the endpoint provides', async () => {
+    respond({ categories: [{ idCategory: '1', strCategory: 'Beef', strCategoryThumb: 'x.png' }] });
+
+    await expect(listCategories()).resolves.toEqual([
+      { idCategory: '1', strCategory: 'Beef', strCategoryThumb: 'x.png' },
+    ]);
+  });
+
+  it('returns an empty list when the endpoint answers with null', async () => {
+    respond({ categories: null });
+
+    await expect(listCategories()).resolves.toEqual([]);
+  });
+
+  it('rejects a meal response rather than reading it as an empty category list', async () => {
+    // A widened schema would let this through as `[]`, and the browse view
+    // would render "no categories" instead of reporting a broken response.
+    respond({ meals: [meal()] });
+
+    await expect(listCategories()).rejects.toThrow('unexpected category list');
+  });
+
+  it('rejects a category missing its name', async () => {
+    respond({ categories: [{ idCategory: '1' }] });
+
+    await expect(listCategories()).rejects.toThrow(RecipeApiError);
+  });
+
+  it('requests the category endpoint', async () => {
+    respond({ categories: [] });
+
+    await listCategories();
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/categories.php'), {});
+  });
+});
+
+describe('mealsInCategory', () => {
+  it('returns the partial meals the filter endpoint provides', async () => {
+    respond({ meals: [{ idMeal: '1', strMeal: 'Acaraje', strMealThumb: 'a.jpg', strArea: null }] });
+
+    // No category, ingredients or instructions: the filter endpoint does not
+    // send them, and the schema must not require what the API omits.
+    await expect(mealsInCategory('Seafood')).resolves.toHaveLength(1);
+  });
+
+  it('encodes a category name containing a space', async () => {
+    respond({ meals: null });
+
+    await mealsInCategory('Side Dish');
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('c=Side%20Dish'), {});
+  });
+
+  it('returns an empty list for a category with no meals', async () => {
+    respond({ meals: null });
+
+    await expect(mealsInCategory('Nothing')).resolves.toEqual([]);
+  });
+});
+
+describe('lookupMeal', () => {
+  it('returns the single meal the endpoint provides', async () => {
+    respond({ meals: [meal()] });
+
+    await expect(lookupMeal('52874')).resolves.toMatchObject({ idMeal: '52874' });
+  });
+
+  it('returns null for an id the API will not resolve', async () => {
+    respond({ meals: null });
+
+    await expect(lookupMeal('nope')).resolves.toBeNull();
+  });
+
+  it('encodes the id it is given', async () => {
+    respond({ meals: null });
+
+    await lookupMeal('a b&c');
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('i=a%20b%26c'), {});
   });
 });
