@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
@@ -26,16 +26,28 @@ const assets = join(process.cwd(), 'dist', 'assets');
 const totals = { '.js': 0, '.css': 0 };
 const counts = { '.js': 0, '.css': 0 };
 
-for (const file of readdirSync(assets)) {
+// withFileTypes rather than a separate stat: checking the path and then reading
+// it is a time-of-check/time-of-use pair, which CodeQL flags as
+// js/file-system-race. The dirent answers both questions from one read.
+let entries = [];
+
+try {
+  entries = readdirSync(assets, { withFileTypes: true });
+} catch {
+  // Missing entirely is the same failure as empty, and deserves the same
+  // message rather than a stack trace.
+  entries = [];
+}
+
+for (const entry of entries) {
+  if (!entry.isFile()) continue;
+
+  const file = entry.name;
   const extension = file.endsWith('.js') ? '.js' : file.endsWith('.css') ? '.css' : null;
 
   if (extension === null) continue;
 
-  const path = join(assets, file);
-
-  if (!statSync(path).isFile()) continue;
-
-  const gzipped = gzipSync(readFileSync(path)).byteLength;
+  const gzipped = gzipSync(readFileSync(join(assets, file))).byteLength;
 
   totals[extension] += gzipped;
   counts[extension] += 1;

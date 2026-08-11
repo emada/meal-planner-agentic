@@ -95,9 +95,9 @@ Runs on every pull request and on `main`, from a clean checkout.
 | Duplication — jscpd                             | warn first, then block | 4             |
 | Automated accessibility checks in Playwright    | yes                    | 4             |
 | Mutation testing — Stryker, changed files       | warn only              | 5             |
-| Bundle-size budget                              | warn first, then block | 5             |
+| Bundle-size budget                              | blocking               | 4             |
 
-Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6. Step 5 — mutation testing and a coverage threshold — is unscheduled: the precondition is met, and adopting it is now a cost decision rather than a sequencing one.
+Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6, together with the bundle-size budget, which was moved here from step 5 because it is cheap and measured rather than estimated. Step 5 — mutation testing — is unscheduled: the precondition is met, and adopting it is now a cost decision rather than a sequencing one.
 
 ### Post-deploy
 

@@ -76,10 +76,15 @@ describe('governance documents agree with the current authorization model', () =
     const declared = (manifest as { sweai: { gates: string[] } }).sweai.gates;
     const quoted = /"gates": \[([^\]]*)\]/.exec(gates)?.[1] ?? '';
 
-    const missing = declared.filter((gate) => !quoted.includes(`"${gate}"`));
+    const scripts = (manifest as { scripts: Record<string, string> }).scripts;
+    const quotedGates = [...quoted.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 
     expect(declared.length).toBeGreaterThan(0);
-    expect(missing).toEqual([]);
+    // Set equality both ways, and every declared gate must name a real script:
+    // a one-directional check would let the register quote a gate that no
+    // longer exists.
+    expect([...quotedGates].sort()).toEqual([...declared].sort());
+    expect(declared.filter((gate) => !(gate in scripts))).toEqual([]);
   });
 
   it('never points a deferred gate at a slice that has already shipped', () => {
@@ -97,7 +102,9 @@ describe('governance documents agree with the current authorization model', () =
       .filter((line) => line.startsWith('| ') && line.includes('deferred'));
 
     const stale = rows.filter((row) =>
-      shipped.some((slice) => new RegExp(`\\| ${slice} +\\|`).test(row)),
+      shipped.some((slice) =>
+        new RegExp(`(\\| ${slice} +\\||\\b${slice}\\b[^.]*\\bif\\b)`).test(row),
+      ),
     );
 
     expect(plan).toContain('S7');
