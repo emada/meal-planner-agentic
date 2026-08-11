@@ -100,18 +100,31 @@ describe('governance documents agree with the current authorization model', () =
     // Selected by content, not by table syntax: the bullet this guard was
     // written for was prose, and a `startsWith('| ')` filter excluded it
     // before the slice regex was ever evaluated.
-    const rows = gates
-      .split('\n')
-      .filter((line) => /deferred|lands in|remains available/i.test(line));
+    // A slice is stale only when it is named as the *landing point* — a cell
+    // of its own in the table, or the object of "lands in" / "available in"
+    // in prose. A rationale that mentions S0 historically is not a promise.
+    const shippedPattern = shipped.join('|');
+    const isStale = (line: string) => {
+      const cells = line.startsWith('| ') ? line.split('|').map((cell) => cell.trim()) : [];
 
-    const stale = rows.filter((row) =>
-      shipped.some((slice) =>
-        new RegExp(`(\\| ${slice} +\\||\\b${slice}\\b[^.]*\\bif\\b)`).test(row),
-      ),
-    );
+      if (cells.some((cell) => shipped.includes(cell))) return true;
+
+      return new RegExp(`(lands? in|available in|deferred to)\\s+(${shippedPattern})\\b`, 'i').test(
+        line,
+      );
+    };
+
+    // Pins the selector itself. Narrowing it to table rows once let the prose
+    // bullet this guard exists for slip through with the suite green, so the
+    // shapes it must catch — and must not — are asserted here rather than in a
+    // commit message.
+    expect(isStale('- **madge deferred.** madge remains available in S6 if wanted.')).toBe(true);
+    expect(isStale('| Coverage thresholds | deferred | S6 | ... |')).toBe(true);
+    expect(isStale('| Coverage thresholds | deferred | unscheduled | ... |')).toBe(false);
+    expect(isStale('Coverage is reported from S0 and enforced later.')).toBe(false);
 
     expect(plan).toContain('S7');
-    expect(stale).toEqual([]);
+    expect(gates.split('\n').filter(isStale)).toEqual([]);
   });
 
   it('states gate counts that match the gate table they summarise', () => {

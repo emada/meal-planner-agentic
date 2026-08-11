@@ -68,9 +68,12 @@ if (counts['.js'] === 0) {
 for (const [extension, budget] of Object.entries(BUDGETS)) {
   const total = totals[extension];
   const within = total <= budget;
+  // "ok" for an extension that produced no file at all would contradict the
+  // failure printed above it.
+  const verdict = counts[extension] === 0 ? 'n/a ' : within ? 'ok  ' : 'FAIL';
 
   process.stdout.write(
-    `${within ? 'ok  ' : 'FAIL'}  ${extension} total across ${String(counts[extension])} file(s): ` +
+    `${verdict}  ${extension} total across ${String(counts[extension])} file(s): ` +
       `${String(total)} B gzipped (budget ${String(budget)} B)\n`,
   );
 
