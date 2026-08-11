@@ -292,7 +292,7 @@ describe('governance documents agree with the current authorization model', () =
       // wearing different words, and it survived the sweep above when the
       // table grew by one because it names no denominator.
       for (const match of text.matchAll(
-        /(?:the other|The unproven) ([\w-]+) (?:remain|are)\b[^.]*|; ([\w-]+) (?:is|are) not\b/gi,
+        /(?:the other|The unproven) ([\w-]+) (?:remains?|are)\b[^.]*|; ([\w-]+) (?:is|are) not\b/gi,
       )) {
         const [claim, other, trailing] = match;
         // "Twenty of twenty-one gates are proven; one is not" — the second
