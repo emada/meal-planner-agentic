@@ -72,10 +72,11 @@ them by accident.
 
 ## Not planned
 
-Recorded so they are not proposed again as if new: user accounts, a backend of
-our own, syncing a list across devices, meal scheduling by day or week,
+Recorded so they are not proposed again as if new: user accounts, login,
+server-side persistence, a backend of our own, syncing a list across devices,
+meal scheduling by day or week,
 nutrition data, portion scaling, pantry tracking, recipe creation, editing,
-rating or favouriting, offline support, analytics, tracking, cookies or any
+rating or favouriting, offline support or an installable PWA, analytics, tracking, cookies or any
 third-party script beyond TheMealDB, and any unit arithmetic on measures.
 
 That is the whole of `SPEC.md`'s non-goals list. Favouriting is called out by

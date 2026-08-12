@@ -271,6 +271,52 @@ describe('governance documents agree with the current authorization model', () =
     ).toBe(true);
   });
 
+  it('lists every SPEC non-goal in the roadmap that claims to hold them all', () => {
+    // "That is the whole of SPEC.md's non-goals list" is a completeness claim
+    // checked by eye. It was wrong twice — `cookies` in one review round and
+    // `installable PWA` in the next — so it is derived instead.
+    const spec = readFileSync('SPEC.md', 'utf8');
+    const roadmap = readFileSync('ROADMAP.md', 'utf8').toLowerCase();
+
+    const section = /^## Non-goals\n\n([\s\S]*?)\n\n## /m.exec(spec)?.[1] ?? '';
+    const bullets = section.split('\n').filter((line) => line.startsWith('- '));
+
+    expect(bullets.length, 'SPEC must declare non-goals').toBeGreaterThan(0);
+
+    // A bullet is a comma- or slash-separated list of distinct refusals, and it
+    // is an individual item that goes missing, not a whole bullet. Each item's
+    // first significant word must appear in the roadmap paragraph.
+    const missing = bullets.flatMap((bullet) =>
+      bullet
+        .slice(2)
+        .replace(/\([^)]*\)/g, '')
+        .split(/,| or | \/ /)
+        .map((fragment) => /[a-z][a-z-]{4,}/i.exec(fragment.replace(/^(any|the)\s+/i, ''))?.[0])
+        .filter((word): word is string => word !== undefined)
+        .filter((word) => !roadmap.includes(word.toLowerCase()))
+        .map((word) => `${word} (from: ${bullet.slice(2, 48)}…)`),
+    );
+
+    expect(missing, 'the roadmap claims to list every non-goal and does not').toEqual([]);
+  });
+
+  it('keeps the adoption register and the gate register agreeing on step 5', () => {
+    // They contradicted each other with every gate green: PLAN and the gate
+    // register recorded the decision, and the adoption register — the document
+    // whose whole purpose is the adoption position — still called it open.
+    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    const closed = gates.includes('Step 5 is closed');
+    const adoptionSaysOpen = /step 5 is unscheduled/i.test(adoption);
+
+    expect(closed, 'the gate register must state where step 5 stands').toBe(true);
+    expect(
+      adoptionSaysOpen,
+      'the adoption register calls step 5 unscheduled while the gate register calls it closed',
+    ).toBe(false);
+  });
+
   it('quotes a slice range that matches the slices PLAN.md declares', () => {
     // README said "slices S0-S7" for a full slice after S8 existed. Nothing
     // bound a range written in prose to the plan it described.
