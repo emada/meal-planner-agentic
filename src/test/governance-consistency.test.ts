@@ -158,9 +158,10 @@ describe('governance documents agree with the current authorization model', () =
       expect([name, ...text.split('\n').filter(isStale)]).toEqual([name]);
     }
 
-    // Step 5 is unscheduled, and three documents have now claimed otherwise in
-    // three different phrasings — "steps 4-5 land in S6", "steps 4-5 in S6",
-    // and a table cell. Asserting the fact catches phrasings not yet invented.
+    // Adoption step 5 must never be pointed at a shipped slice, whatever its
+    // schedule status. Three documents once claimed it landed in one, in three
+    // different phrasings — asserting the shape catches phrasings not yet
+    // invented.
     for (const [name, text] of guarded) {
       const scheduled = text
         .split('\n')
@@ -304,17 +305,24 @@ describe('governance documents agree with the current authorization model', () =
     // They contradicted each other with every gate green: PLAN and the gate
     // register recorded the decision, and the adoption register — the document
     // whose whole purpose is the adoption position — still called it open.
-    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
     const gates = readFileSync('docs/quality/gates.md', 'utf8');
 
-    const closed = gates.includes('Step 5 is closed');
-    const adoptionSaysOpen = /step 5 is unscheduled/i.test(adoption);
-
-    expect(closed, 'the gate register must state where step 5 stands').toBe(true);
     expect(
-      adoptionSaysOpen,
-      'the adoption register calls step 5 unscheduled while the gate register calls it closed',
-    ).toBe(false);
+      gates.includes('Step 5 is closed'),
+      'the gate register must state where step 5 stands',
+    ).toBe(true);
+
+    // Three documents, for the reason the sibling guard above already learned:
+    // the first version of this one read the adoption register alone and left
+    // the same contradiction standing in PLAN.
+    const contradicting = ['docs/quality/bootstrap-adoption.md', 'PLAN.md', 'README.md'].filter(
+      (path) => /step 5 is unscheduled/i.test(readFileSync(path, 'utf8')),
+    );
+
+    expect(
+      contradicting,
+      'a document calls step 5 unscheduled while the gate register calls it closed',
+    ).toEqual([]);
   });
 
   it('quotes a slice range that matches the slices PLAN.md declares', () => {

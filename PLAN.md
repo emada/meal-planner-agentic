@@ -243,15 +243,15 @@ None were used. The readiness assessment below was made before S4, and the outco
 
 ## Risks and mitigations
 
-| Risk                                                                        | Mitigation                                                                                                                                                   |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| TheMealDB test key is rate-limited and unsupported for production (spec O1) | Risk accepted by the human on 2026-08-10. Throttling surfaces as the AC3 error state; there is no further mitigation, which is what accepting the risk means |
-| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                                                                           |
-| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                               |
-| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                |
-| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                    |
-| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 at S0, step 3 pulled forward to 2026-08-10, step 4 at S6. Step 5 is unscheduled — see the gate register                        |
-| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                |
+| Risk                                                                        | Mitigation                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TheMealDB test key is rate-limited and unsupported for production (spec O1) | Risk accepted by the human on 2026-08-10. Throttling surfaces as the AC3 error state; there is no further mitigation, which is what accepting the risk means                                                         |
+| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                                                                                                                                   |
+| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                                                                                       |
+| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                                                                        |
+| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                                                                            |
+| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 at S0, step 3 pulled forward to 2026-08-10, step 4 at S6. Step 5 is closed: mutation testing declined as a gate on 2026-08-12, coverage thresholds unscheduled — see the gate register |
+| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                                                                        |
 
 ## Decisions resolved
 
