@@ -17,7 +17,7 @@ Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, t
 - Operating contract reachable at `.ai-engineering/.bootstrap/AGENTS.md`: Yes
 - Git index mode is `160000` rather than symbolic-link mode `120000`: Yes — verified with `git ls-files --stage .ai-engineering`
 - Product tracks no files inside `.ai-engineering/` and owns no `.bootstrap/`: Yes — `git ls-files .ai-engineering/*` is empty and `.bootstrap/` is ignored
-- CI fetches submodules recursively: No — deliberate. No CI job reads the operating contract, and `GITHUB_TOKEN` cannot fetch a private repository other than this one. Revisit if a contract-dependent CI check is ever added
+- CI fetches submodules recursively: No — deliberate. `GITHUB_TOKEN` cannot fetch a private repository other than this one. Two contract-dependent checks were added on 2026-08-12 and are scoped to the environment that has the submodule; they are recorded as an exception in `docs/quality/gates.md`, with the always-running half of each still in CI. Revisit if a contract-dependent check ever needs to block
 - May advance the pinned SWEAI Builder commit through a dependency-update pull request: Yes
 - Symbolic-link, vendored-copy, or product-owned `.bootstrap/` fallback authorized: No
 - Unpinned-branch tracking authorized: No

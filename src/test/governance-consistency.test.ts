@@ -356,8 +356,17 @@ describe('governance documents agree with the current authorization model', () =
     // bound to the table and a third said "two of them were probed at the
     // tool" for two days after the dependency scan closed — the same shape as
     // the unverified-criteria count below, one document further out.
+    // Sentence-scoped, and every number word in that sentence must agree. A
+    // character window instead of a sentence was thin in both directions: one
+    // correct line escaped by three characters, and a reflow that removed a
+    // sentence break would have produced a false failure.
     const staleToolOnly = documents.flatMap(({ path, text }) =>
-      [...text.matchAll(/\b(zero|one|two|three|four|five|six)\b(?=[^.]{0,60}at the tool)/gi)]
+      text
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) => sentence.includes('at the tool'))
+        .flatMap((sentence) => [
+          ...sentence.matchAll(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten)\b/gi),
+        ])
         .map((match) => match[1]?.toLowerCase() ?? '')
         .filter((word) => word !== toolOnlySpelled)
         .map((word) => `${path}: ${word}`),
@@ -823,6 +832,8 @@ describe('governance documents agree with the current authorization model', () =
     '03-security-privacy',
     '04-product',
     '05-delivery-architecture',
+    '06-tools',
+    '07-project-adoption',
   ];
 
   it('binds every adoption row to a contract file rather than a remembered name', () => {
