@@ -281,4 +281,14 @@ Known local gap: secretlint's preset does not detect every credential shape, and
 
 ## Exception path
 
+### Two checks run in no blocking layer
+
+Recorded because the contract pinned on 2026-08-12 requires it: a check scoped out of every blocking layer is an exception, not a gate.
+
+Two checks read the rule files under `.ai-engineering/.bootstrap/`, which a CI checkout does not have — the contract is a private submodule and `GITHUB_TOKEN` cannot fetch another private repository. Accepted 2026-08-12: `governance-consistency.test.ts` "records every rule the pinned contract carries", and `learning-log.test.ts` "resolves each destination in the contract".
+
+Both are `skipIf` rather than an early return, so CI reports them as skipped rather than as passed — the distinction `01-operating-model/07-engineering-learning-loop.md` entry D4 was written for. Each has an always-running half that reads only tracked product files: the register's paths are checked for shape, area, and uniqueness in CI; only their resolution is local. The residual risk is a row naming a plausible file that does not exist, which reaches `main` if no one runs the suite with the submodule initialized. The agent that opens a dependency-update pull request does, and that is the moment the register can go stale.
+
+Closing this means giving CI read access to the private dependency, which is a credential decision the owner has not been asked for.
+
 An exception requires: the rule, the reason, the reviewer, an expiry date where applicable, and supporting evidence — recorded in the pull request and in this file. Inline `eslint-disable` and `@ts-expect-error` need a comment naming the reason. Unexplained suppressions are review failures.

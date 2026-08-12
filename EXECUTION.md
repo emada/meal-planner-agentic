@@ -12,12 +12,12 @@ Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, t
 - Tracked branch: `main`
 - Product mount path: `.ai-engineering`
 - Installation type: Pinned Git submodule
-- Pinned commit: `dd978bf03d39cdd7721d3d58c49536c30c24decb`, advanced from `b66c337` on 2026-08-10 through a reviewed dependency-update pull request. Earlier pins: `52e60f1` → `b66c337` for the gate-evidence profile
+- Pinned commit: `f03301e6e214f6a18b11cfbc0176b0fbb861f23d`, advanced from `83b8e9c` on 2026-08-12 through a reviewed dependency-update pull request. Earlier pins: `52e60f1` → `b66c337` → `dd978bf` → `83b8e9c`. The full pin is asserted against the gitlink this repository records, because this line was two advances stale before anything read it
 - Submodule initialized and `.ai-engineering/AGENTS.md` readable: Yes
 - Operating contract reachable at `.ai-engineering/.bootstrap/AGENTS.md`: Yes
 - Git index mode is `160000` rather than symbolic-link mode `120000`: Yes — verified with `git ls-files --stage .ai-engineering`
 - Product tracks no files inside `.ai-engineering/` and owns no `.bootstrap/`: Yes — `git ls-files .ai-engineering/*` is empty and `.bootstrap/` is ignored
-- CI fetches submodules recursively: No — deliberate. No CI job reads the operating contract, and `GITHUB_TOKEN` cannot fetch a private repository other than this one. Revisit if a contract-dependent CI check is ever added
+- CI fetches submodules recursively: No — deliberate. `GITHUB_TOKEN` cannot fetch a private repository other than this one. Two contract-dependent checks were added on 2026-08-12 and are scoped to the environment that has the submodule; they are recorded as an exception in `docs/quality/gates.md`, with the always-running half of each still in CI. Revisit if a contract-dependent check ever needs to block
 - May advance the pinned SWEAI Builder commit through a dependency-update pull request: Yes
 - Symbolic-link, vendored-copy, or product-owned `.bootstrap/` fallback authorized: No
 - Unpinned-branch tracking authorized: No

@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
@@ -352,6 +352,31 @@ describe('governance documents agree with the current authorization model', () =
       'ROADMAP says a different number than the gate table marks',
     ).toBe(true);
 
+    // And every other wording of it, in every document. Two documents were
+    // bound to the table and a third said "two of them were probed at the
+    // tool" for two days after the dependency scan closed — the same shape as
+    // the unverified-criteria count below, one document further out.
+    // Sentence-scoped, and every number word in that sentence must agree. A
+    // character window instead of a sentence was thin in both directions: one
+    // correct line escaped by three characters, and a reflow that removed a
+    // sentence break would have produced a false failure.
+    const staleToolOnly = documents.flatMap(({ path, text }) =>
+      text
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) => sentence.includes('at the tool'))
+        .flatMap((sentence) => [
+          ...sentence.matchAll(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten)\b/gi),
+        ])
+        .map((match) => match[1]?.toLowerCase() ?? '')
+        .filter((word) => word !== toolOnlySpelled)
+        .map((word) => `${path}: ${word}`),
+    );
+
+    expect(
+      staleToolOnly,
+      `a document counts the tool-only gates as other than ${toolOnlySpelled}`,
+    ).toEqual([]);
+
     // Every count of the unverified criteria, wherever it is written. Three
     // copies of "three" sit in the file the number is derived from, and only
     // the ROADMAP row was bound to it — so closing a criterion would have
@@ -397,11 +422,16 @@ describe('governance documents agree with the current authorization model', () =
     // the span to the end of the file — the same silent widening, one token
     // away, in the mechanism chosen to end it.
     const enumerationOf = (text: string) => {
-      const after = text.split('<!-- non-goals:list -->')[1] ?? '';
+      const parts = text.split('<!-- non-goals:list -->');
+      const after = parts[1] ?? '';
+      const closes = after.split('<!-- /non-goals:list -->');
 
-      return after.includes('<!-- /non-goals:list -->')
-        ? (after.split('<!-- /non-goals:list -->')[0] ?? '').toLowerCase()
-        : '';
+      // Exactly one of each. Splitting on a closing marker that is not there
+      // returns the whole remainder, so a deleted closing tag widened the span
+      // to the end of the file; a duplicated opening tag widens it from the
+      // other side, because the text between the two copies is then read as
+      // the list. Both are the silent widening this mechanism replaced.
+      return parts.length === 2 && closes.length === 2 ? (closes[0] ?? '').toLowerCase() : '';
     };
 
     const marked = (list: string, prose: string) =>
@@ -446,6 +476,10 @@ describe('governance documents agree with the current authorization model', () =
     expect(
       enumerationOf(marked(list, prose).replace('<!-- /non-goals:list -->', '')),
       'a missing closing marker must read as no list, not as the rest of the file',
+    ).toBe('');
+    expect(
+      enumerationOf(`${marked(list, prose)}\n<!-- non-goals:list -->\n${prose}`),
+      'a duplicated marker must read as no list, not as the text between the copies',
     ).toBe('');
 
     const roadmap = enumerationOf(roadmapFile);
@@ -788,6 +822,83 @@ describe('governance documents agree with the current authorization model', () =
     expect(
       wrong,
       `table holds ${String(rows.length)} gates: ${String(proven)} proven, ${String(unproven)} unproven`,
+    ).toEqual([]);
+  });
+  const BOOTSTRAP = '.ai-engineering/.bootstrap';
+  const AREAS = [
+    '00-orientation',
+    '01-operating-model',
+    '02-quality',
+    '03-security-privacy',
+    '04-product',
+    '05-delivery-architecture',
+    '06-tools',
+    '07-project-adoption',
+  ];
+
+  it('binds every adoption row to a contract file rather than a remembered name', () => {
+    // The register opens by claiming it records every rule. Nothing checked
+    // that, and it was two rules short from the day the pin first carried them
+    // — a completeness claim over prose, which is the class this suite exists
+    // for. Row names cannot be derived from filenames (`02-experiments.md` is
+    // titled "Discovery through experiments"), so each row names its file and
+    // the claim becomes checkable.
+    //
+    // This half runs everywhere: the paths are text in a tracked document.
+    // Resolving them needs the private submodule, so that is the check below.
+    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+    const named = [...adoption.matchAll(/`(\d\d-[a-z-]+\/\d\d-[a-z-]+\.md)`/g)].map(
+      (match) => match[1] ?? '',
+    );
+
+    expect(named.length, 'the register must name the contract files it records').toBeGreaterThan(0);
+    expect(
+      named.filter((path) => !AREAS.some((area) => path.startsWith(`${area}/`))),
+      'a named rule file is outside the areas this register covers',
+    ).toEqual([]);
+    expect(
+      named.filter((path, at) => named.indexOf(path) !== at),
+      'two rows name the same rule file',
+    ).toEqual([]);
+  });
+
+  /**
+   * The contract is a private submodule; a CI checkout has the product and not
+   * the engine. `skipIf` rather than an early return, because a skipped test
+   * reports as skipped where a conditional `return` reports success for a check
+   * that never ran.
+   */
+  it.skipIf(!existsSync(BOOTSTRAP))('records every rule the pinned contract carries', () => {
+    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+
+    // The area list is written here, so it can fall behind the contract the
+    // same way the register fell behind the areas — one level up, and the last
+    // round of this found exactly that. A ninth area would otherwise be missed
+    // in silence, since the register would name nothing from it.
+    expect(
+      readdirSync(BOOTSTRAP, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && /^\d\d-/.test(entry.name))
+        .map((entry) => entry.name)
+        .filter((name) => !AREAS.includes(name)),
+      'the pinned contract carries an area this check does not cover',
+    ).toEqual([]);
+
+    const files = AREAS.flatMap((area) =>
+      readdirSync(`${BOOTSTRAP}/${area}`)
+        .filter((name) => /^\d\d-[a-z-]+\.md$/.test(name))
+        .map((name) => `${area}/${name}`),
+    );
+
+    expect(files.length, 'the contract must carry rules to record').toBeGreaterThan(0);
+    expect(
+      files.filter((path) => !adoption.includes(path)),
+      'the register claims to hold every rule and does not',
+    ).toEqual([]);
+    expect(
+      [...adoption.matchAll(/`(\d\d-[a-z-]+\/\d\d-[a-z-]+\.md)`/g)]
+        .map((match) => match[1] ?? '')
+        .filter((path) => !existsSync(`${BOOTSTRAP}/${path}`)),
+      'the register names a rule file the pinned contract does not have',
     ).toEqual([]);
   });
 });
