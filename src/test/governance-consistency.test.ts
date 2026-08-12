@@ -289,18 +289,50 @@ describe('governance documents agree with the current authorization model', () =
     ).toBe(true);
 
     // The other derivable row: how many gates are proven at the tool rather
-    // than at the wiring around it.
-    const atTool = /\*\*(\w+) rows? (?:is|are) proven at the tool/.exec(gates)?.[1] ?? '';
+    // than at the wiring around it. Derived from the probe cells, not from the
+    // register's own summary — binding the two sentences to each other made
+    // them agree with one another and with nothing else, so probing the
+    // gitleaks wiring would have left both false and the suite green.
+    const toolOnly = gates
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && line.includes('wiring is unprobed')).length;
+    const toolOnlySpelled = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'][toolOnly] ?? '';
 
-    expect(atTool, 'the gate register must state how many rows are tool-only').not.toBe('');
+    expect(toolOnly, 'the gate table must mark some wiring unprobed').toBeGreaterThan(0);
+    expect(toolOnlySpelled, `no spelling for ${String(toolOnly)} tool-only rows`).not.toBe('');
+    expect(
+      gates.includes(
+        toolOnly === 1
+          ? 'One row is proven at the tool'
+          : `${toolOnlySpelled[0]?.toUpperCase() ?? ''}${toolOnlySpelled.slice(1)} rows are proven at the tool`,
+      ),
+      'the gate register says a different number than its own probe cells mark',
+    ).toBe(true);
     expect(
       roadmap.includes(
-        atTool === 'One'
+        toolOnly === 1
           ? 'One gate is proven at the tool'
-          : `${atTool} gates are proven at the tool`,
+          : `${toolOnlySpelled[0]?.toUpperCase() ?? ''}${toolOnlySpelled.slice(1)} gates are proven at the tool`,
       ),
-      'ROADMAP and the gate register disagree on how many rows are tool-only',
+      'ROADMAP says a different number than the gate table marks',
     ).toBe(true);
+
+    // Every count of the unverified criteria, wherever it is written. Three
+    // copies of "three" sit in the file the number is derived from, and only
+    // the ROADMAP row was bound to it — so closing a criterion would have
+    // corrected one sentence and left the rest false.
+    const stale = documents.flatMap(({ path, text }) =>
+      [
+        ...text.matchAll(
+          /\b(zero|one|two|three|four|five|six)\b(?=[^.]{0,40}(?:unverified|AA criteri))/gi,
+        ),
+      ]
+        .map((match) => match[1]?.toLowerCase() ?? '')
+        .filter((word) => word !== spelled)
+        .map((word) => `${path}: ${word}`),
+    );
+
+    expect(stale, `a document counts the unverified criteria as other than ${spelled}`).toEqual([]);
   });
 
   it('lists every SPEC non-goal in the roadmap that claims to hold them all', () => {
@@ -327,7 +359,16 @@ describe('governance documents agree with the current authorization model', () =
           .split(/\n\s*\n/)
           .find((part) => part.trim().startsWith('Recorded so they are not')) ?? '';
 
-      return (/:\s*([\s\S]*?\.)(?:\s|$)/.exec(paragraph)?.[1] ?? '').toLowerCase();
+      const afterColon = paragraph.includes(':') ? paragraph.slice(paragraph.indexOf(':') + 1) : '';
+      // The first sentence after the colon, and it has to be terminated. A
+      // sentence starting on a new line ends the span too: without that, an
+      // enumeration whose full stop was dropped runs straight into the prose
+      // beside it and restores the shielding this span exists to prevent.
+      // Truncating early — an abbreviation inside the list would do it — makes
+      // items go missing and the check fail, which is the loud direction.
+      const [first = ''] = afterColon.split(/(?<=\.)(?:\s|$)|\n(?=[A-Z])/);
+
+      return (first.trimEnd().endsWith('.') ? first : '').toLowerCase();
     };
 
     // Pins the span with the shape that was green through nine review rounds:
@@ -348,6 +389,12 @@ describe('governance documents agree with the current authorization model', () =
       enumerationOf(fixture),
       'prose beside the list must fall outside the span, or it shields the list',
     ).not.toContain('favouriting');
+    // An unterminated list must read as no list at all, rather than as one that
+    // swallows the next sentence.
+    expect(
+      enumerationOf(fixture.replace('login.', 'login')),
+      'an enumeration with no full stop must not capture the prose after it',
+    ).toBe('');
 
     const roadmap = enumerationOf(roadmapFile);
 
@@ -489,14 +536,17 @@ describe('governance documents agree with the current authorization model', () =
       const evidence = isRow ? parts.filter((_, at) => at !== index) : [parts[index + 1] ?? ''];
 
       // The blocking cell's spelling is whatever the register uses: PLAN writes
-      // `yes`/`warn`, the gate table writes the layers — `CI`, `commit, CI`.
+      // `yes`/`warn`, the gate table writes the layers — `CI`, `commit, CI`,
+      // and qualified forms like ``CI (required context on `main`)``.
       // Restricting it to `yes|warn` meant one table in the whole repository
-      // could trip this, and the gate register itself could not. Anchored at
-      // both ends: an unanchored prefix read `yesterday` as `yes`, and read
-      // `not run in CI` — a cell denying enforcement — as proof of it.
+      // could trip this, and the gate register itself could not; requiring the
+      // cell to consist only of layer words then excluded the qualified forms
+      // the register actually uses. What disqualifies a cell is a denial, not
+      // its punctuation — `not run in CI` is not evidence of CI, and
+      // `yesterday` is not `yes`.
       const isBlocking = (cell: string) =>
         /^\s*(?:yes|warn)\b/i.test(cell) ||
-        (/^\s*(?:(?:commit|push|CI)[,\s]*)+$/i.test(cell) && /\bCI\b/.test(cell));
+        (/\bCI\b/.test(cell) && !/\b(?:not|never|manual|unprobed|without)\b/i.test(cell));
 
       return (
         clause !== '' &&
@@ -523,6 +573,11 @@ describe('governance documents agree with the current authorization model', () =
     // `yes`: both were read as blocking while the match was an open prefix.
     expect(claimsEnforced('| Mutants | Stryker | manual | not run in CI |', 'Stryker')).toBe(false);
     expect(claimsEnforced('| Mutants | Stryker | manual | yesterday |', 'Stryker')).toBe(false);
+    // The register's qualified layer spelling, which a layer-words-only match
+    // could not see.
+    expect(
+      claimsEnforced('| Mutants | Stryker | CI (required context on `main`) | — |', 'Stryker'),
+    ).toBe(true);
     expect(claimsEnforced('madge is recorded as `not-applicable`', 'madge')).toBe(false);
     // A disclaimer about one tool must not excuse an overclaim about another.
     expect(
