@@ -309,31 +309,56 @@ describe('governance documents agree with the current authorization model', () =
     // `installable PWA` in the next — so it is derived instead.
     const spec = readFileSync('SPEC.md', 'utf8');
     const roadmapFile = readFileSync('ROADMAP.md', 'utf8');
-    // Scoped to the paragraph making the claim — not the file, not the section.
-    // Read as a whole file, `backend` matched a sentence two sections away.
-    // Read as a whole section, `favouriting` matched the sentence directly
-    // under the enumeration. Either way the item could be deleted from the list
-    // and the guard still passed, and the second miss landed on the item the
-    // document itself names as the one most likely to be re-proposed.
+    // The haystack is the enumeration itself: the sentence after the colon, and
+    // nothing else. Three spans were tried before this one and each let the
+    // document shield itself — the file scope let `backend` match two sections
+    // away, the section scope let `favouriting` match the sentence one blank
+    // line below the list, and the paragraph scope would let that same sentence
+    // shield it again the moment someone reflowed the blank line away. The
+    // shield is always prose near the claim, so the span has to be the claim.
+    //
     // Split rather than a lookahead: `$` under /m matches end of line, so an
     // earlier attempt captured one paragraph and checked a third of the
     // section.
-    const notPlanned = (roadmapFile.split(/^## Not planned$/m)[1] ?? '').split(/^## /m)[0] ?? '';
-    const roadmap = (
-      notPlanned
-        .split(/\n\s*\n/)
-        .find((paragraph) => paragraph.trim().startsWith('Recorded so they are not')) ?? ''
-    ).toLowerCase();
+    const enumerationOf = (text: string) => {
+      const notPlanned = (text.split(/^## Not planned$/m)[1] ?? '').split(/^## /m)[0] ?? '';
+      const paragraph =
+        notPlanned
+          .split(/\n\s*\n/)
+          .find((part) => part.trim().startsWith('Recorded so they are not')) ?? '';
 
-    expect(notPlanned, 'the Not planned section must be findable').not.toBe('');
-    expect(roadmap, 'the enumerating paragraph must be findable').not.toBe('');
+      return (/:\s*([\s\S]*?\.)(?:\s|$)/.exec(paragraph)?.[1] ?? '').toLowerCase();
+    };
+
+    // Pins the span with the shape that was green through nine review rounds:
+    // the item absent from the list, present in a sentence beside it. Both
+    // sentences sit in one paragraph here, which is the arrangement a reflow
+    // produces and the one the paragraph scope could not survive.
+    const fixture = [
+      '## Not planned',
+      '',
+      'Recorded so they are not proposed again as if new: accounts, login.',
+      'Favouriting is called out by name as the one most likely to return.',
+      '',
+      '## Next',
+    ].join('\n');
+
+    expect(enumerationOf(fixture), 'the enumeration must be read').toContain('accounts');
+    expect(
+      enumerationOf(fixture),
+      'prose beside the list must fall outside the span, or it shields the list',
+    ).not.toContain('favouriting');
+
+    const roadmap = enumerationOf(roadmapFile);
+
+    expect(roadmap, 'the enumeration must be findable').not.toBe('');
 
     const section = /^## Non-goals\n\n([\s\S]*?)\n\n## /m.exec(spec)?.[1] ?? '';
     const bullets = section.split('\n').filter((line) => line.startsWith('- '));
 
     // A bullet is a comma- or slash-separated list of distinct refusals, and it
     // is an individual item that goes missing, not a whole bullet. Each item's
-    // first significant word must appear in the enumerating paragraph.
+    // first significant word must appear in the enumeration.
     const items = bullets.flatMap((bullet) =>
       bullet
         .slice(2)
@@ -352,18 +377,6 @@ describe('governance documents agree with the current authorization model', () =
         .map(({ word, bullet }) => `${word} (from: ${bullet}…)`);
 
     expect(missingFrom(roadmap), 'the roadmap claims to list every non-goal and does not').toEqual(
-      [],
-    );
-
-    // Every item load-bearing, one at a time: delete it from the paragraph and
-    // the check has to notice. A green suite otherwise only proves the words
-    // appear somewhere in scope, which is how `favouriting` stayed protected by
-    // a sentence rather than by the list that claims to hold it.
-    const unguarded = items
-      .filter(({ word }) => missingFrom(roadmap.split(word).join('')).length === 0)
-      .map(({ word }) => word);
-
-    expect(unguarded, 'an item can be deleted from the enumeration with the suite green').toEqual(
       [],
     );
   });
@@ -458,28 +471,37 @@ describe('governance documents agree with the current authorization model', () =
       const parts = line.split(/(?<=\.)\s+|\|/);
       const index = parts.findIndex((part) => part.includes(tool));
       const clause = parts[index] ?? '';
-      // A table row has one subject, so its whole row is the tool's context:
-      // both the disclaimer and the blocking cell are read across it, and the
-      // blocking cell is not always adjacent — a tool named in a rationale cell
-      // sits after it. Prose puts several subjects on one line, so there the
-      // scope is the sentence naming the tool; reading a whole prose line let a
-      // disclaimer about one tool excuse an overclaim about another.
+      // A table row is one subject, so the blocking cell is read anywhere in it
+      // — it is not always adjacent, since a tool can be named in a rationale
+      // cell that sits after it. Prose puts several subjects on one line, so
+      // there the scope is the sentence naming the tool; reading a whole prose
+      // line let a disclaimer about one tool excuse an overclaim about another.
       //
-      // The blocking cell's spelling is whatever the register uses: PLAN writes
-      // `yes`/`warn`, the gate table writes the layers — `CI`, `commit, CI`,
-      // `push, CI`. Restricting it to `yes|warn` meant one table in the whole
-      // repository could trip this, and the gate register itself could not.
+      // The disclaimer is read row-wide too, but not from a cell naming one of
+      // the *other* declined tools: reading the whole row let `Stryker is
+      // declined` in a notes cell excuse a row putting madge in CI, which is
+      // the same defect the prose branch above already carries a comment about.
       const isRow = line.trimStart().startsWith('|');
-      const context = isRow ? parts : [clause];
+      const others = declined.filter((other) => other !== tool);
+      const context = isRow
+        ? parts.filter((cell) => !others.some((other) => cell.includes(other)))
+        : [clause];
       const evidence = isRow ? parts.filter((_, at) => at !== index) : [parts[index + 1] ?? ''];
+
+      // The blocking cell's spelling is whatever the register uses: PLAN writes
+      // `yes`/`warn`, the gate table writes the layers — `CI`, `commit, CI`.
+      // Restricting it to `yes|warn` meant one table in the whole repository
+      // could trip this, and the gate register itself could not. Anchored at
+      // both ends: an unanchored prefix read `yesterday` as `yes`, and read
+      // `not run in CI` — a cell denying enforcement — as proof of it.
+      const isBlocking = (cell: string) =>
+        /^\s*(?:yes|warn)\b/i.test(cell) ||
+        (/^\s*(?:(?:commit|push|CI)[,\s]*)+$/i.test(cell) && /\bCI\b/.test(cell));
 
       return (
         clause !== '' &&
-        (evidence.some((cell) => /^\s*(?:yes|warn|[\w, ]*\bCI\b)/i.test(cell)) ||
-          /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(clause)) &&
-        !context.some((cell) =>
-          /not adopted|not-applicable|substituted|declined|by hand/i.test(cell),
-        )
+        (evidence.some(isBlocking) || /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(clause)) &&
+        !context.some((cell) => /not adopted|not-applicable|substituted|declined/i.test(cell))
       );
     };
 
@@ -495,6 +517,12 @@ describe('governance documents agree with the current authorization model', () =
     expect(claimsEnforced('| Mutants | Stryker | not adopted | — | — |', 'Stryker')).toBe(false);
     // Named in a rationale cell, after the blocking one.
     expect(claimsEnforced('| Cycle detection | yes | 4 | via madge |', 'madge')).toBe(true);
+    // A disclaimer about the other declined tool must not excuse this one.
+    expect(claimsEnforced('| Cycles | madge | CI | Stryker was declined |', 'madge')).toBe(true);
+    // A cell denying enforcement is not evidence of it, and `yesterday` is not
+    // `yes`: both were read as blocking while the match was an open prefix.
+    expect(claimsEnforced('| Mutants | Stryker | manual | not run in CI |', 'Stryker')).toBe(false);
+    expect(claimsEnforced('| Mutants | Stryker | manual | yesterday |', 'Stryker')).toBe(false);
     expect(claimsEnforced('madge is recorded as `not-applicable`', 'madge')).toBe(false);
     // A disclaimer about one tool must not excuse an overclaim about another.
     expect(
