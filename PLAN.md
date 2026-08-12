@@ -81,21 +81,21 @@ Cheap and blocking. Must stay fast enough not to become a waiting ritual.
 
 Runs on every pull request and on `main`, from a clean checkout.
 
-| Check                                           | Blocking               | Adoption step |
-| ----------------------------------------------- | ---------------------- | ------------- |
-| Type-check, lint, format                        | yes                    | 1             |
-| Unit/integration tests (Vitest)                 | yes                    | 1             |
-| Gitleaks                                        | yes                    | 1             |
-| Reproducible build                              | yes                    | 2             |
-| Playwright journeys, mobile + desktop viewports | yes                    | 2             |
-| Preview deployment                              | yes                    | 2             |
-| SCA — `npm audit` + OSV-Scanner                 | yes, high/critical     | 3             |
-| SAST — CodeQL or Semgrep                        | yes                    | 3             |
-| Dependency-cycle check — madge                  | yes                    | 4             |
-| Duplication — jscpd                             | warn first, then block | 4             |
-| Automated accessibility checks in Playwright    | yes                    | 4             |
-| Mutation testing — Stryker, changed files       | warn only              | 5             |
-| Bundle-size budget                              | warn first, then block | 4             |
+| Check                                           | Blocking                                           | Adoption step |
+| ----------------------------------------------- | -------------------------------------------------- | ------------- |
+| Type-check, lint, format                        | yes                                                | 1             |
+| Unit/integration tests (Vitest)                 | yes                                                | 1             |
+| Gitleaks                                        | yes                                                | 1             |
+| Reproducible build                              | yes                                                | 2             |
+| Playwright journeys, mobile + desktop viewports | yes                                                | 2             |
+| Preview deployment                              | yes                                                | 2             |
+| SCA — `npm audit` + OSV-Scanner                 | yes, high/critical                                 | 3             |
+| SAST — CodeQL or Semgrep                        | yes                                                | 3             |
+| Dependency-cycle check — madge                  | not adopted; substituted by `import/no-cycle`      | 4             |
+| Duplication — jscpd                             | warn first, then block                             | 4             |
+| Automated accessibility checks in Playwright    | yes                                                | 4             |
+| Mutation testing — Stryker, changed files       | declined as a gate 2026-08-12; hand-run diagnostic | 5             |
+| Bundle-size budget                              | warn first, then block                             | 4             |
 
 Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6, together with the bundle-size budget, which was moved here from step 5 because it is cheap and measured rather than estimated. Step 5 is resolved: mutation testing was measured on 2026-08-11 and **declined as a gate** on 2026-08-12 — adopted instead as an occasional hand-run diagnostic over the pure-logic modules. Coverage thresholds remain unscheduled. `docs/quality/gates.md` carries both decisions.
 

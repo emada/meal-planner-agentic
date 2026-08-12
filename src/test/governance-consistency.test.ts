@@ -312,16 +312,74 @@ describe('governance documents agree with the current authorization model', () =
       'the gate register must state where step 5 stands',
     ).toBe(true);
 
-    // Three documents, for the reason the sibling guard above already learned:
-    // the first version of this one read the adoption register alone and left
-    // the same contradiction standing in PLAN.
-    const contradicting = ['docs/quality/bootstrap-adoption.md', 'PLAN.md', 'README.md'].filter(
-      (path) => /step 5 is unscheduled/i.test(readFileSync(path, 'utf8')),
+    // The shape, not the sentence. Five review rounds each found the same
+    // contradiction in a new phrasing, and a guard pinned to the last one
+    // catches only the last one.
+    const callsStepFiveOpen = (line: string) =>
+      /step 5/i.test(line) &&
+      /\bunscheduled\b|\bstill open\b|\bnot yet\b|\bremains? open\b/i.test(line) &&
+      // A line may close step 5 and note that something else is unscheduled in
+      // the same breath — which is the accurate sentence, not a contradiction.
+      !/step 5 (?:is |was )?(?:closed|resolved|declined)/i.test(line);
+
+    // Pinned, so the selector cannot quietly stop matching. The second case is
+    // legitimate: coverage thresholds genuinely are unscheduled, and saying so
+    // beside a closed step 5 is the accurate sentence.
+    expect(callsStepFiveOpen('Step 5 is unscheduled — see the gate register')).toBe(true);
+    expect(callsStepFiveOpen('Step 5 remains unscheduled; Stryker may yet be adopted')).toBe(true);
+    expect(callsStepFiveOpen('Step 5 is closed. Coverage thresholds remain unscheduled')).toBe(
+      false,
+    );
+
+    // Every document that mentions the step, not a hand-kept list: an earlier
+    // version read one file while three could contradict it.
+    const contradicting = documents.flatMap(({ path, text }) =>
+      text
+        .split('\n')
+        .filter(callsStepFiveOpen)
+        .map((line) => `${path}: ${line.trim().slice(0, 70)}`),
     );
 
     expect(
       contradicting,
-      'a document calls step 5 unscheduled while the gate register calls it closed',
+      'a document calls step 5 open while the gate register calls it closed',
+    ).toEqual([]);
+  });
+
+  it('does not call a gate blocking that the register says is not adopted', () => {
+    // PLAN's CI table listed madge as blocking and Stryker as warn-only long
+    // after the register recorded both as not adopted. Five review rounds found
+    // one contradiction each, by eye; this compares the two tables instead.
+    const plan = readFileSync('PLAN.md', 'utf8');
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    // A tool the register records as declined, substituted, or hand-run must
+    // not appear in PLAN's Blocking column as though CI enforces it.
+    const declined = ['madge', 'Stryker'].filter((tool) =>
+      gates
+        .split('\n')
+        .some(
+          (line) =>
+            line.includes(tool) && /not adopted|not-applicable|declined|by hand/i.test(line),
+        ),
+    );
+
+    expect(declined, 'the register must record madge and Stryker as not adopted').toEqual([
+      'madge',
+      'Stryker',
+    ]);
+
+    const overclaimed = declined.flatMap((tool) =>
+      plan
+        .split('\n')
+        .filter((line) => line.startsWith('| ') && line.includes(tool))
+        .filter((line) => /\|\s*(yes|warn[^|]*)\s*\|/i.test(line))
+        .map((line) => `${tool}: ${line.trim().slice(0, 70)}`),
+    );
+
+    expect(
+      overclaimed,
+      "PLAN's gate table claims CI enforces a check the register says is not adopted",
     ).toEqual([]);
   });
 
