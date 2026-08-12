@@ -140,7 +140,7 @@ This product does not need operational autonomy and is not constrained by the ga
 - Default execution mode: One lead agent
 - Model and reasoning-effort policy: inherit the session model; no per-task overrides
 - Interface approval mode: whatever the session uses. **An interface permission mode is never authorization for an external action** — authorization comes only from this file or an explicit instruction
-- Dynamic workflows or automatic fleet orchestration allowed: No. Fleet readiness is not demonstrated; the first candidate is S4 + S5, and it requires a separate readiness decision to be recorded in a `FLEET.md` created at that point. No such file exists yet, deliberately
+- Dynamic workflows or automatic fleet orchestration allowed: No. Fleet readiness was never demonstrated and no fleet step was taken: S4 and S5 were the only independent pair, and sequencing them cost less than coordinating two workspaces. `PLAN.md` records that outcome. No `FLEET.md` exists, deliberately — the decision it would have carried was made and recorded elsewhere
 - May create local commits: Yes
 - May create branches and worktrees: Yes
 - May push approved branches: Yes — feature branches only. Never `main`, which the ruleset enforces independently

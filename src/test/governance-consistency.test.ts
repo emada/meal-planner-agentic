@@ -181,6 +181,57 @@ describe('governance documents agree with the current authorization model', () =
     expect(planned).toEqual([]);
   });
 
+  it('does not describe the settled fleet decision as upcoming', () => {
+    // Six wordings said fleet readiness was still ahead after the project
+    // shipped without a fleet step. The first version of this guard matched one
+    // of them and the commit message claimed it matched two — and it read only
+    // one document, while the same fact lived in three.
+    const isUpcoming = (line: string) =>
+      /is not met yet|first candidate is|revisit at the S4|is not demonstrated/i.test(line) ||
+      /roles separate at the first fleet/i.test(line) ||
+      /\|\s*Not met\s*[—-]/.test(line) ||
+      // PLAN's fleet section opened with this above its own outcome paragraph.
+      // Without it, adding PLAN to the loop below read a third file and had no
+      // condition that could fail in it.
+      /^Not yet\.$/.test(line.trim());
+
+    // Pinned, because a selector that matches nothing passes. Each retired
+    // wording must be caught, and legitimately forward-looking prose must not.
+    expect(
+      isUpcoming('| Human + agent fleet workflow | Deferred | Fleet readiness is not met yet |'),
+    ).toBe(true);
+    expect(
+      isUpcoming('| Before increasing autonomy | Not met — see the fleet readiness table |'),
+    ).toBe(true);
+    expect(isUpcoming('Concurrency is 1; revisit at the S4 + S5 fleet-readiness decision')).toBe(
+      true,
+    );
+    expect(isUpcoming('the first candidate is S4 + S5, and it requires a separate decision')).toBe(
+      true,
+    );
+    expect(isUpcoming('| Agent roles | Adopted | roles separate at the first fleet step |')).toBe(
+      true,
+    );
+    expect(isUpcoming('Not yet.')).toBe(true);
+    expect(
+      isUpcoming(
+        '| Experiments | Not applicable yet | `docs/product/experiments/` starts at Phase 6 |',
+      ),
+    ).toBe(false);
+    expect(isUpcoming('No fleet step was taken; the decision is recorded in PLAN.md')).toBe(false);
+    expect(isUpcoming('None were used. The readiness assessment was made before S4.')).toBe(false);
+
+    // Three documents, because the same claim was true in one and stale in the
+    // others — which is how it survived every round.
+    for (const path of ['docs/quality/bootstrap-adoption.md', 'EXECUTION.md', 'PLAN.md']) {
+      const stale = readFileSync(path, 'utf8').split('\n').filter(isUpcoming);
+
+      expect([path, ...stale], `${path} still describes the fleet decision as upcoming`).toEqual([
+        path,
+      ]);
+    }
+  });
+
   it('quotes a slice range that matches the slices PLAN.md declares', () => {
     // README said "slices S0-S7" for a full slice after S8 existed. Nothing
     // bound a range written in prose to the plan it described.

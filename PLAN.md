@@ -227,7 +227,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 
 ## Fleet candidates
 
-Not yet. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
+None were used. The readiness assessment below was made before S4, and the outcome is recorded after it. Against `.ai-engineering/.bootstrap/AGENTS.md` Phase 4:
 
 | Condition                                                         | Status                                              |
 | ----------------------------------------------------------------- | --------------------------------------------------- |
