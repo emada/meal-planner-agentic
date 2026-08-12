@@ -61,22 +61,22 @@ None of these is a planned change. They are the places where this repository
 knows it is weaker than it looks, kept here so a reader does not have to find
 them by accident.
 
-|                                                                                    |                                                                                                                                                 |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| One gate is proven at the tool, not at the wiring                                  | CI runs `gitleaks-action`; the probe ran the gitleaks CLI. Closing it means pushing a credential-shaped string to the remote                    |
-| The pre-push layer has no probe of its own                                         | it is a layer, not a gate row; nothing shows it rejects a failing build                                                                         |
-| The promotion check cannot tell a wrong destination from a right one               | it resolves the file and stops there. Two rows once pointed at a real file that did not hold their lesson                                       |
-| The production smoke check is not derived evidence                                 | reproducible with `npm run smoke:prod`, but a human decides when it runs                                                                        |
-| No accessibility audit by a practitioner, and no screen-reader testing             | three AA criteria remain unverified; `docs/quality/accessibility.md` names them and records the human\'s acceptance of this state on 2026-08-12 |
-| Every semantic review was performed by a subagent of the agent that wrote the code | isolated context, not independent judgement                                                                                                     |
+|                                                                                    |                                                                                                                                                |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| One gate is proven at the tool, not at the wiring                                  | CI runs `gitleaks-action`; the probe ran the gitleaks CLI. Closing it means pushing a credential-shaped string to the remote                   |
+| The pre-push layer has no probe of its own                                         | it is a layer, not a gate row; nothing shows it rejects a failing build                                                                        |
+| The promotion check cannot tell a wrong destination from a right one               | it resolves the file and stops there. Two rows once pointed at a real file that did not hold their lesson                                      |
+| The production smoke check is not derived evidence                                 | reproducible with `npm run smoke:prod`, but a human decides when it runs                                                                       |
+| No accessibility audit by a practitioner, and no screen-reader testing             | three AA criteria remain unverified; `docs/quality/accessibility.md` names them and records the human's acceptance of this state on 2026-08-12 |
+| Every semantic review was performed by a subagent of the agent that wrote the code | isolated context, not independent judgement                                                                                                    |
 
 ## Not planned
 
 Recorded so they are not proposed again as if new: user accounts, a backend of
 our own, syncing a list across devices, meal scheduling by day or week,
 nutrition data, portion scaling, pantry tracking, recipe creation, editing,
-rating or favouriting, offline support, analytics or any third-party script
-beyond TheMealDB, and any unit arithmetic on measures.
+rating or favouriting, offline support, analytics, tracking, cookies or any
+third-party script beyond TheMealDB, and any unit arithmetic on measures.
 
 That is the whole of `SPEC.md`'s non-goals list. Favouriting is called out by
 name there as the one most likely to be re-proposed, because it is absent from

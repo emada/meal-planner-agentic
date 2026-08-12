@@ -247,6 +247,10 @@ describe('governance documents agree with the current authorization model', () =
       unverified,
       'the accessibility table must mark some criterion unverified',
     ).toBeGreaterThan(0);
+    // Above the lookup table `spelled` falls back to '', and the assertion
+    // below degrades to a substring the current row already satisfies — so the
+    // guard would stop firing exactly when the state got worse.
+    expect(spelled, `no spelling for ${String(unverified)} unverified criteria`).not.toBe('');
     expect(
       roadmap.includes(`${spelled} AA criteria remain unverified`),
       `ROADMAP says a different number than the ${String(unverified)} the accessibility table marks`,

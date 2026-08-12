@@ -77,7 +77,7 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 ## Deferred gates
 
-Deliberately not in force. The adoption order in `.ai-engineering/.bootstrap/06-tools` is complete through step 4; what remains has no scheduled slice, because the sequencing reason for deferring it is gone and what is left is a cost decision.
+Step 5 is closed. Mutation testing was measured and **declined as a gate** on 2026-08-12; its row below records a decision rather than a deferral. Coverage thresholds remain genuinely deferred, and not on cost grounds — a threshold measured against a suite this size mostly reports the number it was set to.
 
 | Gate                       | Status                                | Lands in            | Rationale                                                                                                                                                           |
 | -------------------------- | ------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
