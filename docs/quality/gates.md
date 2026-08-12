@@ -79,10 +79,10 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 Deliberately not in force. The adoption order in `.ai-engineering/.bootstrap/06-tools` is complete through step 4; what remains has no scheduled slice, because the sequencing reason for deferring it is gone and what is left is a cost decision.
 
-| Gate                       | Status                           | Lands in    | Rationale                                                                                                                                                           |
-| -------------------------- | -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mutation testing (Stryker) | deferred, warn-only when adopted | unscheduled | Step 5. Measured once on 2026-08-11 rather than argued about — see below. What remains is a cost decision                                                           |
-| Coverage thresholds        | deferred                         | unscheduled | Coverage is reported from S0. A threshold measured against a suite this size mostly reports the number it was set to; worth setting when someone will act on a drop |
+| Gate                       | Status                                | Lands in            | Rationale                                                                                                                                                           |
+| -------------------------- | ------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mutation testing (Stryker) | **not adopted as a gate**, 2026-08-12 | occasional, by hand | The human accepted the recommendation below: run it over `domain/`, `api/` and `storage/` as a diagnostic, never as a threshold                                     |
+| Coverage thresholds        | deferred                              | unscheduled         | Coverage is reported from S0. A threshold measured against a suite this size mostly reports the number it was set to; worth setting when someone will act on a drop |
 
 ## Substitutions from `PLAN.md`
 
@@ -207,7 +207,7 @@ What remains unprotected, stated plainly: the reviewer is a subagent of the agen
 
 **Owner recovery.** Requiring a context only an agent publishes reintroduces, by a different route, the lockout that zero required approvals was chosen to avoid: if the agent or `publish-claude-review.sh` is unavailable, nothing can merge — including a fix to the ruleset. `bypass_actors` is empty by design. The recovery is for the owner to edit ruleset 20604945, remove the context, merge, and restore it. Publishing the status by hand with `gh api` is not the recovery; `EXECUTION.md` prohibits it precisely because it would defeat the head binding.
 
-### Mutation testing, measured once
+### Mutation testing: measured, then declined as a gate
 
 Run on 2026-08-11 against a scratch copy that was not retained, so unlike the derived gate evidence these figures cannot be re-derived from this repository. Not adopted. `@stryker-mutator/core` + the vitest runner, 987 mutants across 14 files, 3 minutes 5 seconds at concurrency 4 on a developer machine.
 
@@ -225,7 +225,15 @@ Run on 2026-08-11 against a scratch copy that was not retained, so unlike the de
 
 Two rounds of review were needed to state that paragraph correctly: the first version overstated the hole, the second over-corrected. The defect was always small; describing it precisely was the hard part.
 
-Whether to adopt it as a gate is unresolved. The costs are ~9 MB of dev dependency, roughly three minutes locally and more on a two-core CI runner, and triage of 258 surviving mutants of which an unknown share are equivalent — mutants that change the code without changing behaviour, which no test can or should kill.
+**Resolved 2026-08-12: not adopted as a gate.** The human accepted the recommendation. Three reasons, in order of weight:
+
+1. **The headline number would measure the wrong thing here.** A threshold would penalise a deliberate decision — testing the UI in a browser rather than in jsdom — because Stryker never invokes Playwright.
+2. **258 surviving mutants to triage**, an unknown share of them equivalent: mutants that change the code without changing behaviour, which no test can or should kill. `100%` is unreachable by construction, so a threshold set near it buys work rather than confidence.
+3. **As a gate it converts "write better tests" into "write tests that move a number"**, which is not the same instruction.
+
+**What is adopted instead:** run it by hand over `domain/`, `api/` and `storage/` — the pure-logic modules, where the score is honest (86–94%) and the survivors are few enough to read one at a time. That is where it found the AC4 defect. Once a quarter, or after a substantial change to domain logic, delivers most of the value at almost no cost.
+
+The costs measured: ~9 MB of dev dependency, three minutes locally at concurrency 4, more on a two-core CI runner.
 
 ### Production smoke check
 

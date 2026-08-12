@@ -113,7 +113,7 @@ Each is observable and testable.
 
 Resolved — recorded here with the reasoning that produced them.
 
-- **O1 — TheMealDB production access. RESOLVED 2026-08-10: risk accepted.** The human accepted running production on the public test key `1`, with its rate limiting, absent availability commitment, and use outside what the provider documents for production. S7 is unblocked. The acceptance is recorded in `docs/security/threat-model.md` under residual risk. Should throttling appear in practice, it surfaces as the AC3 error state; adding a caching layer or a proxy would contradict the no-backend non-goal and requires a spec revision. Original text follows.
+- **O1 — TheMealDB production access. RESOLVED 2026-08-10: risk accepted.** Re-accepted 2026-08-12 after the exposure changed shape at S8 — a rate limit is now spent per page view rather than per search. `ROADMAP.md` records what retiring it would take. The human accepted running production on the public test key `1`, with its rate limiting, absent availability commitment, and use outside what the provider documents for production. S7 is unblocked. The acceptance is recorded in `docs/security/threat-model.md` under residual risk. Should throttling appear in practice, it surfaces as the AC3 error state; adding a caching layer or a proxy would contradict the no-backend non-goal and requires a spec revision. Original text follows.
 
   Superseded discussion — _Raised by D3._ Key `1` is TheMealDB's public test key. It is documented for development and testing, is rate-limited, and carries no availability commitment; the maintainers offer a supported key to Patreon supporters for production use. `GOAL.md` names the `v1/1/` endpoints explicitly, so the first slice will use them as specified. But "intended for real users" plus a test key is a genuine reliability and terms-of-use exposure that I should not accept on your behalf. Options: (a) obtain a supported key and read it from configuration, keeping the test key as the local-development default; (b) stay on key `1` and accept the risk explicitly, recorded in the threat model; (c) add a thin caching proxy of our own — which contradicts the "no backend of our own" non-goal and would need that non-goal revised. Recommendation: (a), with the key injected at build time and never committed. This does not block spec approval; it blocks the production-hosting slice.
 
@@ -125,7 +125,7 @@ Non-blocking — recorded to prevent silent invention.
 
   Superseded discussion — Visual direction is unspecified. Default: clean, neutral, system-font UI with no design-system dependency, unless directed otherwise.
 
-- **O4 — PARTIALLY RESOLVED 2026-08-11 by amendment A1.** Browsing by category is promoted from candidate scope to AC15. Filtering by area and checking items off while shopping remain candidate future slices, not requirements. Original text follows.
+- **O4 — PARTIALLY RESOLVED 2026-08-11 by amendment A1.** Browsing by category is promoted from candidate scope to AC15. Filtering by area and checking items off while shopping remain candidate future slices, not requirements — reconfirmed as deferred by the human on 2026-08-12 and recorded in `ROADMAP.md` with what each would cost. Original text follows.
 
   Superseded discussion — Deferred scope from D2 (browse/filter by category and area; check-off while shopping) is recorded as candidate future slices, not requirements.
 
