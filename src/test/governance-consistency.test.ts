@@ -870,6 +870,19 @@ describe('governance documents agree with the current authorization model', () =
    */
   it.skipIf(!existsSync(BOOTSTRAP))('records every rule the pinned contract carries', () => {
     const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+
+    // The area list is written here, so it can fall behind the contract the
+    // same way the register fell behind the areas — one level up, and the last
+    // round of this found exactly that. A ninth area would otherwise be missed
+    // in silence, since the register would name nothing from it.
+    expect(
+      readdirSync(BOOTSTRAP, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && /^\d\d-/.test(entry.name))
+        .map((entry) => entry.name)
+        .filter((name) => !AREAS.includes(name)),
+      'the pinned contract carries an area this check does not cover',
+    ).toEqual([]);
+
     const files = AREAS.flatMap((area) =>
       readdirSync(`${BOOTSTRAP}/${area}`)
         .filter((name) => /^\d\d-[a-z-]+\.md$/.test(name))
