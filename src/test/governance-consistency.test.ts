@@ -148,17 +148,30 @@ describe('governance documents agree with the current authorization model', () =
     // survived a full slice because only gates.md was being read.
     // Every tracked document, not three. An ADR said "a bundle budget lands in
     // S6" through seven review rounds because it was outside the list.
-    const guarded = documents
-      .filter(({ path }) => path !== 'docs/security/threat-model.md')
-      .map(({ path, text }) => [path, text] as const);
+    // Every document, with one line dropped rather than one file: the threat
+    // model is where controls get deferred, so excluding it wholesale would
+    // blind the guard exactly where a stale pointer is most likely to appear.
+    const guarded = documents.map(
+      ({ path, text }) =>
+        [
+          path,
+          text
+            .split('\n')
+            .filter((line) => !line.includes('resolved, not accepted'))
+            .join('\n'),
+        ] as const,
+    );
 
     // The one exclusion, named rather than silent: that file records a
     // deferral as *resolved* ("These were deferred to S6 … Authorizing
     // automatic release on merge made that unacceptable"), which the selector
     // reads as a live pointer. Its status rows are guarded separately below.
+    // The dropped line must still be the one the exemption was written for.
     expect(
-      /deferred to S\d/.test(threats) && threats.includes('resolved, not accepted'),
-      'the threat-model exemption assumes a line recording a resolved deferral',
+      threats
+        .split('\n')
+        .some((line) => /deferred to S\d/.test(line) && line.includes('resolved, not accepted')),
+      'the dropped line must be the resolved-deferral record it was written for',
     ).toBe(true);
 
     for (const [name, text] of guarded) {
@@ -284,7 +297,18 @@ describe('governance documents agree with the current authorization model', () =
     // checked by eye. It was wrong twice — `cookies` in one review round and
     // `installable PWA` in the next — so it is derived instead.
     const spec = readFileSync('SPEC.md', 'utf8');
-    const roadmap = readFileSync('ROADMAP.md', 'utf8').toLowerCase();
+    const roadmapFile = readFileSync('ROADMAP.md', 'utf8');
+    // Scoped to the section making the claim. Read as a whole file, `backend`
+    // matched a sentence two sections away and shielded its own bullet: the
+    // item could be deleted from the paragraph and the guard still passed.
+    // Split rather than a lookahead: `$` under /m matches end of line, so the
+    // first version captured one paragraph and ran the check against a third
+    // of the section.
+    const roadmap = (
+      (roadmapFile.split(/^## Not planned$/m)[1] ?? '').split(/^## /m)[0] ?? ''
+    ).toLowerCase();
+
+    expect(roadmap, 'the Not planned section must be findable').not.toBe('');
 
     const section = /^## Non-goals\n\n([\s\S]*?)\n\n## /m.exec(spec)?.[1] ?? '';
     const bullets = section.split('\n').filter((line) => line.startsWith('- '));
@@ -323,7 +347,7 @@ describe('governance documents agree with the current authorization model', () =
     // contradiction in a new phrasing, and a guard pinned to the last one
     // catches only the last one.
     const callsStepFiveOpen = (line: string) =>
-      /steps? (?:4[–—-])?5\b|fifth adoption step/i.test(line) &&
+      /steps?\s+(?:\d+\s*(?:[–—-]|and|,|&)\s*)*(?:5|five)\b|fifth adoption step/i.test(line) &&
       /\bunscheduled\b|\bstill open\b|\bnot yet\b|\bremains? open\b/i.test(line) &&
       // A line may close step 5 and note that something else is unscheduled in
       // the same breath — which is the accurate sentence, not a contradiction.
@@ -334,6 +358,8 @@ describe('governance documents agree with the current authorization model', () =
     // beside a closed step 5 is the accurate sentence.
     expect(callsStepFiveOpen('Step 5 is unscheduled — see the gate register')).toBe(true);
     expect(callsStepFiveOpen('Steps 4–5 remain unscheduled')).toBe(true);
+    expect(callsStepFiveOpen('Steps 4 and 5 remain unscheduled')).toBe(true);
+    expect(callsStepFiveOpen('Step five remains unscheduled')).toBe(true);
     expect(callsStepFiveOpen('Step 5 remains unscheduled; Stryker may yet be adopted')).toBe(true);
     expect(callsStepFiveOpen('Step 5 is closed. Coverage thresholds remain unscheduled')).toBe(
       false,
@@ -378,8 +404,8 @@ describe('governance documents agree with the current authorization model', () =
     );
     const declined = [...fromRows, ...substitutions].filter(Boolean);
 
-    // Every not-adopted row must have produced a name, so an unrecognised row
-    // shape fails loudly instead of quietly narrowing the search.
+    // This catches a row with no cells at all. What actually catches an
+    // unrecognised row shape is the equality below, which pins the answer.
     expect(fromRows.filter(Boolean).length, 'a not-adopted row produced no tool name').toBe(
       notAdoptedRows.length,
     );
@@ -396,12 +422,16 @@ describe('governance documents agree with the current authorization model', () =
       // Scoped to the clause naming the tool. A whole-line exclusion let a
       // disclaimer about one tool excuse an overclaim about another on the
       // same line.
-      const clause = line.split(/(?<=\.)\s+|\|/).find((part) => part.includes(tool)) ?? '';
+      const parts = line.split(/(?<=\.)\s+|\|/);
+      const index = parts.findIndex((part) => part.includes(tool));
+      const clause = parts[index] ?? '';
+      // The Blocking cell is the one after the tool's own cell, so the positive
+      // evidence is scoped like the disclaimer rather than read line-wide.
+      const nextCell = parts[index + 1] ?? '';
 
       return (
         clause !== '' &&
-        (/\|\s*(?:yes|warn)[^|]*\|/i.test(line) ||
-          /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(clause)) &&
+        (/^\s*(?:yes|warn)/i.test(nextCell) || /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(clause)) &&
         !/not adopted|not-applicable|substituted|declined|by hand/i.test(clause)
       );
     };
