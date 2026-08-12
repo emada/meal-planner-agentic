@@ -90,8 +90,6 @@ describe('governance documents agree with the current authorization model', () =
   it('never points a deferred gate at a slice that has already shipped', () => {
     // Twice now a "lands in S6" cell survived S6 shipping, leaving a commitment
     // with no landing point and nothing to surface it again.
-    const gates = readFileSync('docs/quality/gates.md', 'utf8');
-    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
     const threats = readFileSync('docs/security/threat-model.md', 'utf8');
     const plan = readFileSync('PLAN.md', 'utf8');
 
@@ -148,19 +146,53 @@ describe('governance documents agree with the current authorization model', () =
 
     // Three documents, not one: the step-5 cell and three "Planned" threat rows
     // survived a full slice because only gates.md was being read.
-    const guarded = [
-      ['gates.md', gates],
-      ['bootstrap-adoption.md', adoption],
-      ['PLAN.md', plan],
-    ] as const;
+    // Every tracked document, not three. An ADR said "a bundle budget lands in
+    // S6" through seven review rounds because it was outside the list.
+    // Every document, with one line dropped rather than one file: the threat
+    // model is where controls get deferred, so excluding it wholesale would
+    // blind the guard exactly where a stale pointer is most likely to appear.
+    // The one exclusion, named rather than silent: that file records a
+    // deferral as *resolved* ("These were deferred to S6 … Authorizing
+    // automatic release on merge made that unacceptable"), which the selector
+    // reads as a live pointer. Its status rows are guarded separately below.
+    //
+    // Bound to one path and one shape. Matching the phrase in any document
+    // turned a named single-file exemption into an opt-out any future line
+    // could claim by quoting it — including a line that really does point a
+    // live deferral at a shipped slice.
+    const isResolvedDeferral = (path: string, line: string) =>
+      path === 'docs/security/threat-model.md' &&
+      /deferred to S\d/.test(line) &&
+      line.includes('resolved, not accepted');
+
+    // Counted, not merely asserted to exist: a second exemption has to be
+    // visible here rather than silently widening the hole.
+    expect(
+      documents.flatMap(({ path, text }) =>
+        text.split('\n').filter((line) => isResolvedDeferral(path, line)),
+      ).length,
+      'exactly one line repository-wide may claim the resolved-deferral exemption',
+    ).toBe(1);
+
+    const guarded = documents.map(
+      ({ path, text }) =>
+        [
+          path,
+          text
+            .split('\n')
+            .filter((line) => !isResolvedDeferral(path, line))
+            .join('\n'),
+        ] as const,
+    );
 
     for (const [name, text] of guarded) {
       expect([name, ...text.split('\n').filter(isStale)]).toEqual([name]);
     }
 
-    // Step 5 is unscheduled, and three documents have now claimed otherwise in
-    // three different phrasings — "steps 4-5 land in S6", "steps 4-5 in S6",
-    // and a table cell. Asserting the fact catches phrasings not yet invented.
+    // Adoption step 5 must never be pointed at a shipped slice, whatever its
+    // schedule status. Three documents once claimed it landed in one, in three
+    // different phrasings — asserting the shape catches phrasings not yet
+    // invented.
     for (const [name, text] of guarded) {
       const scheduled = text
         .split('\n')
@@ -230,6 +262,391 @@ describe('governance documents agree with the current authorization model', () =
         path,
       ]);
     }
+  });
+
+  it('states roadmap limits that the documents behind them still hold', () => {
+    // ROADMAP asserts six things about this repository, each of which decays
+    // when the thing it describes is fixed. Two are derivable; deriving them is
+    // what stops the table going quietly false the day one is closed.
+    const roadmap = readFileSync('ROADMAP.md', 'utf8');
+    const accessibility = readFileSync('docs/quality/accessibility.md', 'utf8');
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    const unverified = (accessibility.match(/\*\*(?:Partly u|U)nverified\.\*\*/g) ?? []).length;
+    const spelled = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'][unverified] ?? '';
+
+    expect(
+      unverified,
+      'the accessibility table must mark some criterion unverified',
+    ).toBeGreaterThan(0);
+    // Above the lookup table `spelled` falls back to '', and the assertion
+    // below degrades to a substring the current row already satisfies — so the
+    // guard would stop firing exactly when the state got worse.
+    expect(spelled, `no spelling for ${String(unverified)} unverified criteria`).not.toBe('');
+    expect(
+      roadmap.includes(`${spelled} AA criteria remain unverified`),
+      `ROADMAP says a different number than the ${String(unverified)} the accessibility table marks`,
+    ).toBe(true);
+
+    // The other derivable row: how many gates are proven at the tool rather
+    // than at the wiring around it. Derived from the probe cells, not from the
+    // register's own summary — binding the two sentences to each other made
+    // them agree with one another and with nothing else, so probing the
+    // gitleaks wiring would have left both false and the suite green.
+    const toolOnly = gates
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && line.includes('wiring is unprobed')).length;
+    const toolOnlySpelled = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'][toolOnly] ?? '';
+
+    // The count reads one phrase, so a row saying the same thing in different
+    // words would be tool-only and uncounted. The alternatives are refused
+    // rather than missed.
+    const rewordedIn = (text: string) =>
+      text
+        .split('\n')
+        .filter(
+          (line) =>
+            line.startsWith('| ') &&
+            /wiring[^|]{0,40}(?:un(?:probed|proven|verified)|not probed|never (?:probed|exercised))/i.test(
+              line,
+            ) &&
+            !line.includes('wiring is unprobed'),
+        )
+        .map((line) => line.slice(0, 40));
+
+    // Against a fixture, not only against a file where it currently matches
+    // nothing: an alternation that had stopped matching would agree with a
+    // clean register and say the same thing. The canonical row matches the
+    // alternation too, so it is the exclusion that removes it — both halves of
+    // the filter are load-bearing here, where the first row previously failed
+    // the regex and left the exclusion untested.
+    expect(
+      rewordedIn(
+        [
+          '| Secret scan | gitleaks | CI | the `gitleaks-action@v2` wiring is unprobed | 2026-08-11 |',
+          '| Static analysis | CodeQL | CI | the action wiring was never exercised | 2026-08-11 |',
+        ].join('\n'),
+      ).length,
+      'the reworded-marker filter must recognise a rewording',
+    ).toBe(1);
+    expect(
+      rewordedIn(gates),
+      'a probe cell describes an unprobed wiring in words the count cannot read',
+    ).toEqual([]);
+    expect(toolOnly, 'the gate table must mark some wiring unprobed').toBeGreaterThan(0);
+    expect(toolOnlySpelled, `no spelling for ${String(toolOnly)} tool-only rows`).not.toBe('');
+    expect(
+      gates.includes(
+        toolOnly === 1
+          ? 'One row is proven at the tool'
+          : `${toolOnlySpelled[0]?.toUpperCase() ?? ''}${toolOnlySpelled.slice(1)} rows are proven at the tool`,
+      ),
+      'the gate register says a different number than its own probe cells mark',
+    ).toBe(true);
+    expect(
+      roadmap.includes(
+        toolOnly === 1
+          ? 'One gate is proven at the tool'
+          : `${toolOnlySpelled[0]?.toUpperCase() ?? ''}${toolOnlySpelled.slice(1)} gates are proven at the tool`,
+      ),
+      'ROADMAP says a different number than the gate table marks',
+    ).toBe(true);
+
+    // Every count of the unverified criteria, wherever it is written. Three
+    // copies of "three" sit in the file the number is derived from, and only
+    // the ROADMAP row was bound to it — so closing a criterion would have
+    // corrected one sentence and left the rest false.
+    const stale = documents.flatMap(({ path, text }) =>
+      [
+        ...text.matchAll(
+          /\b(zero|one|two|three|four|five|six)\b(?=[^.]{0,40}(?:unverified|AA criteri))/gi,
+        ),
+      ]
+        .map((match) => match[1]?.toLowerCase() ?? '')
+        .filter((word) => word !== spelled)
+        .map((word) => `${path}: ${word}`),
+    );
+
+    expect(stale, `a document counts the unverified criteria as other than ${spelled}`).toEqual([]);
+  });
+
+  it('lists every SPEC non-goal in the roadmap that claims to hold them all', () => {
+    // "That is the whole of SPEC.md's non-goals list" is a completeness claim
+    // checked by eye. It was wrong twice — `cookies` in one review round and
+    // `installable PWA` in the next — so it is derived instead.
+    const spec = readFileSync('SPEC.md', 'utf8');
+    const roadmapFile = readFileSync('ROADMAP.md', 'utf8');
+    // The haystack is the enumeration itself: the sentence after the colon, and
+    // nothing else. Three spans were tried before this one and each let the
+    // document shield itself — the file scope let `backend` match two sections
+    // away, the section scope let `favouriting` match the sentence one blank
+    // line below the list, and the paragraph scope would let that same sentence
+    // shield it again the moment someone reflowed the blank line away. The
+    // shield is always prose near the claim, so the span has to be the claim.
+    //
+    // Split rather than a lookahead: `$` under /m matches end of line, so an
+    // earlier attempt captured one paragraph and checked a third of the
+    // section.
+    // Marked in the document rather than inferred from it. Every inferred span
+    // this project tried could be defeated by ordinary editing — a heading
+    // away, a blank line away, a full stop away — because nothing in the
+    // punctuation distinguishes a list that ran into prose from a longer list.
+    // A marker cannot be reflowed, and its absence reads as no list at all.
+    // Both markers required. Splitting on a closing marker that is not there
+    // returns the whole remainder, so a deleted closing tag would have widened
+    // the span to the end of the file — the same silent widening, one token
+    // away, in the mechanism chosen to end it.
+    const enumerationOf = (text: string) => {
+      const after = text.split('<!-- non-goals:list -->')[1] ?? '';
+
+      return after.includes('<!-- /non-goals:list -->')
+        ? (after.split('<!-- /non-goals:list -->')[0] ?? '').toLowerCase()
+        : '';
+    };
+
+    const marked = (list: string, prose: string) =>
+      [
+        '## Not planned',
+        '',
+        '<!-- non-goals:list -->',
+        '',
+        list,
+        '',
+        '<!-- /non-goals:list -->',
+        '',
+        prose,
+      ].join('\n');
+    const list = 'Recorded so they are not proposed again as if new: accounts, login.';
+    const prose = 'Favouriting is called out by name as the one most likely to return.';
+
+    expect(enumerationOf(marked(list, prose)), 'the enumeration must be read').toContain(
+      'accounts',
+    );
+    // The arrangements that shielded an item at file, section and paragraph
+    // scope in turn: prose after the list, prose in the same paragraph, and the
+    // same with the list's own full stop dropped so a sentence-slicing span
+    // could not tell where it ended.
+    expect(
+      enumerationOf(marked(list, prose)),
+      'prose outside the markers must fall outside the span',
+    ).not.toContain('favouriting');
+    expect(
+      enumerationOf(marked(list, prose).replace('.\n\n<!-- /non-goals', '.\n<!-- /non-goals')),
+      'a blank line is not what holds the span',
+    ).not.toContain('favouriting');
+    expect(
+      enumerationOf(marked(list.replace('login.', 'login'), prose)),
+      'an unterminated list must not capture the prose after it',
+    ).not.toContain('favouriting');
+    // Either marker, not just the opening one.
+    expect(
+      enumerationOf(marked(list, prose).replace('<!-- non-goals:list -->', '')),
+      'a missing opening marker must read as no list, not as the whole document',
+    ).toBe('');
+    expect(
+      enumerationOf(marked(list, prose).replace('<!-- /non-goals:list -->', '')),
+      'a missing closing marker must read as no list, not as the rest of the file',
+    ).toBe('');
+
+    const roadmap = enumerationOf(roadmapFile);
+
+    expect(roadmap, 'the enumeration must be findable').not.toBe('');
+
+    const section = /^## Non-goals\n\n([\s\S]*?)\n\n## /m.exec(spec)?.[1] ?? '';
+    const bullets = section.split('\n').filter((line) => line.startsWith('- '));
+
+    // A bullet is a comma- or slash-separated list of distinct refusals, and it
+    // is an individual item that goes missing, not a whole bullet. Each item's
+    // first significant word must appear in the enumeration.
+    const items = bullets.flatMap((bullet) =>
+      bullet
+        .slice(2)
+        .replace(/\([^)]*\)/g, '')
+        .split(/,| or | \/ /)
+        .map((fragment) => /[a-z][a-z-]{4,}/i.exec(fragment.replace(/^(any|the)\s+/i, ''))?.[0])
+        .filter((word): word is string => word !== undefined)
+        .map((word) => ({ word: word.toLowerCase(), bullet: bullet.slice(2, 48) })),
+    );
+
+    expect(items.length, 'SPEC must declare non-goals').toBeGreaterThan(0);
+
+    const missingFrom = (haystack: string) =>
+      items
+        .filter(({ word }) => !haystack.includes(word))
+        .map(({ word, bullet }) => `${word} (from: ${bullet}…)`);
+
+    expect(missingFrom(roadmap), 'the roadmap claims to list every non-goal and does not').toEqual(
+      [],
+    );
+  });
+
+  it('keeps the adoption register and the gate register agreeing on step 5', () => {
+    // They contradicted each other with every gate green: PLAN and the gate
+    // register recorded the decision, and the adoption register — the document
+    // whose whole purpose is the adoption position — still called it open.
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    expect(
+      gates.includes('Step 5 is closed'),
+      'the gate register must state where step 5 stands',
+    ).toBe(true);
+
+    // The shape, not the sentence. Five review rounds each found the same
+    // contradiction in a new phrasing, and a guard pinned to the last one
+    // catches only the last one.
+    const callsStepFiveOpen = (line: string) =>
+      /steps?\s+(?:\d+\s*(?:[–—-]|and|,|&)\s*)*(?:5|five)\b|fifth adoption step/i.test(line) &&
+      /\bunscheduled\b|\bstill open\b|\bnot yet\b|\bremains? open\b/i.test(line) &&
+      // A line may close step 5 and note that something else is unscheduled in
+      // the same breath — which is the accurate sentence, not a contradiction.
+      !/step 5 (?:is |was )?(?:closed|resolved|declined)/i.test(line);
+
+    // Pinned, so the selector cannot quietly stop matching. The second case is
+    // legitimate: coverage thresholds genuinely are unscheduled, and saying so
+    // beside a closed step 5 is the accurate sentence.
+    expect(callsStepFiveOpen('Step 5 is unscheduled — see the gate register')).toBe(true);
+    expect(callsStepFiveOpen('Steps 4–5 remain unscheduled')).toBe(true);
+    expect(callsStepFiveOpen('Steps 4 and 5 remain unscheduled')).toBe(true);
+    expect(callsStepFiveOpen('Step five remains unscheduled')).toBe(true);
+    expect(callsStepFiveOpen('Step 5 remains unscheduled; Stryker may yet be adopted')).toBe(true);
+    expect(callsStepFiveOpen('Step 5 is closed. Coverage thresholds remain unscheduled')).toBe(
+      false,
+    );
+
+    // Every document that mentions the step, not a hand-kept list: an earlier
+    // version read one file while three could contradict it.
+    const contradicting = documents.flatMap(({ path, text }) =>
+      text
+        .split('\n')
+        .filter(callsStepFiveOpen)
+        .map((line) => `${path}: ${line.trim().slice(0, 70)}`),
+    );
+
+    expect(
+      contradicting,
+      'a document calls step 5 open while the gate register calls it closed',
+    ).toEqual([]);
+  });
+
+  it('does not name a tool as enforced that the register says is not adopted', () => {
+    // Five rounds fixed this class by hand, then a sixth added a guard that
+    // filtered on table syntax — reintroducing the exact mistake this file
+    // already records for another selector, and letting a prose bullet
+    // ("No cyclic dependencies (madge, CI)") survive a seventh round.
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    // Derived from the register, not listed here: a hardcoded pair covers only
+    // the tools that happened to be declined when it was written.
+    // Every row of the deferred table whose status says not adopted, plus every
+    // substitution bullet — by status, not by the two spellings that happened
+    // to exist. A derivation that silently matches fewer rows shrinks the
+    // search while its anti-vacuity assertion still passes.
+    const notAdoptedRows = gates
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && /not adopted|not-applicable/i.test(line));
+    const substitutions = [...gates.matchAll(/^- \*\*`?[\w/-]+`? instead of (\w+)/gm)].map(
+      (match) => match[1] ?? '',
+    );
+    const fromRows = notAdoptedRows.map(
+      (row) => /\(([\w-]+)\)/.exec(row)?.[1] ?? (row.split('|')[1] ?? '').trim(),
+    );
+    const declined = [...fromRows, ...substitutions].filter(Boolean);
+
+    // This catches a row with no cells at all. What actually catches an
+    // unrecognised row shape is the equality below, which pins the answer.
+    expect(fromRows.filter(Boolean).length, 'a not-adopted row produced no tool name').toBe(
+      notAdoptedRows.length,
+    );
+
+    // Anti-vacuity: the list must resolve to the tools the register declines,
+    // or the assertion below passes by finding nothing to check.
+    expect([...declined].sort(), 'the declined-tool list must derive from the register').toEqual([
+      'Stryker',
+      'madge',
+    ]);
+
+    // Any line, prose or table, presenting the tool as something CI runs.
+    const claimsEnforced = (line: string, tool: string) => {
+      const parts = line.split(/(?<=\.)\s+|\|/);
+      const index = parts.findIndex((part) => part.includes(tool));
+      const clause = parts[index] ?? '';
+      // A table row is one subject, so the blocking cell is read anywhere in it
+      // — it is not always adjacent, since a tool can be named in a rationale
+      // cell that sits after it. Prose puts several subjects on one line, so
+      // there the scope is the sentence naming the tool; reading a whole prose
+      // line let a disclaimer about one tool excuse an overclaim about another.
+      //
+      // The disclaimer is read row-wide too, but not from a cell naming one of
+      // the *other* declined tools: reading the whole row let `Stryker is
+      // declined` in a notes cell excuse a row putting madge in CI, which is
+      // the same defect the prose branch above already carries a comment about.
+      const isRow = line.trimStart().startsWith('|');
+      const others = declined.filter((other) => other !== tool);
+      const context = isRow
+        ? parts.filter((cell) => !others.some((other) => cell.includes(other)))
+        : [clause];
+      const evidence = isRow ? parts.filter((_, at) => at !== index) : [parts[index + 1] ?? ''];
+
+      // The blocking cell's spelling is whatever the register uses: PLAN writes
+      // `yes`/`warn`, the gate table writes the layers — `CI`, `commit, CI`,
+      // and qualified forms like ``CI (required context on `main`)``.
+      // Restricting it to `yes|warn` meant one table in the whole repository
+      // could trip this, and the gate register itself could not; requiring the
+      // cell to consist only of layer words then excluded the qualified forms
+      // the register actually uses. What disqualifies a cell is a denial, not
+      // its punctuation — `not run in CI` is not evidence of CI, and
+      // `yesterday` is not `yes`.
+      const isBlocking = (cell: string) =>
+        /^\s*(?:yes|warn)\b/i.test(cell) ||
+        (/\bCI\b/.test(cell) && !/\b(?:not|never|manual|unprobed|without)\b/i.test(cell));
+
+      return (
+        clause !== '' &&
+        (evidence.some(isBlocking) || /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(clause)) &&
+        !context.some((cell) => /not adopted|not-applicable|substituted|declined/i.test(cell))
+      );
+    };
+
+    expect(claimsEnforced('- No cyclic dependencies (madge, CI).', 'madge')).toBe(true);
+    expect(claimsEnforced('| Mutation testing — Stryker | warn only | 5 |', 'Stryker')).toBe(true);
+    // The gate register's own row shape, in each layer spelling it uses.
+    expect(claimsEnforced('| Cycles | madge | commit, CI | probe | 2026-08-01 |', 'madge')).toBe(
+      true,
+    );
+    expect(claimsEnforced('| Mutants | Stryker | CI | survived | 2026-08-12 |', 'Stryker')).toBe(
+      true,
+    );
+    expect(claimsEnforced('| Mutants | Stryker | not adopted | — | — |', 'Stryker')).toBe(false);
+    // Named in a rationale cell, after the blocking one.
+    expect(claimsEnforced('| Cycle detection | yes | 4 | via madge |', 'madge')).toBe(true);
+    // A disclaimer about the other declined tool must not excuse this one.
+    expect(claimsEnforced('| Cycles | madge | CI | Stryker was declined |', 'madge')).toBe(true);
+    // A cell denying enforcement is not evidence of it, and `yesterday` is not
+    // `yes`: both were read as blocking while the match was an open prefix.
+    expect(claimsEnforced('| Mutants | Stryker | manual | not run in CI |', 'Stryker')).toBe(false);
+    expect(claimsEnforced('| Mutants | Stryker | manual | yesterday |', 'Stryker')).toBe(false);
+    // The register's qualified layer spelling, which a layer-words-only match
+    // could not see.
+    expect(
+      claimsEnforced('| Mutants | Stryker | CI (required context on `main`) | — |', 'Stryker'),
+    ).toBe(true);
+    expect(claimsEnforced('madge is recorded as `not-applicable`', 'madge')).toBe(false);
+    // A disclaimer about one tool must not excuse an overclaim about another.
+    expect(
+      claimsEnforced('- No cyclic dependencies (madge, CI). Stryker is declined.', 'madge'),
+    ).toBe(true);
+
+    const overclaimed = declined.flatMap((tool) =>
+      documents
+        .flatMap(({ path, text }) => text.split('\n').map((line) => `${path}\u0000${line}`))
+        .filter((entry) => claimsEnforced(entry.split('\u0000')[1] ?? '', tool))
+        .map((entry) => `${tool}: ${entry.replace('\u0000', ' — ').trim().slice(0, 80)}`),
+    );
+
+    expect(
+      overclaimed,
+      'PLAN names a tool as enforced that the register says is not adopted',
+    ).toEqual([]);
   });
 
   it('quotes a slice range that matches the slices PLAN.md declares', () => {

@@ -71,5 +71,11 @@ Four things, stated rather than implied:
    conformance and should not until at least the three unverified criteria are
    closed and someone other than this agent has looked.
 
+**Accepted as it stands on 2026-08-12.** The human read the four items above
+and chose to leave them. That is a decision, not an oversight, and it is
+recorded here rather than in a conversation — but it does not make the state
+different: three AA criteria are still unverified and nobody has listened to
+this with a screen reader.
+
 The target is set. Meeting it is not the same as having set it, and this
 document exists so the difference stays visible.

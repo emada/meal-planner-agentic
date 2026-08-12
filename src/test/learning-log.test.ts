@@ -44,6 +44,31 @@ describe('the engineering learning log counts what it contains', () => {
     expect(Number(stated), 'the stated count disagrees with the table').toBe(pending);
   });
 
+  it('names the largest class its own table produces', () => {
+    // "The largest class by a wide margin" opened class A and stopped being
+    // true when class B overtook it — in the entries about guards that pass
+    // while the claim beside them is false.
+    const sizes = new Map<string, number>();
+
+    for (const row of rows) {
+      const letter = (row[1] ?? '').charAt(0);
+
+      sizes.set(letter, (sizes.get(letter) ?? 0) + 1);
+    }
+
+    const largest = [...sizes.entries()].sort((a, b) => b[1] - a[1])[0];
+    const stated = /derived:largest-class -->([A-D])<!-- \/derived/.exec(log)?.[1];
+
+    expect(sizes.size, 'the table must produce classes to compare').toBeGreaterThan(1);
+    expect(stated, 'the log must name its largest class').toBeDefined();
+    expect(stated, 'the stated largest class disagrees with the table').toBe(largest?.[0]);
+    // A tie would make "the largest" a false claim in either spelling.
+    expect(
+      [...sizes.values()].filter((size) => size === (largest?.[1] ?? 0)).length,
+      'two classes are tied, so no single class is the largest',
+    ).toBe(1);
+  });
+
   it('states the entry count its own table produces', () => {
     const stated = /^([\w-]+) entries, and they are not/m.exec(log)?.[1];
     const words = [
@@ -73,6 +98,16 @@ describe('the engineering learning log counts what it contains', () => {
       'Twenty-three',
       'Twenty-four',
       'Twenty-five',
+      'Twenty-six',
+      'Twenty-seven',
+      'Twenty-eight',
+      'Twenty-nine',
+      'Thirty',
+      'Thirty-one',
+      'Thirty-two',
+      'Thirty-three',
+      'Thirty-four',
+      'Thirty-five',
     ];
 
     expect(stated, 'the log must state how many entries it holds').toBeDefined();

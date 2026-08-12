@@ -43,7 +43,7 @@ src/ui/        views, components, modal                  → depends on: api, do
 Rules, to be enforced mechanically rather than by review:
 
 - `domain/` imports nothing from `api/`, `storage/`, or `ui/`. It is pure and fully unit-testable.
-- No cyclic dependencies (madge, CI).
+- No cyclic dependencies (`import/no-cycle`, at commit and in CI; madge recorded as not-applicable — see the gate register).
 - Every value crossing a boundary — API response, `localStorage` read — is parsed through a schema. Unparsed third-party data never reaches `ui/`.
 - Recipe text renders as text nodes only. No `dangerouslySetInnerHTML` anywhere; enforced by lint rule, not by convention.
 
@@ -81,23 +81,23 @@ Cheap and blocking. Must stay fast enough not to become a waiting ritual.
 
 Runs on every pull request and on `main`, from a clean checkout.
 
-| Check                                           | Blocking               | Adoption step |
-| ----------------------------------------------- | ---------------------- | ------------- |
-| Type-check, lint, format                        | yes                    | 1             |
-| Unit/integration tests (Vitest)                 | yes                    | 1             |
-| Gitleaks                                        | yes                    | 1             |
-| Reproducible build                              | yes                    | 2             |
-| Playwright journeys, mobile + desktop viewports | yes                    | 2             |
-| Preview deployment                              | yes                    | 2             |
-| SCA — `npm audit` + OSV-Scanner                 | yes, high/critical     | 3             |
-| SAST — CodeQL or Semgrep                        | yes                    | 3             |
-| Dependency-cycle check — madge                  | yes                    | 4             |
-| Duplication — jscpd                             | warn first, then block | 4             |
-| Automated accessibility checks in Playwright    | yes                    | 4             |
-| Mutation testing — Stryker, changed files       | warn only              | 5             |
-| Bundle-size budget                              | warn first, then block | 4             |
+| Check                                           | Blocking                                           | Adoption step |
+| ----------------------------------------------- | -------------------------------------------------- | ------------- |
+| Type-check, lint, format                        | yes                                                | 1             |
+| Unit/integration tests (Vitest)                 | yes                                                | 1             |
+| Gitleaks                                        | yes                                                | 1             |
+| Reproducible build                              | yes                                                | 2             |
+| Playwright journeys, mobile + desktop viewports | yes                                                | 2             |
+| Preview deployment                              | yes                                                | 2             |
+| SCA — `npm audit` + OSV-Scanner                 | yes, high/critical                                 | 3             |
+| SAST — CodeQL or Semgrep                        | yes                                                | 3             |
+| Dependency-cycle check — madge                  | not adopted; substituted by `import/no-cycle`      | 4             |
+| Duplication — jscpd                             | yes; the warn-first ramp was skipped               | 4             |
+| Automated accessibility checks in Playwright    | yes                                                | 4             |
+| Mutation testing — Stryker, changed files       | declined as a gate 2026-08-12; hand-run diagnostic | 5             |
+| Bundle-size budget                              | yes; the warn-first ramp was skipped               | 4             |
 
-Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6, together with the bundle-size budget, which was moved here from step 5 because it is cheap and measured rather than estimated. Step 5 — mutation testing — is unscheduled: the precondition is met, and adopting it is now a cost decision rather than a sequencing one.
+Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6, together with the bundle-size budget, which was moved here from step 5 because it is cheap and measured rather than estimated. Step 5 is resolved: mutation testing was measured on 2026-08-11 and **declined as a gate** on 2026-08-12 — adopted instead as an occasional hand-run diagnostic over the pure-logic modules. Coverage thresholds remain unscheduled. `docs/quality/gates.md` carries both decisions.
 
 ### Post-deploy
 
@@ -184,7 +184,7 @@ Cross-cutting definition of done for every slice below: acceptance criteria demo
 - **Status**: complete, 2026-08-11 (PR #9).
 - **Outcome**: the full gate profile is in force and the app is verified across the required matrix.
 - **Mapped AC**: AC13, AC14.
-- **Scope**: adoption step 4 — jscpd, automated a11y, bundle-size budget. madge is recorded as `not-applicable`: `import/no-cycle` already blocks cycles at commit and in CI, and a second full-graph checker adds a dependency without adding a control. Step 5 (Stryker, coverage thresholds) is unscheduled — see the gate register. SCA and SAST landed on 2026-08-10; complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
+- **Scope**: adoption step 4 — jscpd, automated a11y, bundle-size budget. madge is recorded as `not-applicable`: `import/no-cycle` already blocks cycles at commit and in CI, and a second full-graph checker adds a dependency without adding a control. Step 5 is resolved for Stryker and unscheduled for coverage thresholds — see the gate register. SCA and SAST landed on 2026-08-10; complete dual-viewport journey matrix; resolve any accumulated warn-level findings.
 - **Dependencies**: S4, S5.
 - **Stop condition**: a new blocking gate produces noise rather than actionable findings — report before making it mandatory.
 
@@ -243,15 +243,15 @@ None were used. The readiness assessment below was made before S4, and the outco
 
 ## Risks and mitigations
 
-| Risk                                                                        | Mitigation                                                                                                                                                   |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| TheMealDB test key is rate-limited and unsupported for production (spec O1) | Risk accepted by the human on 2026-08-10. Throttling surfaces as the AC3 error state; there is no further mitigation, which is what accepting the risk means |
-| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                                                                           |
-| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                               |
-| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                |
-| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                    |
-| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 at S0, step 3 pulled forward to 2026-08-10, step 4 at S6. Step 5 is unscheduled — see the gate register                        |
-| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                |
+| Risk                                                                        | Mitigation                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| TheMealDB test key is rate-limited and unsupported for production (spec O1) | Risk accepted by the human on 2026-08-10. Throttling surfaces as the AC3 error state; there is no further mitigation, which is what accepting the risk means                                                         |
+| TheMealDB availability or latency                                           | Visible error and retry states are acceptance criteria, not polish                                                                                                                                                   |
+| Third-party recipe text rendered in our UI                                  | Text-only rendering, lint-enforced; `rel="noopener noreferrer"` on outbound links; covered in the threat model                                                                                                       |
+| `localStorage` unavailable or full                                          | Write failures handled explicitly in S3; app stays usable without persistence                                                                                                                                        |
+| Measure strings are free text and inconsistent                              | Spec forbids unit arithmetic; grouping is by name only, measures verbatim                                                                                                                                            |
+| Full gate profile slows the first slice                                     | Adoption is staged: steps 1–2 at S0, step 3 pulled forward to 2026-08-10, step 4 at S6. Step 5 is closed: mutation testing declined as a gate on 2026-08-12, coverage thresholds unscheduled — see the gate register |
+| Gates become noise and get ignored                                          | Each slice has a stop condition requiring a report instead of a weakened gate                                                                                                                                        |
 
 ## Decisions resolved
 

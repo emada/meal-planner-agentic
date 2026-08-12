@@ -51,7 +51,7 @@ The last one, preview deployment, was argued here to be not worth proving — th
 
 It also caught something nobody asked about: `git push` had to be run with `--no-verify`, because the pre-push hook rejected the same error first. That layer has no row of its own and no probe; this is the closest thing to one.
 
-**One row is proven at the tool, not at the gate.** Every other probe ran the same program CI runs. The secret scan does not: CI runs `gitleaks/gitleaks-action@v2` and the probe ran the gitleaks CLI, so what is demonstrated is that gitleaks rejects the input, not that the action wiring rejects. The cell says so. Closing it means pushing a credential-shaped string to the remote, which the S9 stop condition forbids.
+**One row is proven at the tool, not at the gate.** Every other probe ran the same program CI runs. The secret scan does not: CI runs `gitleaks/gitleaks-action@v2` and the probe ran the gitleaks CLI, so what is demonstrated is that gitleaks rejects the input, not that the action wiring rejects. The cell says so. Closing it means pushing a credential-shaped string to the remote, which the S9 stop condition forbids. On 2026-08-12 the action failed on this repository for a reason that had nothing to do with secrets: it validates a licence over the network, could not reach `api.github.com`, and failed closed. A re-run passed. That is one more thing the CLI probe could not have shown.
 
 The dependency scan was in that state too, on the argument that closing it meant pushing a vulnerable lockfile. That argument was wrong: the scratch lockfile that probed `npm audit` never left the machine, and OSV-Scanner reads a lockfile locally. It was probed on 2026-08-11 and both halves reject. **A refusal is only valid once a substitute has been looked for**, which the contract now requires and which this row had skipped.
 
@@ -77,12 +77,12 @@ From `PLAN.md`, encoded in `eslint.config.js` rather than left to review:
 
 ## Deferred gates
 
-Deliberately not in force. The adoption order in `.ai-engineering/.bootstrap/06-tools` is complete through step 4; what remains has no scheduled slice, because the sequencing reason for deferring it is gone and what is left is a cost decision.
+Step 5 is closed. Mutation testing was measured and **declined as a gate** on 2026-08-12; its row below records a decision rather than a deferral. Coverage thresholds remain genuinely deferred, and not on cost grounds — a threshold measured against a suite this size mostly reports the number it was set to.
 
-| Gate                       | Status                           | Lands in    | Rationale                                                                                                                                                           |
-| -------------------------- | -------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mutation testing (Stryker) | deferred, warn-only when adopted | unscheduled | Step 5. Measured once on 2026-08-11 rather than argued about — see below. What remains is a cost decision                                                           |
-| Coverage thresholds        | deferred                         | unscheduled | Coverage is reported from S0. A threshold measured against a suite this size mostly reports the number it was set to; worth setting when someone will act on a drop |
+| Gate                       | Status                                | Lands in            | Rationale                                                                                                                                                           |
+| -------------------------- | ------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mutation testing (Stryker) | **not adopted as a gate**, 2026-08-12 | occasional, by hand | The human accepted the recommendation below: run it over `domain/`, `api/` and `storage/` as a diagnostic, never as a threshold                                     |
+| Coverage thresholds        | deferred                              | unscheduled         | Coverage is reported from S0. A threshold measured against a suite this size mostly reports the number it was set to; worth setting when someone will act on a drop |
 
 ## Substitutions from `PLAN.md`
 
@@ -90,7 +90,7 @@ Recorded because they differ from what the plan named:
 
 - **secretlint at pre-commit, gitleaks in CI.** The plan named gitleaks at both layers. Gitleaks is a system binary and is not installed here — the S9 probe fetched a copy for one run and discarded it; requiring it locally would make a fresh clone fail its own hook. secretlint installs from the lockfile, so `npm ci` is enough to get a working pre-commit gate. Gitleaks still runs in CI over full history, which is the authoritative layer. Net effect: stronger, not weaker.
 - **`import/no-cycle` instead of madge; madge recorded as `not-applicable`.** The plan put cycle detection at step 4 via madge. The lint rule was already active from S0, blocks at commit and in CI, and carries a dated negative probe. A second full-graph checker would cover only files ESLint does not lint, of which there are none — so it would add a dependency without adding a control. Decision taken, not deferred again.
-- **Duplication and the bundle budget block from the first day, rather than warning first.** `PLAN.md` staged both as "warn first, then block". Both went straight to blocking, including as a required context: there are zero clones to grandfather, and the budget is measured against the real artifact rather than estimated, so neither can produce the noise the warn-first ramp exists to absorb. Stricter than planned, recorded because it differs.
+- **Duplication and the bundle budget block from the first day, rather than warning first.** `PLAN.md` originally staged both as warn-first; its table now records this deviation rather than the plan. Both went straight to blocking, including as a required context: there are zero clones to grandfather, and the budget is measured against the real artifact rather than estimated, so neither can produce the noise the warn-first ramp exists to absorb. Stricter than planned, recorded because it differs.
 - **CSP shipped in the built HTML, not only in Vercel headers.** A header-only policy could not be tested locally. Injecting it at build time means `vite preview`, and therefore the CI browser tests, exercise the real policy. `vercel.json` carries only the directives a meta tag cannot express (`frame-ancestors`) plus the non-CSP security headers.
 
 ## Version pins forced by the ecosystem
@@ -207,7 +207,7 @@ What remains unprotected, stated plainly: the reviewer is a subagent of the agen
 
 **Owner recovery.** Requiring a context only an agent publishes reintroduces, by a different route, the lockout that zero required approvals was chosen to avoid: if the agent or `publish-claude-review.sh` is unavailable, nothing can merge — including a fix to the ruleset. `bypass_actors` is empty by design. The recovery is for the owner to edit ruleset 20604945, remove the context, merge, and restore it. Publishing the status by hand with `gh api` is not the recovery; `EXECUTION.md` prohibits it precisely because it would defeat the head binding.
 
-### Mutation testing, measured once
+### Mutation testing: measured, then declined as a gate
 
 Run on 2026-08-11 against a scratch copy that was not retained, so unlike the derived gate evidence these figures cannot be re-derived from this repository. Not adopted. `@stryker-mutator/core` + the vitest runner, 987 mutants across 14 files, 3 minutes 5 seconds at concurrency 4 on a developer machine.
 
@@ -225,7 +225,15 @@ Run on 2026-08-11 against a scratch copy that was not retained, so unlike the de
 
 Two rounds of review were needed to state that paragraph correctly: the first version overstated the hole, the second over-corrected. The defect was always small; describing it precisely was the hard part.
 
-Whether to adopt it as a gate is unresolved. The costs are ~9 MB of dev dependency, roughly three minutes locally and more on a two-core CI runner, and triage of 258 surviving mutants of which an unknown share are equivalent — mutants that change the code without changing behaviour, which no test can or should kill.
+**Resolved 2026-08-12: not adopted as a gate.** The human accepted the recommendation. Three reasons, in order of weight:
+
+1. **The headline number would measure the wrong thing here.** A threshold would penalise a deliberate decision — testing the UI in a browser rather than in jsdom — because Stryker never invokes Playwright.
+2. **258 surviving mutants to triage**, an unknown share of them equivalent: mutants that change the code without changing behaviour, which no test can or should kill. `100%` is unreachable by construction, so a threshold set near it buys work rather than confidence.
+3. **As a gate it converts "write better tests" into "write tests that move a number"**, which is not the same instruction.
+
+**What is adopted instead:** run it by hand over `domain/`, `api/` and `storage/` — the pure-logic modules, where the score is honest (86–94%) and the survivors are few enough to read one at a time. That is where it found the AC4 defect. Once a quarter, or after a substantial change to domain logic, delivers most of the value at almost no cost.
+
+The costs measured: ~9 MB of dev dependency, three minutes locally at concurrency 4, more on a two-core CI runner.
 
 ### Production smoke check
 

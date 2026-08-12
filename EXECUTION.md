@@ -123,7 +123,7 @@ Rollback remains a human action: promoting a previous Vercel deployment. An agen
 
 ### Runtime operations
 
-SWEAI Builder does not yet model authorization for operating a running system. Until `ROADMAP.md` item 1 lands, these remain level 4 and are performed by a human:
+SWEAI Builder does not yet model authorization for operating a running system. Until `contract:ROADMAP.md` item 1 lands, these remain level 4 and are performed by a human:
 
 - Read production telemetry, logs, or traces: Human only
 - Execute a runbook or rollback: Human only
