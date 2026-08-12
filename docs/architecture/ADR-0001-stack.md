@@ -23,5 +23,5 @@ Deliberately not adopted: a router, a state-management library, a component libr
 ## Consequences
 
 - Static output deploys anywhere; Vercel is replaceable without touching application code.
-- React's runtime is the largest part of the bundle. Accepted; a bundle budget lands in S6.
+- React's runtime is the largest part of the bundle. Accepted; a bundle budget landed at S6 and blocks in CI.
 - TypeScript is pinned to `^5.9` and ESLint to `^9` because `typescript-eslint` does not yet support TypeScript 7 and `eslint-plugin-import` does not yet support ESLint 10. Both pins are recorded in `docs/quality/gates.md` and are revisited when upstream support lands.

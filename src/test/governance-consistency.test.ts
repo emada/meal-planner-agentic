@@ -90,8 +90,6 @@ describe('governance documents agree with the current authorization model', () =
   it('never points a deferred gate at a slice that has already shipped', () => {
     // Twice now a "lands in S6" cell survived S6 shipping, leaving a commitment
     // with no landing point and nothing to surface it again.
-    const gates = readFileSync('docs/quality/gates.md', 'utf8');
-    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
     const threats = readFileSync('docs/security/threat-model.md', 'utf8');
     const plan = readFileSync('PLAN.md', 'utf8');
 
@@ -148,11 +146,20 @@ describe('governance documents agree with the current authorization model', () =
 
     // Three documents, not one: the step-5 cell and three "Planned" threat rows
     // survived a full slice because only gates.md was being read.
-    const guarded = [
-      ['gates.md', gates],
-      ['bootstrap-adoption.md', adoption],
-      ['PLAN.md', plan],
-    ] as const;
+    // Every tracked document, not three. An ADR said "a bundle budget lands in
+    // S6" through seven review rounds because it was outside the list.
+    const guarded = documents
+      .filter(({ path }) => path !== 'docs/security/threat-model.md')
+      .map(({ path, text }) => [path, text] as const);
+
+    // The one exclusion, named rather than silent: that file records a
+    // deferral as *resolved* ("These were deferred to S6 … Authorizing
+    // automatic release on merge made that unacceptable"), which the selector
+    // reads as a live pointer. Its status rows are guarded separately below.
+    expect(
+      /deferred to S\d/.test(threats) && threats.includes('resolved, not accepted'),
+      'the threat-model exemption assumes a line recording a resolved deferral',
+    ).toBe(true);
 
     for (const [name, text] of guarded) {
       expect([name, ...text.split('\n').filter(isStale)]).toEqual([name]);
@@ -352,17 +359,30 @@ describe('governance documents agree with the current authorization model', () =
     // filtered on table syntax — reintroducing the exact mistake this file
     // already records for another selector, and letting a prose bullet
     // ("No cyclic dependencies (madge, CI)") survive a seventh round.
-    const plan = readFileSync('PLAN.md', 'utf8');
     const gates = readFileSync('docs/quality/gates.md', 'utf8');
 
     // Derived from the register, not listed here: a hardcoded pair covers only
     // the tools that happened to be declined when it was written.
-    const declined = [
-      ...gates.matchAll(/^- \*\*`?[\w/-]+`? instead of (\w+)/gm),
-      ...gates.matchAll(/^\| [^|]*\((\w+)\)[^|]*\|[^|]*not adopted/gm),
-    ]
-      .map((match) => match[1] ?? '')
-      .filter(Boolean);
+    // Every row of the deferred table whose status says not adopted, plus every
+    // substitution bullet — by status, not by the two spellings that happened
+    // to exist. A derivation that silently matches fewer rows shrinks the
+    // search while its anti-vacuity assertion still passes.
+    const notAdoptedRows = gates
+      .split('\n')
+      .filter((line) => line.startsWith('| ') && /not adopted|not-applicable/i.test(line));
+    const substitutions = [...gates.matchAll(/^- \*\*`?[\w/-]+`? instead of (\w+)/gm)].map(
+      (match) => match[1] ?? '',
+    );
+    const fromRows = notAdoptedRows.map(
+      (row) => /\(([\w-]+)\)/.exec(row)?.[1] ?? (row.split('|')[1] ?? '').trim(),
+    );
+    const declined = [...fromRows, ...substitutions].filter(Boolean);
+
+    // Every not-adopted row must have produced a name, so an unrecognised row
+    // shape fails loudly instead of quietly narrowing the search.
+    expect(fromRows.filter(Boolean).length, 'a not-adopted row produced no tool name').toBe(
+      notAdoptedRows.length,
+    );
 
     // Anti-vacuity: the list must resolve to the tools the register declines,
     // or the assertion below passes by finding nothing to check.
@@ -372,20 +392,33 @@ describe('governance documents agree with the current authorization model', () =
     ]);
 
     // Any line, prose or table, presenting the tool as something CI runs.
-    const claimsEnforced = (line: string, tool: string) =>
-      line.includes(tool) &&
-      (/\|\s*(?:yes|warn)[^|]*\|/i.test(line) || /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(line)) &&
-      !/not adopted|not-applicable|substituted|declined|by hand/i.test(line);
+    const claimsEnforced = (line: string, tool: string) => {
+      // Scoped to the clause naming the tool. A whole-line exclusion let a
+      // disclaimer about one tool excuse an overclaim about another on the
+      // same line.
+      const clause = line.split(/(?<=\.)\s+|\|/).find((part) => part.includes(tool)) ?? '';
+
+      return (
+        clause !== '' &&
+        (/\|\s*(?:yes|warn)[^|]*\|/i.test(line) ||
+          /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(clause)) &&
+        !/not adopted|not-applicable|substituted|declined|by hand/i.test(clause)
+      );
+    };
 
     expect(claimsEnforced('- No cyclic dependencies (madge, CI).', 'madge')).toBe(true);
     expect(claimsEnforced('| Mutation testing — Stryker | warn only | 5 |', 'Stryker')).toBe(true);
     expect(claimsEnforced('madge is recorded as `not-applicable`', 'madge')).toBe(false);
+    // A disclaimer about one tool must not excuse an overclaim about another.
+    expect(
+      claimsEnforced('- No cyclic dependencies (madge, CI). Stryker is declined.', 'madge'),
+    ).toBe(true);
 
     const overclaimed = declined.flatMap((tool) =>
-      plan
-        .split('\n')
-        .filter((line) => claimsEnforced(line, tool))
-        .map((line) => `${tool}: ${line.trim().slice(0, 70)}`),
+      documents
+        .flatMap(({ path, text }) => text.split('\n').map((line) => `${path}\u0000${line}`))
+        .filter((entry) => claimsEnforced(entry.split('\u0000')[1] ?? '', tool))
+        .map((entry) => `${tool}: ${entry.replace('\u0000', ' — ').trim().slice(0, 80)}`),
     );
 
     expect(
