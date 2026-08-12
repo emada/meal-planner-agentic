@@ -316,7 +316,7 @@ describe('governance documents agree with the current authorization model', () =
     // contradiction in a new phrasing, and a guard pinned to the last one
     // catches only the last one.
     const callsStepFiveOpen = (line: string) =>
-      /step 5/i.test(line) &&
+      /steps? (?:4[–—-])?5\b|fifth adoption step/i.test(line) &&
       /\bunscheduled\b|\bstill open\b|\bnot yet\b|\bremains? open\b/i.test(line) &&
       // A line may close step 5 and note that something else is unscheduled in
       // the same breath — which is the accurate sentence, not a contradiction.
@@ -326,6 +326,7 @@ describe('governance documents agree with the current authorization model', () =
     // legitimate: coverage thresholds genuinely are unscheduled, and saying so
     // beside a closed step 5 is the accurate sentence.
     expect(callsStepFiveOpen('Step 5 is unscheduled — see the gate register')).toBe(true);
+    expect(callsStepFiveOpen('Steps 4–5 remain unscheduled')).toBe(true);
     expect(callsStepFiveOpen('Step 5 remains unscheduled; Stryker may yet be adopted')).toBe(true);
     expect(callsStepFiveOpen('Step 5 is closed. Coverage thresholds remain unscheduled')).toBe(
       false,
@@ -346,40 +347,50 @@ describe('governance documents agree with the current authorization model', () =
     ).toEqual([]);
   });
 
-  it('does not call a gate blocking that the register says is not adopted', () => {
-    // PLAN's CI table listed madge as blocking and Stryker as warn-only long
-    // after the register recorded both as not adopted. Five review rounds found
-    // one contradiction each, by eye; this compares the two tables instead.
+  it('does not name a tool as enforced that the register says is not adopted', () => {
+    // Five rounds fixed this class by hand, then a sixth added a guard that
+    // filtered on table syntax — reintroducing the exact mistake this file
+    // already records for another selector, and letting a prose bullet
+    // ("No cyclic dependencies (madge, CI)") survive a seventh round.
     const plan = readFileSync('PLAN.md', 'utf8');
     const gates = readFileSync('docs/quality/gates.md', 'utf8');
 
-    // A tool the register records as declined, substituted, or hand-run must
-    // not appear in PLAN's Blocking column as though CI enforces it.
-    const declined = ['madge', 'Stryker'].filter((tool) =>
-      gates
-        .split('\n')
-        .some(
-          (line) =>
-            line.includes(tool) && /not adopted|not-applicable|declined|by hand/i.test(line),
-        ),
-    );
+    // Derived from the register, not listed here: a hardcoded pair covers only
+    // the tools that happened to be declined when it was written.
+    const declined = [
+      ...gates.matchAll(/^- \*\*`?[\w/-]+`? instead of (\w+)/gm),
+      ...gates.matchAll(/^\| [^|]*\((\w+)\)[^|]*\|[^|]*not adopted/gm),
+    ]
+      .map((match) => match[1] ?? '')
+      .filter(Boolean);
 
-    expect(declined, 'the register must record madge and Stryker as not adopted').toEqual([
-      'madge',
+    // Anti-vacuity: the list must resolve to the tools the register declines,
+    // or the assertion below passes by finding nothing to check.
+    expect([...declined].sort(), 'the declined-tool list must derive from the register').toEqual([
       'Stryker',
+      'madge',
     ]);
+
+    // Any line, prose or table, presenting the tool as something CI runs.
+    const claimsEnforced = (line: string, tool: string) =>
+      line.includes(tool) &&
+      (/\|\s*(?:yes|warn)[^|]*\|/i.test(line) || /\(\s*\w*[, ]*CI\s*\)|blocks in CI/i.test(line)) &&
+      !/not adopted|not-applicable|substituted|declined|by hand/i.test(line);
+
+    expect(claimsEnforced('- No cyclic dependencies (madge, CI).', 'madge')).toBe(true);
+    expect(claimsEnforced('| Mutation testing — Stryker | warn only | 5 |', 'Stryker')).toBe(true);
+    expect(claimsEnforced('madge is recorded as `not-applicable`', 'madge')).toBe(false);
 
     const overclaimed = declined.flatMap((tool) =>
       plan
         .split('\n')
-        .filter((line) => line.startsWith('| ') && line.includes(tool))
-        .filter((line) => /\|\s*(yes|warn[^|]*)\s*\|/i.test(line))
+        .filter((line) => claimsEnforced(line, tool))
         .map((line) => `${tool}: ${line.trim().slice(0, 70)}`),
     );
 
     expect(
       overclaimed,
-      "PLAN's gate table claims CI enforces a check the register says is not adopted",
+      'PLAN names a tool as enforced that the register says is not adopted',
     ).toEqual([]);
   });
 

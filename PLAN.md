@@ -43,7 +43,7 @@ src/ui/        views, components, modal                  → depends on: api, do
 Rules, to be enforced mechanically rather than by review:
 
 - `domain/` imports nothing from `api/`, `storage/`, or `ui/`. It is pure and fully unit-testable.
-- No cyclic dependencies (madge, CI).
+- No cyclic dependencies (`import/no-cycle`, at commit and in CI; madge recorded as not-applicable — see the gate register).
 - Every value crossing a boundary — API response, `localStorage` read — is parsed through a schema. Unparsed third-party data never reaches `ui/`.
 - Recipe text renders as text nodes only. No `dangerouslySetInnerHTML` anywhere; enforced by lint rule, not by convention.
 
@@ -92,10 +92,10 @@ Runs on every pull request and on `main`, from a clean checkout.
 | SCA — `npm audit` + OSV-Scanner                 | yes, high/critical                                 | 3             |
 | SAST — CodeQL or Semgrep                        | yes                                                | 3             |
 | Dependency-cycle check — madge                  | not adopted; substituted by `import/no-cycle`      | 4             |
-| Duplication — jscpd                             | warn first, then block                             | 4             |
+| Duplication — jscpd                             | yes; the warn-first ramp was skipped               | 4             |
 | Automated accessibility checks in Playwright    | yes                                                | 4             |
 | Mutation testing — Stryker, changed files       | declined as a gate 2026-08-12; hand-run diagnostic | 5             |
-| Bundle-size budget                              | warn first, then block                             | 4             |
+| Bundle-size budget                              | yes; the warn-first ramp was skipped               | 4             |
 
 Steps 1–2 landed in S0. **Step 3 was pulled forward to 2026-08-10**, when automatic release on merge made shipping without dependency and code analysis a condition the threat model already declared unacceptable. Step 4 completed at S6, together with the bundle-size budget, which was moved here from step 5 because it is cheap and measured rather than estimated. Step 5 is resolved: mutation testing was measured on 2026-08-11 and **declined as a gate** on 2026-08-12 — adopted instead as an occasional hand-run diagnostic over the pure-logic modules. Coverage thresholds remain unscheduled. `docs/quality/gates.md` carries both decisions.
 
