@@ -12,7 +12,7 @@ Migrated on 2026-08-10 from a tracked `.bootstrap` symlink (Git mode `120000`, t
 - Tracked branch: `main`
 - Product mount path: `.ai-engineering`
 - Installation type: Pinned Git submodule
-- Pinned commit: `dd978bf03d39cdd7721d3d58c49536c30c24decb`, advanced from `b66c337` on 2026-08-10 through a reviewed dependency-update pull request. Earlier pins: `52e60f1` → `b66c337` for the gate-evidence profile
+- Pinned commit: `f03301e6e214f6a18b11cfbc0176b0fbb861f23d`, advanced from `83b8e9c` on 2026-08-12 through a reviewed dependency-update pull request. Earlier pins: `52e60f1` → `b66c337` → `dd978bf` → `83b8e9c`. The full pin is asserted against the gitlink this repository records, because this line was two advances stale before anything read it
 - Submodule initialized and `.ai-engineering/AGENTS.md` readable: Yes
 - Operating contract reachable at `.ai-engineering/.bootstrap/AGENTS.md`: Yes
 - Git index mode is `160000` rather than symbolic-link mode `120000`: Yes — verified with `git ls-files --stage .ai-engineering`

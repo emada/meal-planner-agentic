@@ -4,58 +4,60 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 01 — Operating model
 
-| Rule                                         | Status         | Rationale                                                                                                                                                                                                                                                   |
-| -------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Human accountability for every merged change | Adopted        | One named accountable human owns every merge outcome. Since 2026-08-10 an agent performs the merge under authorization recorded in `EXECUTION.md`; accountability and rollback stay with the human, who did not delegate ownership by delegating the action |
-| Bounded autonomy                             | Adopted        | Each slice in `PLAN.md` carries scope, acceptance criteria, verification, and a stop condition                                                                                                                                                              |
-| Agent roles                                  | Adopted        | One lead agent throughout, with an independent reviewer per head. Roles never separated further, because no fleet step was taken                                                                                                                            |
-| Human + agent fleet workflow                 | not-applicable | S4 and S5 were the only independent pair. By the time S3 landed they were small enough that sequencing them cost less than coordinating two workspaces, so no fleet step was taken — `PLAN.md` records the outcome                                          |
-| Language policy                              | Adopted        | Every committed and published engineering artifact is English; conversation language is free                                                                                                                                                                |
-| Evidence-gated authorization                 | Adopted        | Signature table and autonomy ceiling recorded in `EXECUTION.md`. Ceiling raised to 4 on 2026-08-10 for merge and release; runtime operations stay human                                                                                                     |
+| Rule                                                                                         | Status         | Rationale                                                                                                                                                                                                                                                   |
+| -------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Human accountability for every merged change `01-operating-model/01-human-accountability.md` | Adopted        | One named accountable human owns every merge outcome. Since 2026-08-10 an agent performs the merge under authorization recorded in `EXECUTION.md`; accountability and rollback stay with the human, who did not delegate ownership by delegating the action |
+| Bounded autonomy `01-operating-model/02-bounded-autonomy.md`                                 | Adopted        | Each slice in `PLAN.md` carries scope, acceptance criteria, verification, and a stop condition                                                                                                                                                              |
+| Agent roles `01-operating-model/03-agent-roles.md`                                           | Adopted        | One lead agent throughout, with an independent reviewer per head. Roles never separated further, because no fleet step was taken                                                                                                                            |
+| Human + agent fleet workflow `01-operating-model/04-human-agent-fleet-workflow.md`           | not-applicable | S4 and S5 were the only independent pair. By the time S3 landed they were small enough that sequencing them cost less than coordinating two workspaces, so no fleet step was taken — `PLAN.md` records the outcome                                          |
+| Language policy `01-operating-model/05-language-policy.md`                                   | Adopted        | Every committed and published engineering artifact is English; conversation language is free                                                                                                                                                                |
+| Engineering learning loop `01-operating-model/07-engineering-learning-loop.md`               | Adopted        | `docs/engineering/learning-log.md` is the product-side record; its counts are derived by `src/test/learning-log.test.ts` and every general entry has been promoted through a reviewed contract pull request                                                 |
+| Evidence-gated authorization `01-operating-model/06-evidence-gated-authorization.md`         | Adopted        | Signature table and autonomy ceiling recorded in `EXECUTION.md`. Ceiling raised to 4 on 2026-08-10 for merge and release; runtime operations stay human                                                                                                     |
 
 ## 00 — Orientation
 
-| Rule                    | Status  | Rationale                                                                                             |
-| ----------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| How to use              | Adopted | Goal-first order followed: `GOAL.md` → `SPEC.md` → `PLAN.md` → `EXECUTION.md`, each human-approved    |
-| Bootstrap specification | Adopted | Artifacts created from `.ai-engineering/.bootstrap/templates/`, not hand-invented                     |
-| Lifecycle distribution  | Adopted | SWEAI Builder is installed as a pinned submodule at `.ai-engineering`; see `EXECUTION.md` for the pin |
+| Rule                                                                   | Status  | Rationale                                                                                             |
+| ---------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
+| How to use `00-orientation/01-how-to-use.md`                           | Adopted | Goal-first order followed: `GOAL.md` → `SPEC.md` → `PLAN.md` → `EXECUTION.md`, each human-approved    |
+| Bootstrap specification `00-orientation/02-bootstrap-specification.md` | Adopted | Artifacts created from `.ai-engineering/.bootstrap/templates/`, not hand-invented                     |
+| Lifecycle distribution `00-orientation/03-lifecycle-distribution.md`   | Adopted | SWEAI Builder is installed as a pinned submodule at `.ai-engineering`; see `EXECUTION.md` for the pin |
 
 ## 02 — Quality
 
-| Rule                      | Status  | Rationale                                                                                                                                                                                                                     |
-| ------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Policy as code            | Adopted | Types, lint, tests, boundaries, and CSP presence are executable checks, not review conventions                                                                                                                                |
-| Layered gates             | Adopted | Development → pre-commit → pre-push → CI, mapped in `docs/quality/gates.md`                                                                                                                                                   |
-| Definition of done        | Adopted | Applied per slice; each slice's evidence is recorded in its own pull request, S0 in #1                                                                                                                                        |
-| Control effectiveness     | Adopted | All twenty-two mandatory gates have a recorded negative probe. Two of them were probed at the tool rather than at the CI wiring, which their rows say. Per-gate status and `Last proven` dates are in `docs/quality/gates.md` |
-| Automated semantic review | Adopted | Mandatory independent reviewer at `.claude/agents/semantic-reviewer.md`; publishing authorized in `EXECUTION.md` on 2026-08-10                                                                                                |
+| Rule                                                                   | Status  | Rationale                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Policy as code `02-quality/01-policy-as-code.md`                       | Adopted | Types, lint, tests, boundaries, and CSP presence are executable checks, not review conventions                                                                                                                            |
+| Layered gates `02-quality/02-layered-gates.md`                         | Adopted | Development → pre-commit → pre-push → CI, mapped in `docs/quality/gates.md`                                                                                                                                               |
+| Definition of done `02-quality/03-definition-of-done.md`               | Adopted | Applied per slice; each slice's evidence is recorded in its own pull request, S0 in #1                                                                                                                                    |
+| Control effectiveness `02-quality/04-control-effectiveness.md`         | Adopted | All twenty-two mandatory gates have a recorded negative probe. One of them is probed at the tool rather than at the CI wiring, which its row says. Per-gate status and `Last proven` dates are in `docs/quality/gates.md` |
+| Claim accuracy `02-quality/06-claim-accuracy.md`                       | Adopted | The largest defect class recorded here. Counts, lists and statuses are derived by `src/test/governance-consistency.test.ts`; the one completeness claim over prose is bound to a marked span in `ROADMAP.md`              |
+| Automated semantic review `02-quality/05-automated-semantic-review.md` | Adopted | Mandatory independent reviewer at `.claude/agents/semantic-reviewer.md`; publishing authorized in `EXECUTION.md` on 2026-08-10                                                                                            |
 
 ## 03 — Security and privacy
 
-| Rule                       | Status  | Rationale                                                                                                                           |
-| -------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Security by design         | Adopted | Threat model written before feature code; CSP and security headers ship from S0                                                     |
-| Privacy and GDPR/APPs      | Adopted | Assessment complete; the finding is that no personal data is processed by us                                                        |
-| Secrets and supply chain   | Partial | Secret scanning at two layers from S0; SCA and SAST pulled forward to 2026-08-10 as required contexts when release became automatic |
-| Agent tool data handling   | Adopted | Agents touch no personal data; no secret value is printed, logged, or committed — `EXECUTION.md`                                    |
-| External service readiness | Adopted | GitHub and Vercel verified live; the TheMealDB test key runs in production as an accepted risk (spec O1, 2026-08-10)                |
+| Rule                                                                              | Status  | Rationale                                                                                                                           |
+| --------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Security by design `03-security-privacy/01-security-by-design.md`                 | Adopted | Threat model written before feature code; CSP and security headers ship from S0                                                     |
+| Privacy and GDPR/APPs `03-security-privacy/02-privacy-gdpr-apps.md`               | Adopted | Assessment complete; the finding is that no personal data is processed by us                                                        |
+| Secrets and supply chain `03-security-privacy/03-secrets-supply-chain.md`         | Partial | Secret scanning at two layers from S0; SCA and SAST pulled forward to 2026-08-10 as required contexts when release became automatic |
+| Agent tool data handling `03-security-privacy/04-agent-tool-data-handling.md`     | Adopted | Agents touch no personal data; no secret value is printed, logged, or committed — `EXECUTION.md`                                    |
+| External service readiness `03-security-privacy/05-external-service-readiness.md` | Adopted | GitHub and Vercel verified live; the TheMealDB test key runs in production as an accepted risk (spec O1, 2026-08-10)                |
 
 ## 04 — Product
 
-| Rule                                          | Status             | Rationale                                                                       |
-| --------------------------------------------- | ------------------ | ------------------------------------------------------------------------------- |
-| Engineering quality is not product-market fit | Adopted            | Gates and acceptance criteria kept separate from product hypotheses             |
-| Experiments                                   | Not applicable yet | No product hypothesis under test; `docs/product/experiments/` starts at Phase 6 |
+| Rule                                                                                         | Status             | Rationale                                                                       |
+| -------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------- |
+| Engineering quality is not product-market fit `04-product/01-engineering-quality-not-pmf.md` | Adopted            | Gates and acceptance criteria kept separate from product hypotheses             |
+| Experiments `04-product/02-experiments.md`                                                   | Not applicable yet | No product hypothesis under test; `docs/product/experiments/` starts at Phase 6 |
 
 ## 05 — Delivery and architecture
 
-| Rule                        | Status         | Rationale                                                                                                           |
-| --------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Architecture boundaries     | Adopted        | Four modules, one-way dependencies, lint-enforced — ADR-0002                                                        |
-| Continuous delivery         | Adopted        | Branch-based flow, CI, preview deploys, and an active ruleset on `main` proven with a `GH013` negative probe        |
-| Observability and flow      | Partial        | Host metrics and manual smoke checks only; client error reporting deliberately declined — ADR-0003                  |
-| Parallel agent architecture | not-applicable | Concurrency stayed 1 by `EXECUTION.md`. The serial-or-fleet decision was made and its outcome recorded in `PLAN.md` |
+| Rule                                                                                     | Status         | Rationale                                                                                                           |
+| ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Architecture boundaries `05-delivery-architecture/01-architecture-boundaries.md`         | Adopted        | Four modules, one-way dependencies, lint-enforced — ADR-0002                                                        |
+| Continuous delivery `05-delivery-architecture/02-continuous-delivery.md`                 | Adopted        | Branch-based flow, CI, preview deploys, and an active ruleset on `main` proven with a `GH013` negative probe        |
+| Observability and flow `05-delivery-architecture/03-observability-flow.md`               | Partial        | Host metrics and manual smoke checks only; client error reporting deliberately declined — ADR-0003                  |
+| Parallel agent architecture `05-delivery-architecture/04-parallel-agent-architecture.md` | not-applicable | Concurrency stayed 1 by `EXECUTION.md`. The serial-or-fleet decision was made and its outcome recorded in `PLAN.md` |
 
 ## 06 — Tools
 

@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
@@ -25,5 +26,20 @@ describe('operating-contract installation', () => {
 
   it('owns no product-local copy of the contract', () => {
     expect(git('ls-files', '--', '.bootstrap')).toBe('');
+  });
+
+  it('records the pin this repository actually holds', () => {
+    // EXECUTION.md named a commit two advances behind: the pin moved twice
+    // through reviewed pull requests and the line describing it moved neither
+    // time. Read from the index rather than from HEAD, so an advance is checked
+    // in the commit that makes it rather than the one after.
+    const pinned = git('ls-files', '--stage', '.ai-engineering').split(/\s+/)[1] ?? '';
+    const execution = readFileSync('EXECUTION.md', 'utf8');
+
+    expect(pinned, 'the submodule must be pinned to a commit').toMatch(/^[0-9a-f]{40}$/);
+    expect(
+      execution.includes(`\`${pinned}\``),
+      `EXECUTION.md must record the pinned commit ${pinned}`,
+    ).toBe(true);
   });
 });
