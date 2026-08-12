@@ -232,6 +232,41 @@ describe('governance documents agree with the current authorization model', () =
     }
   });
 
+  it('states roadmap limits that the documents behind them still hold', () => {
+    // ROADMAP asserts six things about this repository, each of which decays
+    // when the thing it describes is fixed. Two are derivable; deriving them is
+    // what stops the table going quietly false the day one is closed.
+    const roadmap = readFileSync('ROADMAP.md', 'utf8');
+    const accessibility = readFileSync('docs/quality/accessibility.md', 'utf8');
+    const gates = readFileSync('docs/quality/gates.md', 'utf8');
+
+    const unverified = (accessibility.match(/\*\*(?:Partly u|U)nverified\.\*\*/g) ?? []).length;
+    const spelled = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'][unverified] ?? '';
+
+    expect(
+      unverified,
+      'the accessibility table must mark some criterion unverified',
+    ).toBeGreaterThan(0);
+    expect(
+      roadmap.includes(`${spelled} AA criteria remain unverified`),
+      `ROADMAP says a different number than the ${String(unverified)} the accessibility table marks`,
+    ).toBe(true);
+
+    // The other derivable row: how many gates are proven at the tool rather
+    // than at the wiring around it.
+    const atTool = /\*\*(\w+) rows? (?:is|are) proven at the tool/.exec(gates)?.[1] ?? '';
+
+    expect(atTool, 'the gate register must state how many rows are tool-only').not.toBe('');
+    expect(
+      roadmap.includes(
+        atTool === 'One'
+          ? 'One gate is proven at the tool'
+          : `${atTool} gates are proven at the tool`,
+      ),
+      'ROADMAP and the gate register disagree on how many rows are tool-only',
+    ).toBe(true);
+  });
+
   it('quotes a slice range that matches the slices PLAN.md declares', () => {
     // README said "slices S0-S7" for a full slice after S8 existed. Nothing
     // bound a range written in prose to the plan it described.
