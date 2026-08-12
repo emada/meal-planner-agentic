@@ -50,12 +50,12 @@ Required by `.ai-engineering/.bootstrap/00-orientation/01-how-to-use.md`: every 
 
 ## 05 — Delivery and architecture
 
-| Rule                        | Status             | Rationale                                                                                                           |
-| --------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| Architecture boundaries     | Adopted            | Four modules, one-way dependencies, lint-enforced — ADR-0002                                                        |
-| Continuous delivery         | Adopted            | Branch-based flow, CI, preview deploys, and an active ruleset on `main` proven with a `GH013` negative probe        |
-| Observability and flow      | Partial            | Host metrics and manual smoke checks only; client error reporting deliberately declined — ADR-0003                  |
-| Parallel agent architecture | Not applicable yet | Concurrency stayed 1 by `EXECUTION.md`. The serial-or-fleet decision was made and its outcome recorded in `PLAN.md` |
+| Rule                        | Status         | Rationale                                                                                                           |
+| --------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Architecture boundaries     | Adopted        | Four modules, one-way dependencies, lint-enforced — ADR-0002                                                        |
+| Continuous delivery         | Adopted        | Branch-based flow, CI, preview deploys, and an active ruleset on `main` proven with a `GH013` negative probe        |
+| Observability and flow      | Partial        | Host metrics and manual smoke checks only; client error reporting deliberately declined — ADR-0003                  |
+| Parallel agent architecture | not-applicable | Concurrency stayed 1 by `EXECUTION.md`. The serial-or-fleet decision was made and its outcome recorded in `PLAN.md` |
 
 ## 06 — Tools
 

@@ -182,13 +182,18 @@ describe('governance documents agree with the current authorization model', () =
   });
 
   it('does not describe the settled fleet decision as upcoming', () => {
-    // Four places said fleet readiness was still ahead after the project
+    // Six wordings said fleet readiness was still ahead after the project
     // shipped without a fleet step. The first version of this guard matched one
     // of them and the commit message claimed it matched two — and it read only
     // one document, while the same fact lived in three.
     const isUpcoming = (line: string) =>
       /is not met yet|first candidate is|revisit at the S4|is not demonstrated/i.test(line) ||
-      /\|\s*Not met\s*[—-]/.test(line);
+      /roles separate at the first fleet/i.test(line) ||
+      /\|\s*Not met\s*[—-]/.test(line) ||
+      // PLAN's fleet section opened with this above its own outcome paragraph.
+      // Without it, adding PLAN to the loop below read a third file and had no
+      // condition that could fail in it.
+      /^Not yet\.$/.test(line.trim());
 
     // Pinned, because a selector that matches nothing passes. Each retired
     // wording must be caught, and legitimately forward-looking prose must not.
@@ -204,12 +209,17 @@ describe('governance documents agree with the current authorization model', () =
     expect(isUpcoming('the first candidate is S4 + S5, and it requires a separate decision')).toBe(
       true,
     );
+    expect(isUpcoming('| Agent roles | Adopted | roles separate at the first fleet step |')).toBe(
+      true,
+    );
+    expect(isUpcoming('Not yet.')).toBe(true);
     expect(
       isUpcoming(
         '| Experiments | Not applicable yet | `docs/product/experiments/` starts at Phase 6 |',
       ),
     ).toBe(false);
     expect(isUpcoming('No fleet step was taken; the decision is recorded in PLAN.md')).toBe(false);
+    expect(isUpcoming('None were used. The readiness assessment was made before S4.')).toBe(false);
 
     // Three documents, because the same claim was true in one and stale in the
     // others — which is how it survived every round.
