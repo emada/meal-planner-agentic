@@ -181,6 +181,18 @@ describe('governance documents agree with the current authorization model', () =
     expect(planned).toEqual([]);
   });
 
+  it('does not describe a finished project in the future tense', () => {
+    // Two adoption rows survived every review saying fleet readiness "is not
+    // met yet" and autonomy was "not met", after the project shipped and
+    // autonomy was raised. Both read as present state.
+    const adoption = readFileSync('docs/quality/bootstrap-adoption.md', 'utf8');
+    const forward = adoption
+      .split('\n')
+      .filter((line) => /\b(is not met yet|first candidate is|will land|has yet to)\b/i.test(line));
+
+    expect(forward, 'an adoption row still describes work as upcoming').toEqual([]);
+  });
+
   it('quotes a slice range that matches the slices PLAN.md declares', () => {
     // README said "slices S0-S7" for a full slice after S8 existed. Nothing
     // bound a range written in prose to the plan it described.
