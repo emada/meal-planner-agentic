@@ -301,20 +301,33 @@ describe('governance documents agree with the current authorization model', () =
     // The count reads one phrase, so a row saying the same thing in different
     // words would be tool-only and uncounted. The alternatives are refused
     // rather than missed.
-    const reworded = gates
-      .split('\n')
-      .filter(
-        (line) =>
-          line.startsWith('| ') &&
-          /wiring[^|]{0,40}(?:not probed|never (?:probed|exercised)|unproven|unverified)/i.test(
-            line,
-          ) &&
-          !line.includes('wiring is unprobed'),
-      )
-      .map((line) => line.slice(0, 40));
+    const rewordedIn = (text: string) =>
+      text
+        .split('\n')
+        .filter(
+          (line) =>
+            line.startsWith('| ') &&
+            /wiring[^|]{0,40}(?:not probed|never (?:probed|exercised)|unproven|unverified)/i.test(
+              line,
+            ) &&
+            !line.includes('wiring is unprobed'),
+        )
+        .map((line) => line.slice(0, 40));
 
+    // Against a fixture, not only against a file where it currently matches
+    // nothing: an alternation that had stopped matching would agree with a
+    // clean register and say the same thing.
     expect(
-      reworded,
+      rewordedIn(
+        [
+          '| Secret scan | gitleaks | CI | the `gitleaks-action@v2` wiring is unprobed | 2026-08-11 |',
+          '| Static analysis | CodeQL | CI | the action wiring was never exercised | 2026-08-11 |',
+        ].join('\n'),
+      ).length,
+      'the reworded-marker filter must recognise a rewording',
+    ).toBe(1);
+    expect(
+      rewordedIn(gates),
       'a probe cell describes an unprobed wiring in words the count cannot read',
     ).toEqual([]);
     expect(toolOnly, 'the gate table must mark some wiring unprobed').toBeGreaterThan(0);
@@ -376,10 +389,17 @@ describe('governance documents agree with the current authorization model', () =
     // away, a blank line away, a full stop away — because nothing in the
     // punctuation distinguishes a list that ran into prose from a longer list.
     // A marker cannot be reflowed, and its absence reads as no list at all.
-    const enumerationOf = (text: string) =>
-      (text.split('<!-- non-goals:list -->')[1] ?? '')
-        .split('<!-- /non-goals:list -->')[0]
-        ?.toLowerCase() ?? '';
+    // Both markers required. Splitting on a closing marker that is not there
+    // returns the whole remainder, so a deleted closing tag would have widened
+    // the span to the end of the file — the same silent widening, one token
+    // away, in the mechanism chosen to end it.
+    const enumerationOf = (text: string) => {
+      const after = text.split('<!-- non-goals:list -->')[1] ?? '';
+
+      return after.includes('<!-- /non-goals:list -->')
+        ? (after.split('<!-- /non-goals:list -->')[0] ?? '').toLowerCase()
+        : '';
+    };
 
     const marked = (list: string, prose: string) =>
       [
@@ -415,9 +435,14 @@ describe('governance documents agree with the current authorization model', () =
       enumerationOf(marked(list.replace('login.', 'login'), prose)),
       'an unterminated list must not capture the prose after it',
     ).not.toContain('favouriting');
+    // Either marker, not just the opening one.
     expect(
       enumerationOf(marked(list, prose).replace('<!-- non-goals:list -->', '')),
-      'a missing marker must read as no list, not as the whole document',
+      'a missing opening marker must read as no list, not as the whole document',
+    ).toBe('');
+    expect(
+      enumerationOf(marked(list, prose).replace('<!-- /non-goals:list -->', '')),
+      'a missing closing marker must read as no list, not as the rest of the file',
     ).toBe('');
 
     const roadmap = enumerationOf(roadmapFile);
