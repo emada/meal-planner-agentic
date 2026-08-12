@@ -307,7 +307,7 @@ describe('governance documents agree with the current authorization model', () =
         .filter(
           (line) =>
             line.startsWith('| ') &&
-            /wiring[^|]{0,40}(?:not probed|never (?:probed|exercised)|unproven|unverified)/i.test(
+            /wiring[^|]{0,40}(?:un(?:probed|proven|verified)|not probed|never (?:probed|exercised))/i.test(
               line,
             ) &&
             !line.includes('wiring is unprobed'),
@@ -316,7 +316,10 @@ describe('governance documents agree with the current authorization model', () =
 
     // Against a fixture, not only against a file where it currently matches
     // nothing: an alternation that had stopped matching would agree with a
-    // clean register and say the same thing.
+    // clean register and say the same thing. The canonical row matches the
+    // alternation too, so it is the exclusion that removes it — both halves of
+    // the filter are load-bearing here, where the first row previously failed
+    // the regex and left the exclusion untested.
     expect(
       rewordedIn(
         [
