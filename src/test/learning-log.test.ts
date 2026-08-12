@@ -103,6 +103,11 @@ describe('the engineering learning log counts what it contains', () => {
       'Twenty-eight',
       'Twenty-nine',
       'Thirty',
+      'Thirty-one',
+      'Thirty-two',
+      'Thirty-three',
+      'Thirty-four',
+      'Thirty-five',
     ];
 
     expect(stated, 'the log must state how many entries it holds').toBeDefined();

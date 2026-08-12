@@ -298,6 +298,25 @@ describe('governance documents agree with the current authorization model', () =
       .filter((line) => line.startsWith('| ') && line.includes('wiring is unprobed')).length;
     const toolOnlySpelled = ['zero', 'one', 'two', 'three', 'four', 'five', 'six'][toolOnly] ?? '';
 
+    // The count reads one phrase, so a row saying the same thing in different
+    // words would be tool-only and uncounted. The alternatives are refused
+    // rather than missed.
+    const reworded = gates
+      .split('\n')
+      .filter(
+        (line) =>
+          line.startsWith('| ') &&
+          /wiring[^|]{0,40}(?:not probed|never (?:probed|exercised)|unproven|unverified)/i.test(
+            line,
+          ) &&
+          !line.includes('wiring is unprobed'),
+      )
+      .map((line) => line.slice(0, 40));
+
+    expect(
+      reworded,
+      'a probe cell describes an unprobed wiring in words the count cannot read',
+    ).toEqual([]);
     expect(toolOnly, 'the gate table must mark some wiring unprobed').toBeGreaterThan(0);
     expect(toolOnlySpelled, `no spelling for ${String(toolOnly)} tool-only rows`).not.toBe('');
     expect(
@@ -352,48 +371,53 @@ describe('governance documents agree with the current authorization model', () =
     // Split rather than a lookahead: `$` under /m matches end of line, so an
     // earlier attempt captured one paragraph and checked a third of the
     // section.
-    const enumerationOf = (text: string) => {
-      const notPlanned = (text.split(/^## Not planned$/m)[1] ?? '').split(/^## /m)[0] ?? '';
-      const paragraph =
-        notPlanned
-          .split(/\n\s*\n/)
-          .find((part) => part.trim().startsWith('Recorded so they are not')) ?? '';
+    // Marked in the document rather than inferred from it. Every inferred span
+    // this project tried could be defeated by ordinary editing — a heading
+    // away, a blank line away, a full stop away — because nothing in the
+    // punctuation distinguishes a list that ran into prose from a longer list.
+    // A marker cannot be reflowed, and its absence reads as no list at all.
+    const enumerationOf = (text: string) =>
+      (text.split('<!-- non-goals:list -->')[1] ?? '')
+        .split('<!-- /non-goals:list -->')[0]
+        ?.toLowerCase() ?? '';
 
-      const afterColon = paragraph.includes(':') ? paragraph.slice(paragraph.indexOf(':') + 1) : '';
-      // The first sentence after the colon, and it has to be terminated. A
-      // sentence starting on a new line ends the span too: without that, an
-      // enumeration whose full stop was dropped runs straight into the prose
-      // beside it and restores the shielding this span exists to prevent.
-      // Truncating early — an abbreviation inside the list would do it — makes
-      // items go missing and the check fail, which is the loud direction.
-      const [first = ''] = afterColon.split(/(?<=\.)(?:\s|$)|\n(?=[A-Z])/);
+    const marked = (list: string, prose: string) =>
+      [
+        '## Not planned',
+        '',
+        '<!-- non-goals:list -->',
+        '',
+        list,
+        '',
+        '<!-- /non-goals:list -->',
+        '',
+        prose,
+      ].join('\n');
+    const list = 'Recorded so they are not proposed again as if new: accounts, login.';
+    const prose = 'Favouriting is called out by name as the one most likely to return.';
 
-      return (first.trimEnd().endsWith('.') ? first : '').toLowerCase();
-    };
-
-    // Pins the span with the shape that was green through nine review rounds:
-    // the item absent from the list, present in a sentence beside it. Both
-    // sentences sit in one paragraph here, which is the arrangement a reflow
-    // produces and the one the paragraph scope could not survive.
-    const fixture = [
-      '## Not planned',
-      '',
-      'Recorded so they are not proposed again as if new: accounts, login.',
-      'Favouriting is called out by name as the one most likely to return.',
-      '',
-      '## Next',
-    ].join('\n');
-
-    expect(enumerationOf(fixture), 'the enumeration must be read').toContain('accounts');
+    expect(enumerationOf(marked(list, prose)), 'the enumeration must be read').toContain(
+      'accounts',
+    );
+    // The arrangements that shielded an item at file, section and paragraph
+    // scope in turn: prose after the list, prose in the same paragraph, and the
+    // same with the list's own full stop dropped so a sentence-slicing span
+    // could not tell where it ended.
     expect(
-      enumerationOf(fixture),
-      'prose beside the list must fall outside the span, or it shields the list',
+      enumerationOf(marked(list, prose)),
+      'prose outside the markers must fall outside the span',
     ).not.toContain('favouriting');
-    // An unterminated list must read as no list at all, rather than as one that
-    // swallows the next sentence.
     expect(
-      enumerationOf(fixture.replace('login.', 'login')),
-      'an enumeration with no full stop must not capture the prose after it',
+      enumerationOf(marked(list, prose).replace('.\n\n<!-- /non-goals', '.\n<!-- /non-goals')),
+      'a blank line is not what holds the span',
+    ).not.toContain('favouriting');
+    expect(
+      enumerationOf(marked(list.replace('login.', 'login'), prose)),
+      'an unterminated list must not capture the prose after it',
+    ).not.toContain('favouriting');
+    expect(
+      enumerationOf(marked(list, prose).replace('<!-- non-goals:list -->', '')),
+      'a missing marker must read as no list, not as the whole document',
     ).toBe('');
 
     const roadmap = enumerationOf(roadmapFile);
